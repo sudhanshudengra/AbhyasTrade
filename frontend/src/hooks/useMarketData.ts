@@ -29,15 +29,36 @@ export function useMarketData() {
     }, 650);
   }, []);
 
-  // Initialize initial watchlist via REST
+  // Initialize initial watchlist via REST with auto-retry
   useEffect(() => {
-    getWatchlist()
-      .then((data) => {
-        if (data && data.length > 0) {
-          setStocks(data);
+    let unmounted = false;
+    const fetchWatchlist = async () => {
+      try {
+        const data = await getWatchlist();
+        if (!unmounted && Array.isArray(data) && data.length > 0) {
+          setStocks((prev) => (prev.length === 0 ? data : prev));
         }
-      })
-      .catch((err) => console.warn('Initial watchlist fetch:', err));
+      } catch (err) {
+        console.warn('Initial watchlist fetch:', err);
+      }
+    };
+
+    fetchWatchlist();
+    const retryInterval = setInterval(() => {
+      if (!unmounted) {
+        setStocks((current) => {
+          if (current.length === 0) {
+            fetchWatchlist();
+          }
+          return current;
+        });
+      }
+    }, 2000);
+
+    return () => {
+      unmounted = true;
+      clearInterval(retryInterval);
+    };
   }, []);
 
   // Dynamic add symbol handler
@@ -84,9 +105,11 @@ export function useMarketData() {
         if (unmounted) return;
         try {
           if (event.data === 'pong') return;
-          const payload = JSON.parse(event.data);
+          // Sanitize raw NaN or undefined values if yfinance returns unpopulated float
+          const sanitized = typeof event.data === 'string' ? event.data.replace(/:\s*NaN/g, ': null') : event.data;
+          const payload = JSON.parse(sanitized);
 
-          if (payload.type === 'SNAPSHOT' && Array.isArray(payload.data)) {
+          if (payload.type === 'SNAPSHOT' && Array.isArray(payload.data) && payload.data.length > 0) {
             setStocks(payload.data);
             setLastTickTime(Date.now());
           } else if (payload.type === 'TICK_UPDATE' && Array.isArray(payload.data)) {

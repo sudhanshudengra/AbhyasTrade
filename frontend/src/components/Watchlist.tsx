@@ -241,7 +241,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                         : 'text-rose-400'
                     }`}
                   >
-                    ₹{stock.ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₹{(stock.ltp ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <div className="flex items-center justify-end gap-1 mt-0.5">
                     {isPositive ? (
@@ -255,27 +255,23 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                       }`}
                     >
                       {isPositive ? '+' : ''}
-                      {stock.change.toFixed(2)} ({isPositive ? '+' : ''}
-                      {stock.pChange.toFixed(2)}%)
+                      {(stock.change ?? 0).toFixed(2)} ({isPositive ? '+' : ''}
+                      {(stock.pChange ?? 0).toFixed(2)}%)
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* 52-Week Range Mini Bar */}
-              <div className="mt-2 flex items-center gap-2 text-[9px] text-slate-400">
-                <span className="font-tabular">L: ₹{stock.low52 ? stock.low52.toFixed(0) : '-'}</span>
-                <div className="flex-1 h-1 bg-obsidian-900 rounded-full overflow-hidden relative border border-obsidian-700/60">
+              <div className="mt-2 flex items-center justify-between gap-1 text-[10px] text-slate-500">
+                <span className="font-tabular">L: ₹{stock.low52 ? Number(stock.low52).toFixed(0) : '-'}</span>
+                <div className="flex-1 h-1 bg-obsidian-900 rounded-full mx-1.5 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full"
-                    style={{ width: '100%' }}
-                  />
-                  <div
-                    className="absolute top-0 w-1.5 h-full bg-white shadow-sm -translate-x-1/2"
-                    style={{ left: `${rangePos}%` }}
+                    className="h-full bg-slate-600 rounded-full"
+                    style={{ width: `${rangePos}%` }}
                   />
                 </div>
-                <span className="font-tabular">H: ₹{stock.high52 ? stock.high52.toFixed(0) : '-'}</span>
+                <span className="font-tabular">H: ₹{stock.high52 ? Number(stock.high52).toFixed(0) : '-'}</span>
               </div>
 
               {/* Quick Action Hover Buttons */}
@@ -350,7 +346,14 @@ export const Watchlist: React.FC<WatchlistProps> = ({
         {/* No Results at all */}
         {filteredStocks.length === 0 && globalSearchResults.length === 0 && !isSearchingGlobal && (
           <div className="p-8 text-center text-slate-500 text-xs">
-            No scrips matching &quot;{searchQuery}&quot;
+            {stocks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6">
+                <Loader2 className="w-5 h-5 text-brand-cyan animate-spin" />
+                <span className="text-slate-400 font-medium">Fetching live quotes from NSE...</span>
+              </div>
+            ) : (
+              <span>No scrips matching &quot;{searchQuery}&quot;</span>
+            )}
           </div>
         )}
       </div>

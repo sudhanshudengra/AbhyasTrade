@@ -39,12 +39,36 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED' || err?.code === 'ECONNREFUSED') {
+              return;
+            }
+            console.warn('[vite proxy error]:', err?.message || err);
+          });
+        }
       },
       '/ws': {
-        target: 'ws://localhost:8000',
-        ws: true
+        target: 'ws://127.0.0.1:8000',
+        ws: true,
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED' || err?.code === 'EPIPE') {
+              return;
+            }
+            console.warn('[vite ws proxy error]:', err?.message || err);
+          });
+          proxy.on('proxyReqWs', (proxyReq, _req, socket) => {
+            socket.on('error', (err: any) => {
+              if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED') {
+                return;
+              }
+            });
+          });
+        }
       }
     }
   }

@@ -424,10 +424,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           <div className="flex items-center gap-2 mr-1">
             <span className="font-black text-sm text-white">{stock.symbol}</span>
             <span className="font-tabular font-black text-sm text-white">
-              ₹{stock.ltp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              ₹{(stock.ltp ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
             <span className={`text-xs font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-              ({isPositive ? '+' : ''}{stock.pChange.toFixed(2)}%)
+              ({isPositive ? '+' : ''}{(stock.pChange ?? 0).toFixed(2)}%)
             </span>
           </div>
 
@@ -516,21 +516,21 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">Previous Close</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.close.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{(stock.close ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">Open</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{(stock.open ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">High</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{(stock.high ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -538,21 +538,21 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">Low</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{(stock.low ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">52 Week High</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.high52 ? stock.high52.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+              ₹{stock.high52 ? Number(stock.high52).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">52 Week Low</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.low52 ? stock.low52.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+              ₹{stock.low52 ? Number(stock.low52).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
             </span>
           </div>
         </div>
