@@ -72,6 +72,20 @@ class MarketDataFeed:
         self.is_running = False
         self.subscribers: List[asyncio.Queue] = []
 
+    def broadcast_snapshot(self):
+        """Pushes full market snapshot to all active WebSocket clients"""
+        if self.subscribers and self.market_cache:
+            payload = {
+                "type": "SNAPSHOT",
+                "data": list(self.market_cache.values()),
+                "timestamp": int(time.time())
+            }
+            for queue in list(self.subscribers):
+                try:
+                    queue.put_nowait(payload)
+                except Exception:
+                    pass
+
     async def fetch_nse_master_directory(self):
         """Loads official NSE equity directory (all 2,500+ listed companies) from official NSE Archives"""
         logger.info("Loading official NSE Equity Master Directory...")
@@ -103,7 +117,7 @@ class MarketDataFeed:
         for sym in DEFAULT_NSE_SYMBOLS:
             self.nse_master_directory[sym] = {"symbol": sym, "name": f"{sym} Ltd.", "series": "EQ"}
 
-    async def fetch_symbol_data_dynamically(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def fetch_symbol_data_dynamically(self, symbol: str, broadcast: bool = False) -> Optional[Dict[str, Any]]:
         """
         Fetches 100% real-time data from NSE / Yahoo Finance for ANY stock:
         - Real official LTP, Open, High, Low, Close, Volume
@@ -134,12 +148,8 @@ class MarketDataFeed:
             change = round(close - prev_close, 2)
             p_change = round((change / prev_close) * 100, 2) if prev_close > 0 else 0.0
             
-            # Fetch real metadata from exchange
-            info = getattr(ticker, "info", {}) or {}
-            company_name = info.get("shortName") or info.get("longName")
-            if not company_name and clean_symbol in self.nse_master_directory:
-                company_name = self.nse_master_directory[clean_symbol]["name"]
-                
+            # Resolve official company name from master directory (instant, no extra HTTP roundtrips)
+            company_name = self.nse_master_directory.get(clean_symbol, {}).get("name")
             if not company_name:
                 if clean_symbol == "NIFTY 50":
                     company_name = "NIFTY 50 Index"
@@ -148,16 +158,24 @@ class MarketDataFeed:
                 else:
                     company_name = f"{clean_symbol} Ltd."
                     
-            sector = info.get("sector")
-            if not sector:
-                if "INDEX" in clean_symbol or clean_symbol in ["NIFTY 50", "BANKNIFTY"]:
-                    sector = "Benchmark Index"
-                elif "BANK" in clean_symbol:
-                    sector = "Financial Services"
-                elif clean_symbol in ["TCS", "INFY", "WIPRO"]:
-                    sector = "Information Technology"
-                else:
-                    sector = "NSE Equity"
+            if "INDEX" in clean_symbol or clean_symbol in ["NIFTY 50", "BANKNIFTY"]:
+                sector = "Benchmark Index"
+            elif "BANK" in clean_symbol or clean_symbol in ["SBIN", "BAJFINANCE"]:
+                sector = "Financial Services"
+            elif clean_symbol in ["TCS", "INFY", "WIPRO"]:
+                sector = "Information Technology"
+            elif clean_symbol in ["RELIANCE", "ONGC", "BPCL", "IOC"]:
+                sector = "Energy"
+            elif clean_symbol in ["MARUTI", "TATAMOTORS", "M&M"]:
+                sector = "Automobile"
+            elif clean_symbol in ["SUNPHARMA", "DRREDDY", "CIPLA"]:
+                sector = "Healthcare"
+            elif clean_symbol in ["TITAN", "ITC", "HINDUNILVR"]:
+                sector = "Consumer Goods"
+            elif clean_symbol in ["TATASTEEL", "JSWSTEEL", "HINDALCO"]:
+                sector = "Metals & Mining"
+            else:
+                sector = "NSE Equity"
 
             quote_data = {
                 "symbol": clean_symbol,
@@ -179,6 +197,8 @@ class MarketDataFeed:
             }
             
             self.market_cache[clean_symbol] = quote_data
+            if broadcast:
+                self.broadcast_snapshot()
             return quote_data
         except Exception as e:
             logger.error(f"Error dynamically fetching {clean_symbol}: {e}")
@@ -190,7 +210,7 @@ class MarketDataFeed:
         # First load master directory
         await self.fetch_nse_master_directory()
         
-        tasks = [self.fetch_symbol_data_dynamically(sym) for sym in DEFAULT_NSE_SYMBOLS]
+        tasks = [self.fetch_symbol_data_dynamically(sym, broadcast=False) for sym in DEFAULT_NSE_SYMBOLS]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
         loaded = 0
@@ -198,13 +218,14 @@ class MarketDataFeed:
             if isinstance(res, dict) and res.get("ltp"):
                 loaded += 1
         logger.info(f"Successfully initialized {loaded}/{len(DEFAULT_NSE_SYMBOLS)} default symbols from exchange.")
+        self.broadcast_snapshot()
 
     async def get_or_fetch_symbol(self, symbol: str) -> Optional[Dict[str, Any]]:
         """Returns quote from cache, or fetches dynamically on-demand if it's a new symbol"""
         clean_symbol = symbol.strip().upper()
         if clean_symbol in self.market_cache:
             return self.market_cache[clean_symbol]
-        return await self.fetch_symbol_data_dynamically(clean_symbol)
+        return await self.fetch_symbol_data_dynamically(clean_symbol, broadcast=True)
 
     def search_nse_symbols(self, query: str, limit: int = 15) -> List[Dict[str, Any]]:
         """
@@ -407,28 +428,29 @@ class MarketDataFeed:
                     asyncio.create_task(self.fetch_real_prices_startup())
                     last_resync_time = time.time()
                 
-                for symbol in symbols_to_update:
-                    live_quote = None
-                    if market_open and not symbol.startswith("NIFTY"):
-                        live_quote = await self.fetch_nse_live_quote(symbol)
-                        
-                    if live_quote:
-                        cached = self.market_cache[symbol]
-                        prev_ltp = cached["ltp"]
-                        new_ltp = live_quote["ltp"]
-                        tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
-                        
-                        updated = {
-                            **cached,
-                            **live_quote,
-                            "tick_direction": tick_dir,
-                            "last_updated": datetime.now(timezone.utc).isoformat()
-                        }
-                        self.market_cache[symbol] = updated
-                        tick_diffs.append(updated)
-                    else:
-                        # Off-market: 100% static at official exchange closing price (no fake ticks)
-                        pass
+                if market_open:
+                    for symbol in symbols_to_update:
+                        live_quote = None
+                        if not symbol.startswith("NIFTY"):
+                            live_quote = await self.fetch_nse_live_quote(symbol)
+                            
+                        if live_quote:
+                            cached = self.market_cache[symbol]
+                            prev_ltp = cached["ltp"]
+                            new_ltp = live_quote["ltp"]
+                            tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
+                            
+                            updated = {
+                                **cached,
+                                **live_quote,
+                                "tick_direction": tick_dir,
+                                "last_updated": datetime.now(timezone.utc).isoformat()
+                            }
+                            self.market_cache[symbol] = updated
+                            tick_diffs.append(updated)
+                else:
+                    # Off-market hours: 100% static at official exchange closing price. No artificial or fake ticks.
+                    pass
                 
                 if tick_diffs and self.subscribers:
                     payload = {"type": "TICK_UPDATE", "data": tick_diffs, "timestamp": int(time.time())}
@@ -441,7 +463,7 @@ class MarketDataFeed:
             except Exception as e:
                 logger.error(f"Error in market feed tick loop: {e}")
                 
-            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 5.0)
+            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 2.0)
 
     def subscribe(self) -> asyncio.Queue:
         q = asyncio.Queue(maxsize=100)

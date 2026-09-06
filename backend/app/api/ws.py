@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.nse_feed import market_feed
 from app.services.order_matcher import order_matcher
@@ -38,10 +39,18 @@ async def websocket_market_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            # Wait for next tick update payload
-            payload = await queue.get()
+            try:
+                # Wait for next tick update payload with 4s timeout for heartbeat
+                payload = await asyncio.wait_for(queue.get(), timeout=4.0)
+            except asyncio.TimeoutError:
+                # Heartbeat snapshot when queue has no tick diffs
+                payload = {
+                    "type": "SNAPSHOT",
+                    "data": list(market_feed.market_cache.values()),
+                    "timestamp": int(time.time()) if 'time' in globals() else 0
+                }
             
-            # Match pending orders on every tick update
+            # Match pending orders on every tick update / heartbeat
             try:
                 await order_matcher.match_all_pending_orders()
             except Exception as e:
@@ -52,7 +61,7 @@ async def websocket_market_endpoint(websocket: WebSocket):
     except (WebSocketDisconnect, asyncio.CancelledError):
         logger.info("WebSocket client disconnected from /ws/market")
     except Exception as e:
-        logger.warning(f"WebSocket connection closed with error: {e}")
+        logger.debug(f"WebSocket connection closed: {e}")
     finally:
         client_task.cancel()
         market_feed.unsubscribe(queue)
