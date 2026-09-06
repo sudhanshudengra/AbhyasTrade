@@ -2,7 +2,7 @@
 
 > Practice stock trading on India's NSE with ₹10,00,000 virtual money. Real prices. Real charges. No real risk.
 
-AbhyasTrade is a full-stack virtual trading platform that replicates a real Indian broker terminal (think Zerodha Kite or Groww) — complete with live NSE market data, Google Finance-style charts, Zerodha's exact brokerage & regulatory charge calculations, and per-user portfolio tracking via Google Sign-In.
+AbhyasTrade is a full-stack virtual trading platform that replicates a professional Indian broker terminal — complete with live NSE market data, dynamic interactive charts, exact statutory & regulatory charge calculations, and per-user portfolio tracking via Google Sign-In.
 
 ---
 

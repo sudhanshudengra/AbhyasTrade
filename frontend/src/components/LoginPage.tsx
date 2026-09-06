@@ -71,7 +71,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
 
         {/* Subtitle */}
         <p className="text-sm sm:text-base text-slate-400 max-w-2xl mb-8 leading-relaxed">
-          Test intraday (5x MIS) and delivery (CNC) strategies in a hyper-realistic Zerodha Kite / Groww terminal
+          Test intraday (5x MIS) and delivery (CNC) strategies in a high-fidelity virtual trading terminal
           anchored to real market prices and exact regulatory charge breakdowns.
         </p>
 

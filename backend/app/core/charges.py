@@ -45,7 +45,7 @@ def calculate_single_leg_charges(
         # 0.03% or Rs. 20 per executed order, whichever is lower
         brokerage = min(0.0003 * turnover, 20.0)
     else:  # CNC
-        # 0 brokerage for delivery (Zerodha model)
+        # 0 brokerage for delivery (standard discount broker model)
         brokerage = 0.0
     
     # 2. STT / CTT (Securities Transaction Tax)

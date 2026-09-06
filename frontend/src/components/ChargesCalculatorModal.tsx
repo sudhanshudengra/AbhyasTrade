@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calculator } from 'lucide-react';
-import { ProductType, RoundtripEstimate } from '../lib/types';
-import { estimateRoundtrip } from '../lib/api';
+import { ProductType } from '../lib/types';
+import { calculateRoundtripCharges } from '../lib/charges';
 
 interface ChargesCalculatorModalProps {
   isOpen: boolean;
@@ -19,8 +19,7 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
   const [productType, setProductType] = useState<ProductType>('MIS');
   const [quantity, setQuantity] = useState<number>(100);
   const [buyPrice, setBuyPrice] = useState<number>(defaultPrice);
-  const [sellPrice, setSellPrice] = useState<number>(defaultPrice * 1.01);
-  const [estimate, setEstimate] = useState<RoundtripEstimate | null>(null);
+  const [sellPrice, setSellPrice] = useState<number>(parseFloat((defaultPrice * 1.01).toFixed(2)));
 
   useEffect(() => {
     if (defaultPrice > 0) {
@@ -29,18 +28,12 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
     }
   }, [defaultPrice]);
 
-  useEffect(() => {
+  // Instant 0ms deterministic calculation across state changes
+  const estimate = useMemo(() => {
     if (quantity > 0 && buyPrice > 0 && sellPrice > 0) {
-      estimateRoundtrip({
-        symbol: defaultSymbol,
-        product_type: productType,
-        quantity,
-        buy_price: buyPrice,
-        sell_price: sellPrice,
-      })
-        .then((res) => setEstimate(res))
-        .catch(() => setEstimate(null));
+      return calculateRoundtripCharges(defaultSymbol, productType, quantity, buyPrice, sellPrice);
     }
+    return null;
   }, [defaultSymbol, productType, quantity, buyPrice, sellPrice]);
 
   if (!isOpen) return null;
@@ -61,7 +54,7 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                 Indian Brokerage & Taxes Calculator
               </h3>
               <p className="text-xs text-slate-400">
-                100% Deterministic Zerodha / NSE Schedule Friction
+                Standard NSE / SEBI Regulatory & Discount Broker Schedule
               </p>
             </div>
           </div>
