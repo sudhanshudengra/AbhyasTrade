@@ -112,15 +112,16 @@ export const Header: React.FC<HeaderProps> = ({
   const truncateName = (name: string, max = 15) =>
     name.length > max ? name.slice(0, max).trimEnd() + '…' : name;
 
+  const initialCap = portfolio?.initial_capital ?? 1000000
   const virtualCash = portfolio?.virtual_cash ?? 1000000
-  const usedMargin = portfolio?.used_margin ?? 0
-  const availableMargin = portfolio?.available_margin ?? virtualCash
-  const unrealizedPnl = portfolio?.total_unrealized_pnl ?? 0
-  const realizedPnl = portfolio?.total_realized_pnl ?? 0
-  const totalPnl = unrealizedPnl + realizedPnl
+  const deployedCapital = portfolio?.used_margin ?? 0
+  const availableCapital = portfolio?.available_margin ?? virtualCash
   const totalEquity = portfolio?.total_equity ?? virtualCash
 
-  const isProfit = totalPnl >= 0
+  // Overall Net P&L = Current Total Account Equity - Base Starting Capital (10 Lakhs)
+  const overallPnl = totalEquity - initialCap
+  const overallPnlPercent = ((overallPnl / initialCap) * 100).toFixed(2)
+  const isProfit = overallPnl >= 0
 
   const handleReset = async () => {
     setIsResetting(true)
@@ -175,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Financial Metrics Strip */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 overflow-x-auto py-0.5">
-          {/* Total Capital / Equity */}
+          {/* Total Capital */}
           <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
             <Wallet className="w-4 h-4 text-brand-cyan hidden sm:block" />
             <div>
@@ -184,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="font-tabular text-xs sm:text-sm font-bold text-slate-100">
                 ₹
-                {totalEquity.toLocaleString('en-IN', {
+                {initialCap.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -192,16 +193,16 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Available Margin */}
+          {/* Available Capital */}
           <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
             <PieChart className="w-4 h-4 text-emerald-400 hidden sm:block" />
             <div>
               <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                Available Margin
+                Available Capital
               </div>
               <div className="font-tabular text-xs sm:text-sm font-bold text-emerald-400">
                 ₹
-                {availableMargin.toLocaleString('en-IN', {
+                {availableCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -209,16 +210,16 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Used Margin */}
+          {/* Deployed Capital */}
           <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 hidden md:flex items-center gap-2">
             <Activity className="w-4 h-4 text-amber-400" />
             <div>
               <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                Used Margin
+                Deployed Capital
               </div>
               <div className="font-tabular text-xs sm:text-sm font-semibold text-slate-300">
                 ₹
-                {usedMargin.toLocaleString('en-IN', {
+                {deployedCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -226,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Today's Total PnL (Unrealized + Realized) */}
+          {/* Overall Total PnL (Unrealized + Realized) */}
           <div
             className={`border rounded-lg px-3 py-1.5 flex items-center gap-2 transition-all ${
               isProfit
@@ -241,24 +242,18 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <div>
               <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                Today&apos;s P&L
+                Overall P&L
               </div>
               <div className="font-tabular text-xs sm:text-sm font-extrabold flex items-center gap-1.5">
                 <span>
                   {isProfit ? '+' : ''}₹
-                  {totalPnl.toLocaleString('en-IN', {
+                  {overallPnl.toLocaleString('en-IN', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   })}
                 </span>
                 <span className="text-[10px] opacity-80">
-                  (
-                  {portfolio?.day_pnl_percent
-                    ? portfolio.day_pnl_percent >= 0
-                      ? `+${portfolio.day_pnl_percent}%`
-                      : `${portfolio.day_pnl_percent}%`
-                    : '0.00%'}
-                  )
+                  ({isProfit ? '+' : ''}{overallPnlPercent}%)
                 </span>
               </div>
             </div>
@@ -275,16 +270,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Calculator className="w-3.5 h-3.5 text-brand-cyan" />
             <span className="hidden sm:inline">Calculator</span>
-          </button>
-
-          {/* Reset Capital Button */}
-          <button
-            onClick={() => setShowResetConfirm(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-obsidian-700/60 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 text-xs font-medium border border-obsidian-600 hover:border-rose-500/40 transition-colors"
-            title="Reset Virtual Balance to ₹10,00,000"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Reset ₹10L</span>
           </button>
 
           {/* User Profile Avatar & Dropdown Menu */}
@@ -322,8 +307,8 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-obsidian-800/95 backdrop-blur-xl border border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95">
-                <div className="pb-2.5 mb-2.5 border-b border-obsidian-700">
+              <div className="absolute right-0 top-full mt-2 w-60 bg-obsidian-800/95 backdrop-blur-xl border border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 space-y-2">
+                <div className="pb-2.5 border-b border-obsidian-700">
                   <div className="font-extrabold text-sm text-white truncate">
                     {userProfile?.name || 'Trader'}
                   </div>
@@ -332,6 +317,22 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
 
+                {/* Reset Capital Option */}
+                <button
+                  onClick={() => {
+                    setShowUserMenu(false)
+                    setShowResetConfirm(true)
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-obsidian-700/60 hover:bg-amber-950/40 text-slate-200 hover:text-amber-300 text-xs font-bold border border-obsidian-600 hover:border-amber-500/40 transition flex items-center justify-between group active:scale-95"
+                  title="Reset portfolio to ₹10,00,000"
+                >
+                  <span className="flex items-center gap-2">
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-[-45deg] transition-transform" />
+                    <span>Reset Capital (₹10L)</span>
+                  </span>
+                </button>
+
+                {/* Logout Option */}
                 <button
                   onClick={() => {
                     setShowUserMenu(false)

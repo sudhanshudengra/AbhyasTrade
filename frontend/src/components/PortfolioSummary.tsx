@@ -64,10 +64,10 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
 
       {/* Grid of Key Performance Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Available Margin */}
+        {/* Available Capital */}
         <div className="bg-obsidian-800 border border-obsidian-700 rounded-2xl p-4">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Available Margin</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Available Capital</span>
             <Wallet className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-lg font-extrabold text-emerald-400 font-tabular">
@@ -78,17 +78,17 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
           </div>
         </div>
 
-        {/* Used Margin */}
+        {/* Deployed Capital */}
         <div className="bg-obsidian-800 border border-obsidian-700 rounded-2xl p-4">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Used Margin</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Deployed Capital</span>
             <Scale className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-lg font-extrabold text-slate-200 font-tabular">
             ₹{portfolio?.used_margin?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            Locked in active holdings
+            Active in open trades
           </div>
         </div>
 
