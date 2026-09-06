@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   X,
   ChevronDown,
   ChevronUp,
   AlertCircle,
   CheckCircle2,
-  Percent,
-  Sparkles
+  Sparkles,
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { StockQuote, ProductType, OrderType, OrderSide, ChargeBreakdown } from '../lib/types';
-import { estimateSingleLeg } from '../lib/api';
+import { StockQuote, ProductType, OrderType, OrderSide } from '../lib/types';
+import { calculateSingleLegCharges } from '../lib/charges';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -30,7 +31,6 @@ interface OrderModalProps {
 }
 
 const QUICK_QTY_ADDERS = [25, 50, 100, 250];
-const MARGIN_PCT_CHIPS = [10, 25, 50, 100];
 
 export const OrderModal: React.FC<OrderModalProps> = ({
   isOpen,
@@ -44,63 +44,78 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [productType, setProductType] = useState<ProductType>('MIS');
   const [orderType, setOrderType] = useState<OrderType>('MARKET');
   const [quantity, setQuantity] = useState<number>(50);
-  const [limitPrice, setLimitPrice] = useState<number>(0);
-  const [triggerPrice, setTriggerPrice] = useState<number>(0);
+  const [limitPrice, setLimitPrice] = useState<number>(stock?.ltp || 0);
+  const [triggerPrice, setTriggerPrice] = useState<number>(stock?.ltp || 0);
   
   const [showTaxBreakdown, setShowTaxBreakdown] = useState<boolean>(false);
-  const [taxBreakdown, setTaxBreakdown] = useState<ChargeBreakdown | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Scroll to top on mount
   useEffect(() => {
-    setSide(initialSide);
-    if (stock) {
-      setLimitPrice(stock.ltp);
-      setTriggerPrice(stock.ltp);
+    if (formRef.current) {
+      formRef.current.scrollTop = 0;
     }
-    setErrorMessage(null);
-    setSuccessMessage(null);
-  }, [initialSide, stock, isOpen]);
+  }, []);
+
+  // Handle ESC key press to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Determine effective price
   const ltp = stock?.ltp || 100;
   const effectivePrice = orderType === 'LIMIT' && limitPrice > 0 ? limitPrice : ltp;
   
-  // Calculate Required Margin
-  const totalTurnover = quantity * effectivePrice;
+  // Calculate Required Margin & Turnover
+  const totalTurnover = (quantity > 0 ? quantity : 0) * effectivePrice;
   const requiredMargin = productType === 'MIS' ? totalTurnover / 5.0 : totalTurnover;
   const hasInsufficientMargin = requiredMargin > availableMargin;
 
-  // Live itemized charges calculation
-  useEffect(() => {
-    if (!stock || quantity <= 0) return;
-    
-    estimateSingleLeg({
-      symbol: stock.symbol,
+  // Live itemized charges calculation (0ms instant)
+  const taxBreakdown = useMemo(() => {
+    if (!stock || quantity <= 0) return null;
+    return calculateSingleLegCharges(
+      stock.symbol,
       side,
-      product_type: productType,
+      productType,
       quantity,
-      price: effectivePrice,
-    })
-      .then((data) => setTaxBreakdown(data))
-      .catch(() => setTaxBreakdown(null));
+      effectivePrice
+    );
   }, [stock?.symbol, side, productType, quantity, effectivePrice]);
+
+  // Determine if Indian Equity Market (NSE) is currently open (Mon-Fri 09:15 - 15:30 IST)
+  const isMarketOpen = useMemo(() => {
+    const now = new Date();
+    const istHoursStr = now.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      hour: '2-digit'
+    });
+    const istMinutesStr = now.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      minute: '2-digit'
+    });
+    const day = now.getDay();
+    const totalMinutes = parseInt(istHoursStr, 10) * 60 + parseInt(istMinutesStr, 10);
+    const isWeekday = day >= 1 && day <= 5;
+    return isWeekday && totalMinutes >= 9 * 60 + 15 && totalMinutes <= 15 * 60 + 30;
+  }, [isOpen]);
 
   if (!isOpen || !stock) return null;
 
   const isBuy = side === 'BUY';
-
-  const handleMarginPctClick = (pct: number) => {
-    const targetCapital = availableMargin * (pct / 100);
-    const leverage = productType === 'MIS' ? 5 : 1;
-    const calculatedQty = Math.max(1, Math.floor((targetCapital * leverage) / effectivePrice));
-    setQuantity(calculatedQty);
-  };
-
-  const handleAddQty = (adder: number) => {
-    setQuantity((prev) => prev + adder);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,10 +158,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       if (res.status === 'REJECTED') {
         setErrorMessage(res.rejection_reason || 'Order was rejected');
       } else {
-        // Confetti effect on execution
         confetti({
-          particleCount: 60,
-          spread: 70,
+          particleCount: 50,
+          spread: 60,
           origin: { y: 0.6 },
           colors: isBuy ? ['#10b981', '#34d399', '#0ea5e9'] : ['#ef4444', '#f87171', '#f59e0b'],
         });
@@ -154,7 +168,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         setSuccessMessage(`Order ${res.status}: ${side} ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice}`);
         setTimeout(() => {
           onClose();
-        }, 1200);
+        }, 1100);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to place order');
@@ -164,29 +178,52 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+    >
       <div
-        className={`w-full sm:max-w-lg bg-obsidian-800 rounded-t-3xl sm:rounded-2xl border ${
+        className={`w-full sm:max-w-md max-h-[92vh] sm:max-h-[85vh] flex flex-col bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
           isBuy ? 'border-emerald-500/40 glow-emerald' : 'border-rose-500/40 glow-crimson'
-        } shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in`}
+        } shadow-2xl overflow-hidden transition-all duration-150`}
       >
-        {/* Modal Header Strip */}
-        <div
-          className={`px-5 py-3.5 flex items-center justify-between border-b ${
-            isBuy
-              ? 'bg-emerald-950/40 border-emerald-500/20 text-emerald-400'
-              : 'bg-rose-950/40 border-rose-500/20 text-rose-400'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            {/* Side Tabs */}
-            <div className="flex items-center bg-obsidian-900/80 p-0.5 rounded-lg border border-obsidian-700">
+        {/* Compact Integrated Header Bar */}
+        <div className="px-4 py-3 border-b border-obsidian-700/60 bg-gradient-to-b from-obsidian-800 to-obsidian-900/90 shrink-0 flex items-center justify-between gap-2">
+          {/* Symbol & Price Info */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-extrabold text-white tracking-tight leading-tight">{stock.symbol}</span>
+                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-obsidian-700 text-slate-300 border border-obsidian-600">
+                  NSE
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-tabular mt-0.5">
+                <span className="font-bold text-white">₹{stock.ltp.toFixed(2)}</span>
+                <span
+                  className={`text-[11px] font-semibold ${
+                    (stock.change ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {(stock.change ?? 0) >= 0 ? '+' : ''}{(stock.change ?? 0).toFixed(2)} ({(stock.pChange ?? 0) >= 0 ? '+' : ''}{(stock.pChange ?? 0).toFixed(2)}%)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Header Controls: BUY/SELL Mode + Close */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center bg-obsidian-950/90 p-0.5 rounded-lg border border-obsidian-700/80">
               <button
                 type="button"
                 onClick={() => setSide('BUY')}
-                className={`px-4 py-1 text-xs font-bold rounded-md transition ${
+                className={`px-3 py-1 rounded-md text-xs font-bold transition ${
                   isBuy
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                    ? 'bg-emerald-600 text-white shadow-sm glow-emerald'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -195,9 +232,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setSide('SELL')}
-                className={`px-4 py-1 text-xs font-bold rounded-md transition ${
+                className={`px-3 py-1 rounded-md text-xs font-bold transition ${
                   !isBuy
-                    ? 'bg-rose-600 text-white shadow-sm'
+                    ? 'bg-rose-600 text-white shadow-sm glow-crimson'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -205,68 +242,98 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </button>
             </div>
 
-            <div>
-              <div className="font-extrabold text-white text-base tracking-tight">{stock.symbol}</div>
-              <div className="text-[11px] font-tabular text-slate-300">
-                LTP: ₹{stock.ltp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </div>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg hover:bg-obsidian-700 text-slate-400 hover:text-white transition"
+              title="Close (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-obsidian-700/60 text-slate-400 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* Product Type (MIS vs CNC) */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setProductType('MIS')}
-              className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center ${
-                productType === 'MIS'
-                  ? 'bg-brand-blue/15 border-brand-blue text-brand-cyan shadow-sm'
-                  : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
-              }`}
-            >
-              <span>Intraday MIS</span>
-              <span className="text-[10px] font-medium opacity-80 mt-0.5">5x Leverage (Auto 3:15 PM)</span>
-            </button>
+        {/* Compact Form Body */}
+        <form ref={formRef} onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1 overscroll-contain">
+          {/* Off-Market Hours Notice (Compact 1-line tag) */}
+          {!isMarketOpen && (
+            <div className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-200 text-[11px] flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+              <span className="truncate">
+                <strong>NSE Closed:</strong> AMO order placed at ₹{stock.ltp.toFixed(2)}
+              </span>
+            </div>
+          )}
 
-            <button
-              type="button"
-              onClick={() => setProductType('CNC')}
-              className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center ${
-                productType === 'CNC'
-                  ? 'bg-brand-blue/15 border-brand-blue text-brand-cyan shadow-sm'
-                  : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
-              }`}
-            >
-              <span>Longterm CNC</span>
-              <span className="text-[10px] font-medium opacity-80 mt-0.5">100% Upfront Margin</span>
-            </button>
+          {/* Product Type (MIS vs CNC) */}
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setProductType('MIS')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
+                  productType === 'MIS'
+                    ? 'bg-brand-blue/20 border-brand-blue text-brand-cyan shadow-sm glow-blue'
+                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
+                }`}
+              >
+                <span>Intraday MIS</span>
+                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand-blue/30 text-sky-200">
+                  5x Margin
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProductType('CNC')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
+                  productType === 'CNC'
+                    ? 'bg-indigo-950/60 border-indigo-500 text-indigo-300 shadow-sm'
+                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
+                }`}
+              >
+                <span>Longterm CNC</span>
+                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-indigo-900/60 text-indigo-200">
+                  Delivery
+                </span>
+              </button>
+            </div>
+
+            {/* Dynamic Leverage / Cost Note (Concise 1-Line Strip) */}
+            {productType === 'MIS' ? (
+              <div className="px-2.5 py-1.5 rounded-lg bg-brand-blue/10 border border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-300">
+                <span className="flex items-center gap-1.5 text-brand-cyan font-medium">
+                  <Zap className="w-3.5 h-3.5 text-brand-cyan shrink-0" />
+                  Trade: ₹{totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-emerald-400 font-bold font-tabular">
+                  You pay 1/5th (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
+                </span>
+              </div>
+            ) : (
+              <div className="px-2.5 py-1.5 rounded-lg bg-indigo-950/40 border border-indigo-500/25 text-[11px] flex items-center justify-between text-slate-300">
+                <span className="flex items-center gap-1.5 text-indigo-300 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  Delivery CNC
+                </span>
+                <span className="text-indigo-300 font-bold font-tabular">
+                  100% Upfront (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Order Type (MARKET / LIMIT / SL_M) */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-              Order Type
-            </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 bg-obsidian-950/70 p-1 rounded-xl border border-obsidian-700/80">
               {(['MARKET', 'LIMIT', 'SL_M'] as OrderType[]).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setOrderType(type)}
-                  className={`py-1.5 rounded-lg border text-xs font-semibold transition ${
+                  className={`py-1.5 rounded-lg text-xs font-bold transition ${
                     orderType === type
-                      ? 'bg-obsidian-700 border-slate-400 text-white'
-                      : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:text-slate-200'
+                      ? 'bg-obsidian-700 text-white shadow-sm border border-obsidian-600'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {type === 'SL_M' ? 'SL-M' : type}
@@ -275,8 +342,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
           </div>
 
-          {/* Quantity & Quick Steppers */}
-          <div className="space-y-2">
+          {/* Quantity Controls & Steppers */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 Quantity (Shares)
@@ -286,8 +353,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <button
                     key={adder}
                     type="button"
-                    onClick={() => handleAddQty(adder)}
-                    className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-obsidian-700/60 hover:bg-obsidian-700 text-slate-300 border border-obsidian-600 transition"
+                    onClick={() => setQuantity((prev) => (prev || 0) + adder)}
+                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
                   >
                     +{adder}
                   </button>
@@ -295,87 +362,107 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </div>
             </div>
 
-            <div className="relative">
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-4 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">
-                Qty
-              </span>
-            </div>
-
-            {/* Quick Margin % Allocators */}
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                <Percent className="w-3 h-3 text-brand-cyan" /> Use Margin %:
-              </span>
-              <div className="flex items-center gap-1.5">
-                {MARGIN_PCT_CHIPS.map((pct) => (
-                  <button
-                    key={pct}
-                    type="button"
-                    onClick={() => handleMarginPctClick(pct)}
-                    className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
-                  >
-                    {pct}%
-                  </button>
-                ))}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setQuantity((prev) => Math.max(1, (prev || 1) - 1))}
+                className="w-9 h-9 rounded-xl bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0"
+              >
+                -
+              </button>
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={quantity || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setQuantity(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
+                  className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-center text-sm font-tabular font-extrabold text-white focus:outline-none focus:border-brand-blue"
+                  placeholder="0"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-semibold uppercase">
+                  Qty
+                </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setQuantity((prev) => (prev || 0) + 1)}
+                className="w-9 h-9 rounded-xl bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0"
+              >
+                +
+              </button>
             </div>
           </div>
 
           {/* Conditional Limit / Trigger Price Inputs */}
           {orderType === 'LIMIT' && (
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                Limit Price (₹)
-              </label>
+            <div className="space-y-1 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-slate-400">Limit Price (₹)</span>
+                <button
+                  type="button"
+                  onClick={() => setLimitPrice(stock.ltp)}
+                  className="font-bold text-brand-cyan hover:underline"
+                >
+                  Use LTP (₹{stock.ltp.toFixed(2)})
+                </button>
+              </div>
               <input
                 type="number"
                 step="0.05"
-                value={limitPrice}
+                value={limitPrice || ''}
                 onChange={(e) => setLimitPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-4 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                placeholder={stock.ltp.toFixed(2)}
               />
             </div>
           )}
 
           {orderType === 'SL_M' && (
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                Trigger Price (₹)
-              </label>
+            <div className="space-y-1 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-slate-400">Trigger Price (₹)</span>
+                <button
+                  type="button"
+                  onClick={() => setTriggerPrice(stock.ltp)}
+                  className="font-bold text-brand-cyan hover:underline"
+                >
+                  Use LTP (₹{stock.ltp.toFixed(2)})
+                </button>
+              </div>
               <input
                 type="number"
                 step="0.05"
-                value={triggerPrice}
+                value={triggerPrice || ''}
                 onChange={(e) => setTriggerPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-4 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                placeholder={stock.ltp.toFixed(2)}
               />
             </div>
           )}
 
-          {/* Margin & Available Summary Strip */}
-          <div className="bg-obsidian-900/90 rounded-xl p-3 border border-obsidian-700 space-y-1.5">
+          {/* Margin Required vs Available Balance (Compact Strip) */}
+          <div className="bg-obsidian-950/80 rounded-xl p-2.5 border border-obsidian-700/80">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Margin Required:</span>
-              <span className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-400' : 'text-slate-200'}`}>
-                ₹{requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 text-[11px]">Required:</span>
+                <span className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-400' : 'text-white'}`}>
+                  ₹{requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 text-[11px]">Available:</span>
+                <span className="font-tabular font-bold text-emerald-400">
+                  ₹{availableMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Available Margin:</span>
-              <span className="font-tabular font-bold text-emerald-400">
-                ₹{availableMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
+
             {hasInsufficientMargin && (
-              <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1 border-t border-obsidian-800">
+              <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1.5 mt-1.5 border-t border-rose-500/20 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>Insufficient margin to execute order</span>
               </div>
@@ -383,21 +470,25 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           </div>
 
           {/* Expandable Charges Breakdown */}
-          <div className="border border-obsidian-700 rounded-xl overflow-hidden bg-obsidian-900/50">
+          <div className="border border-obsidian-700/70 rounded-xl overflow-hidden bg-obsidian-900/50">
             <button
               type="button"
               onClick={() => setShowTaxBreakdown(!showTaxBreakdown)}
               className="w-full px-3 py-2 flex items-center justify-between text-xs text-slate-300 hover:text-white transition"
             >
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-                Charges & Taxes: <strong className="text-white font-tabular">₹{taxBreakdown?.total_charges?.toFixed(2) || '0.00'}</strong>
-              </span>
-              {showTaxBreakdown ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <Sparkles className="w-3 h-3 text-brand-cyan" />
+                <span>Taxes & Charges:</span>
+                <strong className="text-white font-tabular font-bold">₹{taxBreakdown?.total_charges?.toFixed(2) || '0.00'}</strong>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-400 text-[10px]">
+                <span className="text-emerald-400 font-tabular font-medium">+₹{taxBreakdown?.breakeven_pnl?.toFixed(2) || '0.00'}/sh</span>
+                {showTaxBreakdown ? <ChevronUp className="w-3.5 h-3.5 text-brand-cyan" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </div>
             </button>
 
             {showTaxBreakdown && taxBreakdown && (
-              <div className="p-3 border-t border-obsidian-700 text-[11px] space-y-1 bg-obsidian-950/60 font-tabular">
+              <div className="p-3 border-t border-obsidian-700/70 text-[11px] space-y-1 bg-obsidian-950/80 font-tabular animate-in fade-in duration-150">
                 <div className="flex justify-between text-slate-400">
                   <span>Brokerage ({productType}):</span>
                   <span className="text-slate-200">₹{taxBreakdown.brokerage.toFixed(2)}</span>
@@ -419,10 +510,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <span className="text-slate-200">₹{taxBreakdown.stamp_duty.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>GST (18% on Brokerage + Exch + SEBI):</span>
+                  <span>GST (18%):</span>
                   <span className="text-slate-200">₹{taxBreakdown.gst.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-emerald-400 pt-1 border-t border-obsidian-800 font-bold">
+                <div className="flex justify-between text-emerald-400 pt-1 border-t border-obsidian-800 font-bold text-xs">
                   <span>Breakeven per share:</span>
                   <span>+₹{taxBreakdown.breakeven_pnl.toFixed(2)}</span>
                 </div>
@@ -445,20 +536,29 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
           )}
 
-          {/* Submit Action Button */}
+          {/* Action CTA Button */}
           <button
             type="submit"
             disabled={isSubmitting || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL'))}
-            className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               isBuy
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30'
-                : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30'
+                ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-950/60'
+                : 'bg-gradient-to-r from-rose-600 via-rose-500 to-red-500 hover:from-rose-500 hover:to-red-400 text-white shadow-rose-950/60'
             }`}
           >
-            {isSubmitting ? 'Placing Order...' : `${side} ${quantity} ${stock.symbol} (${productType})`}
+            {isSubmitting ? (
+              <span>Placing Order...</span>
+            ) : (
+              <span>
+                {side} {quantity > 0 ? quantity : 0} {stock.symbol} ({productType}) • ₹{requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            )}
           </button>
         </form>
       </div>
     </div>
   );
 };
+
+
+

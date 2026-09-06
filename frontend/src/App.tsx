@@ -369,23 +369,29 @@ export const App: React.FC = () => {
         pendingOrdersCount={pendingOrdersCount}
       />
 
-      {/* Order Ticket Modal / Drawer */}
-      <OrderModal
-        isOpen={isOrderModalOpen}
-        onClose={() => setIsOrderModalOpen(false)}
-        stock={selectedStock}
-        initialSide={orderModalSide}
-        availableMargin={portfolio?.available_margin ?? 1000000}
-        onPlaceOrder={placeOrder}
-      />
+      {/* Order Ticket Modal / Drawer - Destroyed completely on close */}
+      {isOrderModalOpen && selectedStock && (
+        <OrderModal
+          key={`order-modal-${selectedStock.symbol}`}
+          isOpen={isOrderModalOpen}
+          onClose={() => setIsOrderModalOpen(false)}
+          stock={selectedStock}
+          initialSide={orderModalSide}
+          availableMargin={portfolio?.available_margin ?? 1000000}
+          onPlaceOrder={placeOrder}
+        />
+      )}
 
-      {/* Brokerage & Regulatory Charges Calculator Modal */}
-      <ChargesCalculatorModal
-        isOpen={isChargesCalcOpen}
-        onClose={() => setIsChargesCalcOpen(false)}
-        defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
-        defaultPrice={selectedStock?.ltp || 3000}
-      />
+      {/* Brokerage & Regulatory Charges Calculator Modal - Destroyed completely on close */}
+      {isChargesCalcOpen && (
+        <ChargesCalculatorModal
+          key="charges-calculator-modal"
+          isOpen={isChargesCalcOpen}
+          onClose={() => setIsChargesCalcOpen(false)}
+          defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
+          defaultPrice={selectedStock?.ltp || 3000}
+        />
+      )}
     </div>
   );
 };
