@@ -92,19 +92,61 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Quantity with quick steppers */}
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Quantity
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Quantity
+                </label>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((prev) => Math.max(1, (prev || 0) + 25))}
+                    className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
+                  >
+                    +25
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((prev) => Math.max(1, (prev || 0) + 50))}
+                    className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
+                  >
+                    +50
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((prev) => Math.max(1, (prev || 1) - 1))}
+                  className="w-8 h-8 rounded-lg bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-sm active:scale-95 transition shrink-0"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={quantity === 0 ? '' : quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setQuantity(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
+                  placeholder="1"
+                  className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-2.5 py-1.5 text-center text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQuantity((prev) => (prev || 0) + 1)}
+                  className="w-8 h-8 rounded-lg bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-sm active:scale-95 transition shrink-0"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
+            {/* Buy Price */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Buy Price (₹)
@@ -112,11 +154,18 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
               <input
                 type="number"
                 step="0.05"
-                value={buyPrice}
-                onChange={(e) => setBuyPrice(parseFloat(e.target.value) || 0)}
+                min="0"
+                value={buyPrice === 0 ? '' : buyPrice}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setBuyPrice(isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                placeholder="0.00"
                 className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
               />
             </div>
+
+            {/* Sell Price */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Sell Price (₹)
@@ -124,8 +173,13 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
               <input
                 type="number"
                 step="0.05"
-                value={sellPrice}
-                onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+                min="0"
+                value={sellPrice === 0 ? '' : sellPrice}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setSellPrice(isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                placeholder="0.00"
                 className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-2 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
               />
             </div>
