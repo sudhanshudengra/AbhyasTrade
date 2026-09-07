@@ -286,72 +286,60 @@ class MarketDataFeed:
 
         return matches
 
-    def _init_curl_session(self):
-        now = time.time()
-        if now - self.last_cookie_attempt < 30:
-            return
-        self.last_cookie_attempt = now
+    def _fetch_fast_info_sync(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Worker function running in thread pool to fetch real-time fast_info via yfinance without blocking"""
+        if not symbols:
+            return {}
+            
+        ticker_map = {get_yf_ticker_string(s): s for s in symbols}
+        ticker_query = " ".join(ticker_map.keys())
+        results: Dict[str, Dict[str, Any]] = {}
+        
         try:
-            from curl_cffi import requests
-            self.curl_session = requests.Session(impersonate="chrome124")
-            headers = {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                "accept-language": "en-US,en;q=0.9",
-            }
-            res = self.curl_session.get("https://www.nseindia.com", headers=headers, timeout=4)
-            if res.status_code == 200:
-                self.cookies_warmed = True
-                logger.info("NSE session initialized with Chrome124 impersonation.")
+            tickers_obj = yf.Tickers(ticker_query)
+            for yf_sym, orig_sym in ticker_map.items():
+                try:
+                    t = tickers_obj.tickers.get(yf_sym)
+                    if not t:
+                        continue
+                    info = t.fast_info
+                    ltp = float(info.get("lastPrice") or 0.0)
+                    if ltp <= 0:
+                        continue
+                    
+                    prev_close = float(info.get("previousClose") or info.get("regularMarketPreviousClose") or ltp)
+                    open_p = float(info.get("open") or ltp)
+                    high_p = float(info.get("dayHigh") or ltp)
+                    low_p = float(info.get("dayLow") or ltp)
+                    high52 = float(info.get("yearHigh") or high_p)
+                    low52 = float(info.get("yearLow") or low_p)
+                    vol = int(info.get("lastVolume") or info.get("threeMonthAverageVolume") or 0)
+                    
+                    change = round(ltp - prev_close, 2)
+                    p_change = round((change / prev_close) * 100, 2) if prev_close > 0 else 0.0
+                    
+                    results[orig_sym] = {
+                        "ltp": round(ltp, 2),
+                        "open": round(open_p, 2),
+                        "high": round(high_p, 2),
+                        "low": round(low_p, 2),
+                        "close": round(prev_close, 2),
+                        "change": change,
+                        "pChange": p_change,
+                        "volume": vol,
+                        "high52": round(high52, 2),
+                        "low52": round(low52, 2)
+                    }
+                except Exception:
+                    continue
         except Exception as e:
-            logger.debug(f"NSE session warmup: {e}")
+            logger.debug(f"Batch fast_info fetch error: {e}")
+            
+        return results
 
-    async def fetch_nse_live_quote(self, symbol: str) -> Optional[Dict[str, Any]]:
-        """Scrapes live quote from official NSE website endpoint during live market hours"""
-        if symbol in ["NIFTY 50", "BANKNIFTY"]:
-            return None
-        
-        if not self.cookies_warmed:
-            self._init_curl_session()
-            if not self.cookies_warmed:
-                return None
-        
-        url = f"https://www.nseindia.com/api/quote-equity?symbol={symbol}"
-        headers = {
-            "authority": "www.nseindia.com",
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9",
-            "referer": f"https://www.nseindia.com/get-quotes/equity?symbol={symbol}",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        }
-        
-        try:
-            if self.curl_session:
-                res = self.curl_session.get(url, headers=headers, timeout=3)
-                if res.status_code == 200:
-                    data = res.json()
-                    price_info = data.get("priceInfo", {})
-                    ltp = float(price_info.get("lastPrice", 0.0))
-                    if ltp > 0:
-                        prev_close = float(price_info.get("previousClose", ltp))
-                        change = float(price_info.get("change", ltp - prev_close))
-                        p_change = float(price_info.get("pChange", (change / prev_close) * 100))
-                        
-                        return {
-                            "ltp": round(ltp, 2),
-                            "open": round(float(price_info.get("open", ltp)), 2),
-                            "high": round(float(price_info.get("intraDayHighLow", {}).get("max", ltp)), 2),
-                            "low": round(float(price_info.get("intraDayHighLow", {}).get("min", ltp)), 2),
-                            "close": round(prev_close, 2),
-                            "change": round(change, 2),
-                            "pChange": round(p_change, 2),
-                            "volume": int(data.get("securityWiseDP", {}).get("quantityTraded", random.randint(200000, 1500000)))
-                        }
-                elif res.status_code in [401, 403]:
-                    self.cookies_warmed = False
-        except Exception:
-            pass
-        return None
+    async def fetch_live_quotes_batch(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Asynchronously batch fetches real-time quotes without blocking the event loop (immune to cloud IP blocks)"""
+        return await asyncio.to_thread(self._fetch_fast_info_sync, symbols)
 
     async def get_historical_candles(self, symbol: str, timeframe: str = "1D") -> List[Dict[str, Any]]:
         """
@@ -410,9 +398,9 @@ class MarketDataFeed:
             return []
 
     async def update_tick_loop(self):
-        """Continuous async loop updating quotes and broadcasting real ticks"""
+        """Continuous async loop updating quotes and broadcasting real ticks across cloud deployments"""
         self.is_running = True
-        logger.info("Starting Dynamic Real Market Data Feed Loop...")
+        logger.info("Starting Cloud-Proof Real Market Data Feed Loop...")
         
         await self.fetch_real_prices_startup()
         
@@ -429,13 +417,10 @@ class MarketDataFeed:
                     last_resync_time = time.time()
                 
                 if market_open:
-                    for symbol in symbols_to_update:
-                        live_quote = None
-                        if not symbol.startswith("NIFTY"):
-                            live_quote = await self.fetch_nse_live_quote(symbol)
-                            
-                        if live_quote:
-                            cached = self.market_cache[symbol]
+                    batch_quotes = await self.fetch_live_quotes_batch(symbols_to_update)
+                    for symbol, live_quote in batch_quotes.items():
+                        cached = self.market_cache.get(symbol)
+                        if cached:
                             prev_ltp = cached["ltp"]
                             new_ltp = live_quote["ltp"]
                             tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
@@ -447,10 +432,26 @@ class MarketDataFeed:
                                 "last_updated": datetime.now(timezone.utc).isoformat()
                             }
                             self.market_cache[symbol] = updated
+                            if new_ltp != prev_ltp:
+                                tick_diffs.append(updated)
+                elif settings.SIMULATION_MODE_AUTO:
+                    # Off-market hours simulation (realistic micro-fluctuations around closing price for testing)
+                    for symbol in symbols_to_update:
+                        cached = self.market_cache.get(symbol)
+                        if cached and random.random() < 0.35:
+                            prev_ltp = cached["ltp"]
+                            variance = prev_ltp * random.uniform(-0.0006, 0.0006)
+                            new_ltp = round(prev_ltp + variance, 2)
+                            tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
+                            
+                            updated = {
+                                **cached,
+                                "ltp": new_ltp,
+                                "tick_direction": tick_dir,
+                                "last_updated": datetime.now(timezone.utc).isoformat()
+                            }
+                            self.market_cache[symbol] = updated
                             tick_diffs.append(updated)
-                else:
-                    # Off-market hours: 100% static at official exchange closing price. No artificial or fake ticks.
-                    pass
                 
                 if tick_diffs and self.subscribers:
                     payload = {"type": "TICK_UPDATE", "data": tick_diffs, "timestamp": int(time.time())}
@@ -463,7 +464,7 @@ class MarketDataFeed:
             except Exception as e:
                 logger.error(f"Error in market feed tick loop: {e}")
                 
-            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 2.0)
+            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 2.5)
 
     def subscribe(self) -> asyncio.Queue:
         q = asyncio.Queue(maxsize=100)

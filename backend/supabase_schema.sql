@@ -89,7 +89,27 @@ CREATE POLICY "Allow all access to orders" ON orders FOR ALL USING (true) WITH C
 DROP POLICY IF EXISTS "Allow all access to trades" ON trades;
 CREATE POLICY "Allow all access to trades" ON trades FOR ALL USING (true) WITH CHECK (true);
 
+-- 5. Auto-Initialize Portfolio Trigger for New Supabase Auth Users
+-- Automatically grants ₹10,00,000 virtual cash on signup (Google OAuth, Email, etc.)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.portfolios (user_id, virtual_cash, used_margin, created_at, updated_at)
+    VALUES (NEW.id, 1000000.00, 0.00, NOW(), NOW())
+    ON CONFLICT (user_id) DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Recreate trigger cleanly on auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
 -- Default Demo Portfolio Seed
 INSERT INTO portfolios (user_id, virtual_cash, used_margin)
 VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 1000000.00, 0.00)
 ON CONFLICT (user_id) DO NOTHING;
+
