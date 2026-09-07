@@ -10,7 +10,9 @@ import {
   RoundtripEstimate
 } from './types';
 
-const API_BASE = '/api';
+// Support dynamic backend URL in production (e.g. Render/Railway) with local fallback
+const rawApiBase = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = rawApiBase.endsWith('/api') ? rawApiBase : (rawApiBase === '' || rawApiBase === '/' ? '/api' : `${rawApiBase.replace(/\/$/, '')}/api`);
 let currentUserId = '00000000-0000-0000-0000-000000000001';
 
 export function setApiUserId(userId: string) {

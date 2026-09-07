@@ -1,9 +1,79 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { StockQuote } from '../lib/types';
 import { getWatchlist, addSymbolToWatchlist } from '../lib/api';
 
+export interface WatchlistGroup {
+  id: string;
+  name: string;
+  symbols: string[];
+}
+
+const DEFAULT_SYMBOLS_WL1 = [
+  'RELIANCE',
+  'TCS',
+  'INFY',
+  'HDFCBANK',
+  'ICICIBANK',
+  'SBIN',
+  'BHARTIARTL',
+  'ITC',
+  'LT',
+  'KOTAKBANK',
+  'AXISBANK',
+  'MARUTI',
+  'SUNPHARMA',
+  'TITAN',
+  'BAJFINANCE',
+  'WIPRO',
+  'TATASTEEL',
+  'NIFTY 50',
+  'BANKNIFTY',
+];
+
+const DEFAULT_WATCHLISTS: WatchlistGroup[] = [
+  { id: 'wl_1', name: 'Watchlist 1', symbols: DEFAULT_SYMBOLS_WL1 },
+  { id: 'wl_2', name: 'Watchlist 2', symbols: ['NIFTY 50', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'] },
+  { id: 'wl_3', name: 'Watchlist 3', symbols: [] },
+  { id: 'wl_4', name: 'Watchlist 4', symbols: [] },
+  { id: 'wl_5', name: 'Watchlist 5', symbols: [] },
+];
+
+const STORAGE_KEY_WATCHLISTS = 'abhyastrade_watchlists_v2';
+const STORAGE_KEY_ACTIVE_WL = 'abhyastrade_active_wl_id';
+
+function loadSavedWatchlists(): WatchlistGroup[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_WATCHLISTS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure 5 watchlists exist
+        const result = [...parsed];
+        while (result.length < 5) {
+          const idx = result.length + 1;
+          result.push({ id: `wl_${idx}`, name: `Watchlist ${idx}`, symbols: [] });
+        }
+        return result.slice(0, 5);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to parse saved watchlists:', err);
+  }
+  return DEFAULT_WATCHLISTS;
+}
+
+function loadSavedActiveWlId(): string {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_WL);
+    if (raw) return raw;
+  } catch {}
+  return 'wl_1';
+}
+
 export function useMarketData() {
-  const [stocks, setStocks] = useState<StockQuote[]>([]);
+  const [watchlists, setWatchlists] = useState<WatchlistGroup[]>(loadSavedWatchlists);
+  const [activeWatchlistId, setActiveWatchlistIdState] = useState<string>(loadSavedActiveWlId);
+  const [quotesMap, setQuotesMap] = useState<Record<string, StockQuote>>({});
   const [selectedSymbol, setSelectedSymbol] = useState<string>('RELIANCE');
   const [flashMap, setFlashMap] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -11,6 +81,28 @@ export function useMarketData() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
   const flashTimeoutsRef = useRef<Record<string, any>>({});
+
+  // Persist watchlists whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_WATCHLISTS, JSON.stringify(watchlists));
+    } catch (err) {
+      console.warn('Failed to save watchlists to localStorage:', err);
+    }
+  }, [watchlists]);
+
+  // Set active watchlist and persist
+  const setActiveWatchlistId = useCallback((id: string) => {
+    setActiveWatchlistIdState(id);
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_WL, id);
+    } catch {}
+  }, []);
+
+  // Active Watchlist reference
+  const activeWatchlist = useMemo(() => {
+    return watchlists.find((w) => w.id === activeWatchlistId) || watchlists[0];
+  }, [watchlists, activeWatchlistId]);
 
   // Trigger brief flash for updated ticks
   const triggerFlash = useCallback((symbol: string, direction: 'UP' | 'DOWN') => {
@@ -29,14 +121,82 @@ export function useMarketData() {
     }, 650);
   }, []);
 
-  // Initialize initial watchlist via REST with auto-retry
+  // Rename a watchlist
+  const renameWatchlist = useCallback((id: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setWatchlists((prev) =>
+      prev.map((wl) => (wl.id === id ? { ...wl, name: trimmed } : wl))
+    );
+  }, []);
+
+  // Remove symbol from active watchlist
+  const removeSymbol = useCallback((symbol: string) => {
+    const clean = symbol.trim().toUpperCase();
+    setWatchlists((prev) =>
+      prev.map((wl) => {
+        if (wl.id === activeWatchlistId) {
+          return {
+            ...wl,
+            symbols: wl.symbols.filter((s) => s.toUpperCase() !== clean),
+          };
+        }
+        return wl;
+      })
+    );
+
+    // If removed stock was selected, switch to next available symbol
+    setSelectedSymbol((curr) => {
+      if (curr.toUpperCase() === clean) {
+        const remaining = activeWatchlist.symbols.filter((s) => s.toUpperCase() !== clean);
+        return remaining[0] || '';
+      }
+      return curr;
+    });
+  }, [activeWatchlistId, activeWatchlist.symbols]);
+
+  // Dynamic add symbol handler (Prepends to top of active watchlist)
+  const addSymbol = useCallback(async (symbol: string) => {
+    const cleanSymbol = symbol.trim().toUpperCase();
+    if (!cleanSymbol) return null;
+
+    const quote = await addSymbolToWatchlist(cleanSymbol);
+    if (quote) {
+      // Store in quotesMap
+      setQuotesMap((prev) => ({ ...prev, [quote.symbol]: quote }));
+
+      // Prepend to active watchlist symbols (newest at the top)
+      setWatchlists((prev) =>
+        prev.map((wl) => {
+          if (wl.id === activeWatchlistId) {
+            const filtered = wl.symbols.filter((s) => s.toUpperCase() !== quote.symbol.toUpperCase());
+            return {
+              ...wl,
+              symbols: [quote.symbol, ...filtered],
+            };
+          }
+          return wl;
+        })
+      );
+      setSelectedSymbol(quote.symbol);
+    }
+    return quote;
+  }, [activeWatchlistId]);
+
+  // Fetch initial watchlist quotes via REST
   useEffect(() => {
     let unmounted = false;
     const fetchWatchlist = async () => {
       try {
         const data = await getWatchlist();
         if (!unmounted && Array.isArray(data) && data.length > 0) {
-          setStocks((prev) => (prev.length === 0 ? data : prev));
+          setQuotesMap((prev) => {
+            const next = { ...prev };
+            for (const q of data) {
+              if (q && q.symbol) next[q.symbol] = q;
+            }
+            return next;
+          });
         }
       } catch (err) {
         console.warn('Initial watchlist fetch:', err);
@@ -46,8 +206,8 @@ export function useMarketData() {
     fetchWatchlist();
     const retryInterval = setInterval(() => {
       if (!unmounted) {
-        setStocks((current) => {
-          if (current.length === 0) {
+        setQuotesMap((current) => {
+          if (Object.keys(current).length === 0) {
             fetchWatchlist();
           }
           return current;
@@ -61,31 +221,43 @@ export function useMarketData() {
     };
   }, []);
 
-  // Dynamic add symbol handler
-  const addSymbol = useCallback(async (symbol: string) => {
-    const cleanSymbol = symbol.trim().toUpperCase();
-    const quote = await addSymbolToWatchlist(cleanSymbol);
-    if (quote) {
-      setStocks((prev) => {
-        if (prev.some((s) => s.symbol === quote.symbol)) {
-          return prev.map((s) => (s.symbol === quote.symbol ? quote : s));
-        }
-        return [quote, ...prev];
-      });
-      setSelectedSymbol(quote.symbol);
-    }
-    return quote;
-  }, []);
+  // Ensure missing quotes for symbols in active watchlist are fetched
+  useEffect(() => {
+    if (!activeWatchlist || activeWatchlist.symbols.length === 0) return;
+    activeWatchlist.symbols.forEach((sym) => {
+      if (!quotesMap[sym]) {
+        addSymbolToWatchlist(sym)
+          .then((quote) => {
+            if (quote) {
+              setQuotesMap((prev) => ({ ...prev, [quote.symbol]: quote }));
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, [activeWatchlist, quotesMap]);
 
   // Connect WebSocket
   useEffect(() => {
     let unmounted = false;
 
-    function connectWs() {
-      if (unmounted) return;
+    function getWsUrl(): string {
+      if (import.meta.env.VITE_WS_URL) {
+        return import.meta.env.VITE_WS_URL;
+      }
+      if (import.meta.env.VITE_API_URL) {
+        const apiUrl = import.meta.env.VITE_API_URL as string;
+        const wsBase = apiUrl.replace(/^http/, 'ws').replace(/\/api\/?$/, '');
+        return `${wsBase}/ws/market`;
+      }
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ws/market`;
+      return `${protocol}//${host}/ws/market`;
+    }
+
+    function connectWs() {
+      if (unmounted) return;
+      const wsUrl = getWsUrl();
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -105,22 +277,26 @@ export function useMarketData() {
         if (unmounted) return;
         try {
           if (event.data === 'pong') return;
-          // Sanitize raw NaN or undefined values if yfinance returns unpopulated float
           const sanitized = typeof event.data === 'string' ? event.data.replace(/:\s*NaN/g, ': null') : event.data;
           const payload = JSON.parse(sanitized);
 
           if (payload.type === 'SNAPSHOT' && Array.isArray(payload.data) && payload.data.length > 0) {
-            setStocks(payload.data);
+            setQuotesMap((prev) => {
+              const next = { ...prev };
+              for (const q of payload.data) {
+                if (q && q.symbol) next[q.symbol] = q;
+              }
+              return next;
+            });
             setLastTickTime(Date.now());
           } else if (payload.type === 'TICK_UPDATE' && Array.isArray(payload.data)) {
             const updates: StockQuote[] = payload.data;
             setLastTickTime(Date.now());
 
-            setStocks((prevStocks) => {
-              const stockMap = new Map<string, StockQuote>(prevStocks.map((s) => [s.symbol, s]));
-
+            setQuotesMap((prevQuotes) => {
+              const next = { ...prevQuotes };
               for (const update of updates) {
-                const existing = stockMap.get(update.symbol);
+                const existing = next[update.symbol];
                 if (existing) {
                   if (update.ltp > existing.ltp) {
                     triggerFlash(update.symbol, 'UP');
@@ -128,10 +304,9 @@ export function useMarketData() {
                     triggerFlash(update.symbol, 'DOWN');
                   }
                 }
-                stockMap.set(update.symbol, update);
+                next[update.symbol] = update;
               }
-
-              return Array.from(stockMap.values());
+              return next;
             });
           }
         } catch (err) {
@@ -168,9 +343,46 @@ export function useMarketData() {
     };
   }, [triggerFlash]);
 
-  const selectedStock = stocks.find((s) => s.symbol === selectedSymbol) || stocks[0] || null;
+  // Compute ordered stocks array for the active watchlist
+  const stocks = useMemo(() => {
+    if (!activeWatchlist || !activeWatchlist.symbols) return [];
+    return activeWatchlist.symbols
+      .map((sym) => {
+        const quote = quotesMap[sym];
+        if (quote) return quote;
+        // Fallback placeholder while quote is being fetched
+        return {
+          symbol: sym,
+          name: sym,
+          sector: 'NSE Equity',
+          ltp: 0,
+          open: 0,
+          high: 0,
+          low: 0,
+          close: 0,
+          change: 0,
+          pChange: 0,
+          volume: 0,
+          high52: 0,
+          low52: 0,
+        } as StockQuote;
+      });
+  }, [activeWatchlist, quotesMap]);
+
+  // If selectedSymbol is not set or not in current stocks, select first stock if available
+  useEffect(() => {
+    if (stocks.length > 0 && (!selectedSymbol || !stocks.some((s) => s.symbol === selectedSymbol))) {
+      setSelectedSymbol(stocks[0].symbol);
+    }
+  }, [stocks, selectedSymbol]);
+
+  const selectedStock = stocks.find((s) => s.symbol === selectedSymbol) || quotesMap[selectedSymbol] || stocks[0] || null;
 
   return {
+    watchlists,
+    activeWatchlistId,
+    setActiveWatchlistId,
+    renameWatchlist,
     stocks,
     selectedSymbol,
     setSelectedSymbol,
@@ -179,5 +391,7 @@ export function useMarketData() {
     isConnected,
     lastTickTime,
     addSymbol,
+    removeSymbol,
   };
 }
+

@@ -34,6 +34,10 @@ export const App: React.FC = () => {
 
   // Market Data Hook
   const {
+    watchlists,
+    activeWatchlistId,
+    setActiveWatchlistId,
+    renameWatchlist,
     stocks,
     selectedSymbol,
     setSelectedSymbol,
@@ -41,6 +45,7 @@ export const App: React.FC = () => {
     flashMap,
     isConnected,
     addSymbol,
+    removeSymbol,
   } = useMarketData();
 
   // Portfolio Hook
@@ -70,6 +75,19 @@ export const App: React.FC = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
   const [orderModalSide, setOrderModalSide] = useState<OrderSide>('BUY');
   const [isChargesCalcOpen, setIsChargesCalcOpen] = useState<boolean>(false);
+
+  // Collapsible Watchlist Sidebar State
+  const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('abhyastrade_watchlist_collapsed') === 'true';
+  });
+
+  const handleToggleWatchlistCollapse = () => {
+    setIsWatchlistCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('abhyastrade_watchlist_collapsed', next.toString());
+      return next;
+    });
+  };
 
   // Adjustable Resizable Desk State
   const [deskHeight, setDeskHeight] = useState<number>(() => {
@@ -145,23 +163,51 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Desktop View (>= 1024px) */}
         <div className="hidden lg:flex w-full h-full overflow-hidden">
-          {/* Left Column: Watchlist */}
-          <div className="w-80 xl:w-96 shrink-0 h-full border-r border-obsidian-700/80">
-            <Watchlist
-              stocks={stocks}
-              selectedSymbol={selectedSymbol}
-              onSelectSymbol={setSelectedSymbol}
-              onOpenOrderModal={handleOpenOrderModal}
-              flashMap={flashMap}
-              onAddSymbol={addSymbol}
-            />
+          {/* Left Column: Watchlist (Collapsible) */}
+          <div
+            className={`shrink-0 h-full border-r border-obsidian-700/80 transition-all duration-300 ease-in-out overflow-hidden ${
+              isWatchlistCollapsed ? 'w-0 border-none' : 'w-80 xl:w-96'
+            }`}
+          >
+            <div className="w-80 xl:w-96 h-full">
+              <Watchlist
+                watchlists={watchlists}
+                activeWatchlistId={activeWatchlistId}
+                onSelectWatchlist={setActiveWatchlistId}
+                onRenameWatchlist={renameWatchlist}
+                stocks={stocks}
+                selectedSymbol={selectedSymbol}
+                onSelectSymbol={setSelectedSymbol}
+                onOpenOrderModal={handleOpenOrderModal}
+                flashMap={flashMap}
+                onAddSymbol={addSymbol}
+                onRemoveSymbol={removeSymbol}
+                onToggleCollapse={handleToggleWatchlistCollapse}
+                isCollapsed={isWatchlistCollapsed}
+              />
+            </div>
           </div>
 
           {/* Right Area: Chart (Top) & Resizable Tabbed Desk (Bottom) */}
           <div className="flex-1 flex flex-col h-full overflow-hidden relative select-none">
+            {/* Floating Expand Watchlist Button (when sidebar is collapsed on desktop) */}
+            {isWatchlistCollapsed && (
+              <button
+                onClick={handleToggleWatchlistCollapse}
+                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-800/95 hover:bg-obsidian-700 border border-obsidian-600/90 text-slate-200 hover:text-white shadow-2xl text-xs font-bold backdrop-blur-md transition-all active:scale-95 group animate-in fade-in zoom-in-95"
+                title="Expand Watchlist"
+              >
+                <Layers className="w-4 h-4 text-brand-cyan group-hover:scale-110 transition-transform" />
+                <span>Watchlist</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand-blue/30 text-brand-cyan font-extrabold border border-brand-blue/40">
+                  {stocks.length}
+                </span>
+              </button>
+            )}
+
             {/* Upper: TradingView Lightweight Chart */}
             <div
               className="w-full overflow-hidden"
@@ -316,6 +362,10 @@ export const App: React.FC = () => {
         <div className="flex lg:hidden flex-1 flex-col h-full pb-16 overflow-hidden">
           {mobileTab === 'WATCHLIST' && (
             <Watchlist
+              watchlists={watchlists}
+              activeWatchlistId={activeWatchlistId}
+              onSelectWatchlist={setActiveWatchlistId}
+              onRenameWatchlist={renameWatchlist}
               stocks={stocks}
               selectedSymbol={selectedSymbol}
               onSelectSymbol={(sym) => {
@@ -325,6 +375,7 @@ export const App: React.FC = () => {
               onOpenOrderModal={handleOpenOrderModal}
               flashMap={flashMap}
               onAddSymbol={addSymbol}
+              onRemoveSymbol={removeSymbol}
             />
           )}
 
