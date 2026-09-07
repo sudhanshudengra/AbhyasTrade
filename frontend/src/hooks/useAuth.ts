@@ -14,18 +14,35 @@ export function useAuth() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // Clean up Supabase OAuth hash fragments from URL (e.g. /#access_token=... or /#)
+    if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash === '#')) {
+      const cleanPath = window.location.pathname === '/login' ? '/' : window.location.pathname;
+      window.history.replaceState(null, '', cleanPath || '/');
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      // Clean hash after session is loaded
+      if (window.location.hash) {
+        window.history.replaceState(null, '', session?.user ? '/' : '/login');
+      }
     }).catch(() => {
       setLoading(false);
     });
 
     // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        if (window.location.pathname === '/login' || window.location.hash) {
+          window.history.replaceState(null, '', '/');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        window.history.replaceState(null, '', '/login');
+      }
     });
 
     return () => {
@@ -40,6 +57,7 @@ export function useAuth() {
   const handleSignOut = useCallback(async () => {
     await signOut();
     setUser(null);
+    window.history.replaceState(null, '', '/login');
   }, []);
 
   const userProfile: UserProfile | null = user

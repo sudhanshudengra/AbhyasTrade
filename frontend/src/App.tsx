@@ -123,6 +123,20 @@ export const App: React.FC = () => {
     };
   }, [isDragging, isDeskCollapsed]);
 
+  // Sync URL Path with Authentication State (/ vs /login)
+  useEffect(() => {
+    if (loading) return;
+    if (!userProfile) {
+      if (window.location.pathname !== '/login') {
+        window.history.replaceState(null, '', '/login');
+      }
+    } else {
+      if (window.location.pathname === '/login' || window.location.hash) {
+        window.history.replaceState(null, '', '/');
+      }
+    }
+  }, [userProfile, loading]);
+
   // Loading auth session check
   if (loading) {
     return (
