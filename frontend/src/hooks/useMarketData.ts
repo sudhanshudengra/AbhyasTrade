@@ -33,9 +33,6 @@ const DEFAULT_SYMBOLS_WL1 = [
 const DEFAULT_WATCHLISTS: WatchlistGroup[] = [
   { id: 'wl_1', name: 'Watchlist 1', symbols: DEFAULT_SYMBOLS_WL1 },
   { id: 'wl_2', name: 'Watchlist 2', symbols: ['NIFTY 50', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'] },
-  { id: 'wl_3', name: 'Watchlist 3', symbols: [] },
-  { id: 'wl_4', name: 'Watchlist 4', symbols: [] },
-  { id: 'wl_5', name: 'Watchlist 5', symbols: [] },
 ];
 
 const STORAGE_KEY_WATCHLISTS = 'abhyastrade_watchlists_v2';
@@ -47,13 +44,7 @@ function loadSavedWatchlists(): WatchlistGroup[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure 5 watchlists exist
-        const result = [...parsed];
-        while (result.length < 5) {
-          const idx = result.length + 1;
-          result.push({ id: `wl_${idx}`, name: `Watchlist ${idx}`, symbols: [] });
-        }
-        return result.slice(0, 5);
+        return parsed.slice(0, 5);
       }
     }
   } catch (err) {
@@ -98,6 +89,32 @@ export function useMarketData() {
       localStorage.setItem(STORAGE_KEY_ACTIVE_WL, id);
     } catch {}
   }, []);
+
+  // Add a new watchlist (up to 5 maximum)
+  const addWatchlist = useCallback(() => {
+    if (watchlists.length >= 5) return null;
+    const newIdx = watchlists.length + 1;
+    const newWl: WatchlistGroup = {
+      id: `wl_${Date.now()}`,
+      name: `Watchlist ${newIdx}`,
+      symbols: [],
+    };
+    setWatchlists((prev) => [...prev, newWl]);
+    setActiveWatchlistId(newWl.id);
+    return newWl.id;
+  }, [watchlists.length, setActiveWatchlistId]);
+
+  // Delete a watchlist (minimum 1 retained)
+  const deleteWatchlist = useCallback((id: string) => {
+    if (watchlists.length <= 1) return;
+    setWatchlists((prev) => prev.filter((w) => w.id !== id));
+    if (activeWatchlistId === id) {
+      const remaining = watchlists.filter((w) => w.id !== id);
+      if (remaining[0]) {
+        setActiveWatchlistId(remaining[0].id);
+      }
+    }
+  }, [watchlists, activeWatchlistId, setActiveWatchlistId]);
 
   // Active Watchlist reference
   const activeWatchlist = useMemo(() => {
@@ -237,6 +254,19 @@ export function useMarketData() {
     });
   }, [activeWatchlist, quotesMap]);
 
+  // Ensure quote is fetched for selectedSymbol even if it is not in current active watchlist
+  useEffect(() => {
+    if (selectedSymbol && !quotesMap[selectedSymbol]) {
+      addSymbolToWatchlist(selectedSymbol)
+        .then((quote) => {
+          if (quote) {
+            setQuotesMap((prev) => ({ ...prev, [quote.symbol]: quote }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedSymbol, quotesMap]);
+
   // Connect WebSocket
   useEffect(() => {
     let unmounted = false;
@@ -369,19 +399,22 @@ export function useMarketData() {
       });
   }, [activeWatchlist, quotesMap]);
 
-  // If selectedSymbol is not set or not in current stocks, select first stock if available
+  // Initialize selected symbol on first load if not set
   useEffect(() => {
-    if (stocks.length > 0 && (!selectedSymbol || !stocks.some((s) => s.symbol === selectedSymbol))) {
+    if (!selectedSymbol && stocks.length > 0) {
       setSelectedSymbol(stocks[0].symbol);
     }
   }, [stocks, selectedSymbol]);
 
-  const selectedStock = stocks.find((s) => s.symbol === selectedSymbol) || quotesMap[selectedSymbol] || stocks[0] || null;
+  // Resolve selected stock object from quote cache regardless of active watchlist tab
+  const selectedStock = quotesMap[selectedSymbol] || stocks.find((s) => s.symbol === selectedSymbol) || stocks[0] || null;
 
   return {
     watchlists,
     activeWatchlistId,
     setActiveWatchlistId,
+    addWatchlist,
+    deleteWatchlist,
     renameWatchlist,
     stocks,
     selectedSymbol,
@@ -394,4 +427,5 @@ export function useMarketData() {
     removeSymbol,
   };
 }
+
 

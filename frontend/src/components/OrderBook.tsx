@@ -16,7 +16,7 @@ interface OrderBookProps {
 }
 
 export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOrder }) => {
-  const [activeTab, setActiveTab] = useState<'OPEN' | 'EXECUTED' | 'ALL'>('OPEN');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'OPEN' | 'EXECUTED'>('ALL');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const pendingOrders = orders.filter((o) => o.status === 'PENDING');
@@ -44,6 +44,20 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
 
         <div className="flex items-center gap-1 bg-obsidian-900 p-0.5 rounded-lg border border-obsidian-700">
           <button
+            onClick={() => setActiveTab('ALL')}
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+              activeTab === 'ALL'
+                ? 'bg-brand-blue text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span>All Orders</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
+              {orders.length}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('OPEN')}
             className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
               activeTab === 'OPEN'
@@ -51,7 +65,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <span>Open</span>
+            <span>Open (Pending)</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
               {pendingOrders.length}
             </span>
@@ -69,17 +83,6 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
               {trades.length}
             </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
-              activeTab === 'ALL'
-                ? 'bg-brand-blue text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            All History
           </button>
         </div>
       </div>
@@ -178,7 +181,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
                     <div className="text-[11px] text-slate-400 mt-0.5 font-tabular">
                       {timeStr} &bull; Qty: {order.quantity}
                       {order.price ? ` @ Limit ₹${order.price.toFixed(2)}` : ''}
-                      {order.trigger_price ? ` @ Trigger ₹${order.trigger_price.toFixed(2)}` : ''}
+                      {order.trigger_price ? ` @ Stoploss Trigger ₹${order.trigger_price.toFixed(2)}` : ''}
                     </div>
                     {isRejected && order.rejection_reason && (
                       <div className="text-[10px] text-rose-400 mt-1">

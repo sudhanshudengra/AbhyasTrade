@@ -37,6 +37,8 @@ export const App: React.FC = () => {
     watchlists,
     activeWatchlistId,
     setActiveWatchlistId,
+    addWatchlist,
+    deleteWatchlist,
     renameWatchlist,
     stocks,
     selectedSymbol,
@@ -192,6 +194,8 @@ export const App: React.FC = () => {
                 activeWatchlistId={activeWatchlistId}
                 onSelectWatchlist={setActiveWatchlistId}
                 onRenameWatchlist={renameWatchlist}
+                onAddWatchlist={addWatchlist}
+                onDeleteWatchlist={deleteWatchlist}
                 stocks={stocks}
                 selectedSymbol={selectedSymbol}
                 onSelectSymbol={setSelectedSymbol}
@@ -351,6 +355,7 @@ export const App: React.FC = () => {
                       onExitPosition={exitPosition}
                       onSquareoffAllMis={squareoffAllMis}
                       onRefresh={refreshAll}
+                      onOpenOrderModal={handleOpenOrderModal}
                     />
                   )}
                   {desktopDeskTab === 'ORDERS' && (
@@ -380,6 +385,8 @@ export const App: React.FC = () => {
               activeWatchlistId={activeWatchlistId}
               onSelectWatchlist={setActiveWatchlistId}
               onRenameWatchlist={renameWatchlist}
+              onAddWatchlist={addWatchlist}
+              onDeleteWatchlist={deleteWatchlist}
               stocks={stocks}
               selectedSymbol={selectedSymbol}
               onSelectSymbol={(sym) => {
@@ -406,6 +413,7 @@ export const App: React.FC = () => {
               onExitPosition={exitPosition}
               onSquareoffAllMis={squareoffAllMis}
               onRefresh={refreshAll}
+              onOpenOrderModal={handleOpenOrderModal}
             />
           )}
 
@@ -443,6 +451,7 @@ export const App: React.FC = () => {
           stock={selectedStock}
           initialSide={orderModalSide}
           availableMargin={portfolio?.available_margin ?? 1000000}
+          positions={positions}
           onPlaceOrder={placeOrder}
         />
       )}

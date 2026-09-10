@@ -10,7 +10,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { StockQuote, ProductType, OrderType, OrderSide } from '../lib/types';
+import { StockQuote, ProductType, OrderType, OrderSide, Position } from '../lib/types';
 import { calculateSingleLegCharges } from '../lib/charges';
 
 interface OrderModalProps {
@@ -19,6 +19,7 @@ interface OrderModalProps {
   stock: StockQuote | null;
   initialSide: OrderSide;
   availableMargin: number;
+  positions?: Position[];
   onPlaceOrder: (payload: {
     symbol: string;
     side: OrderSide;
@@ -38,12 +39,29 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   stock,
   initialSide,
   availableMargin,
+  positions = [],
   onPlaceOrder,
 }) => {
   const [side, setSide] = useState<OrderSide>(initialSide);
-  const [productType, setProductType] = useState<ProductType>('MIS');
+  const [productType, setProductType] = useState<ProductType>('CNC');
   const [orderType, setOrderType] = useState<OrderType>('MARKET');
-  const [quantity, setQuantity] = useState<number>(50);
+
+  // Calculate available holding quantity for the selected symbol and product type
+  const availableHoldingQty = useMemo(() => {
+    if (!stock || !positions) return 0;
+    const targetPos = positions.find(
+      (p) => p.symbol.toUpperCase() === stock.symbol.toUpperCase() && p.product_type === productType
+    );
+    return targetPos && targetPos.quantity > 0 ? targetPos.quantity : 0;
+  }, [stock, positions, productType]);
+
+  const [quantity, setQuantity] = useState<number>(() => {
+    if (initialSide === 'SELL' && availableHoldingQty > 0) {
+      return availableHoldingQty;
+    }
+    return 50;
+  });
+
   const [limitPrice, setLimitPrice] = useState<number>(stock?.ltp || 0);
   const [triggerPrice, setTriggerPrice] = useState<number>(stock?.ltp || 0);
   
@@ -53,6 +71,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Update default quantity when side is changed to SELL
+  const handleSideChange = (newSide: OrderSide) => {
+    setSide(newSide);
+    setErrorMessage(null);
+    if (newSide === 'SELL' && availableHoldingQty > 0 && quantity > availableHoldingQty) {
+      setQuantity(availableHoldingQty);
+    }
+  };
 
   // Scroll to top on mount
   useEffect(() => {
@@ -81,6 +108,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const totalTurnover = (quantity > 0 ? quantity : 0) * effectivePrice;
   const requiredMargin = productType === 'MIS' ? totalTurnover / 5.0 : totalTurnover;
   const hasInsufficientMargin = requiredMargin > availableMargin;
+
+  // CNC Sell holding validation state
+  const isCncSellExceeded = side === 'SELL' && productType === 'CNC' && (availableHoldingQty === 0 || quantity > availableHoldingQty);
 
   // Live itemized charges calculation (0ms instant)
   const taxBreakdown = useMemo(() => {
@@ -127,13 +157,24 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       return;
     }
 
+    if (side === 'SELL' && productType === 'CNC') {
+      if (availableHoldingQty <= 0) {
+        setErrorMessage(`No CNC holdings available to sell for ${stock.symbol}. Delivery short selling is not permitted on NSE.`);
+        return;
+      }
+      if (quantity > availableHoldingQty) {
+        setErrorMessage(`Sell quantity (${quantity}) exceeds available holdings (${availableHoldingQty} shares). Sell amount cannot be greater than what you have.`);
+        return;
+      }
+    }
+
     if (orderType === 'LIMIT' && limitPrice <= 0) {
       setErrorMessage('Please enter a valid limit price');
       return;
     }
 
     if (orderType === 'SL_M' && triggerPrice <= 0) {
-      setErrorMessage('Please enter a valid trigger price');
+      setErrorMessage('Please enter a valid stoploss trigger price');
       return;
     }
 
@@ -220,7 +261,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             <div className="flex items-center bg-obsidian-950/90 p-0.5 rounded-lg border border-obsidian-700/80">
               <button
                 type="button"
-                onClick={() => setSide('BUY')}
+                onClick={() => handleSideChange('BUY')}
                 className={`px-3 py-1 rounded-md text-xs font-bold transition ${
                   isBuy
                     ? 'bg-emerald-600 text-white shadow-sm glow-emerald'
@@ -231,7 +272,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setSide('SELL')}
+                onClick={() => handleSideChange('SELL')}
                 className={`px-3 py-1 rounded-md text-xs font-bold transition ${
                   !isBuy
                     ? 'bg-rose-600 text-white shadow-sm glow-crimson'
@@ -264,24 +305,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
           )}
 
-          {/* Product Type (MIS vs CNC) */}
+          {/* Product Type (CNC vs MIS - Longterm Delivery by default) */}
           <div className="space-y-1.5">
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setProductType('MIS')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
-                  productType === 'MIS'
-                    ? 'bg-brand-blue/20 border-brand-blue text-brand-cyan shadow-sm glow-blue'
-                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
-                }`}
-              >
-                <span>Intraday MIS</span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand-blue/30 text-sky-200">
-                  5x Margin
-                </span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => setProductType('CNC')}
@@ -296,20 +322,25 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   Delivery
                 </span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setProductType('MIS')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
+                  productType === 'MIS'
+                    ? 'bg-brand-blue/20 border-brand-blue text-brand-cyan shadow-sm glow-blue'
+                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
+                }`}
+              >
+                <span>Intraday MIS</span>
+                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand-blue/30 text-sky-200">
+                  5x Margin
+                </span>
+              </button>
             </div>
 
             {/* Dynamic Leverage / Cost Note (Concise 1-Line Strip) */}
-            {productType === 'MIS' ? (
-              <div className="px-2.5 py-1.5 rounded-lg bg-brand-blue/10 border border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-300">
-                <span className="flex items-center gap-1.5 text-brand-cyan font-medium">
-                  <Zap className="w-3.5 h-3.5 text-brand-cyan shrink-0" />
-                  Trade: ₹{totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </span>
-                <span className="text-emerald-400 font-bold font-tabular">
-                  You pay 1/5th (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
-                </span>
-              </div>
-            ) : (
+            {productType === 'CNC' ? (
               <div className="px-2.5 py-1.5 rounded-lg bg-indigo-950/40 border border-indigo-500/25 text-[11px] flex items-center justify-between text-slate-300">
                 <span className="flex items-center gap-1.5 text-indigo-300 font-medium">
                   <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -317,6 +348,16 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 </span>
                 <span className="text-indigo-300 font-bold font-tabular">
                   100% Upfront (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
+                </span>
+              </div>
+            ) : (
+              <div className="px-2.5 py-1.5 rounded-lg bg-brand-blue/10 border border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-300">
+                <span className="flex items-center gap-1.5 text-brand-cyan font-medium">
+                  <Zap className="w-3.5 h-3.5 text-brand-cyan shrink-0" />
+                  Trade: ₹{totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-emerald-400 font-bold font-tabular">
+                  You pay 1/5th (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
                 </span>
               </div>
             )}
@@ -353,7 +394,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <button
                     key={adder}
                     type="button"
-                    onClick={() => setQuantity((prev) => (prev || 0) + adder)}
+                    onClick={() => {
+                      const nextQty = (quantity || 0) + adder;
+                      if (side === 'SELL' && productType === 'CNC' && availableHoldingQty > 0) {
+                        setQuantity(Math.min(nextQty, availableHoldingQty));
+                      } else {
+                        setQuantity(nextQty);
+                      }
+                    }}
                     className="px-2 py-0.5 text-[10px] font-bold rounded bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
                   >
                     +{adder}
@@ -361,6 +409,27 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Available to Sell Helper Strip when in SELL mode */}
+            {!isBuy && (
+              <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-obsidian-900/90 border border-obsidian-700/80">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 text-[11px]">Available to Sell:</span>
+                  <span className={`font-bold font-tabular text-[11px] ${availableHoldingQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {availableHoldingQty} Shares ({productType})
+                  </span>
+                </div>
+                {availableHoldingQty > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(availableHoldingQty)}
+                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/40 transition active:scale-95"
+                  >
+                    Sell All ({availableHoldingQty})
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-1.5">
               <button
@@ -389,7 +458,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setQuantity((prev) => (prev || 0) + 1)}
+                onClick={() => {
+                  const nextQty = (quantity || 0) + 1;
+                  if (side === 'SELL' && productType === 'CNC' && availableHoldingQty > 0) {
+                    setQuantity(Math.min(nextQty, availableHoldingQty));
+                  } else {
+                    setQuantity(nextQty);
+                  }
+                }}
                 className="w-9 h-9 rounded-xl bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0"
               >
                 +
@@ -397,7 +473,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
           </div>
 
-          {/* Conditional Limit / Trigger Price Inputs */}
+          {/* Conditional Limit / Stoploss Trigger Price Inputs */}
           {orderType === 'LIMIT' && (
             <div className="space-y-1 animate-in fade-in duration-150">
               <div className="flex items-center justify-between text-[11px]">
@@ -424,7 +500,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {orderType === 'SL_M' && (
             <div className="space-y-1 animate-in fade-in duration-150">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-400">Trigger Price (₹)</span>
+                <span className="font-semibold text-slate-400">Stoploss Trigger Price (₹)</span>
                 <button
                   type="button"
                   onClick={() => setTriggerPrice(stock.ltp)}
@@ -461,7 +537,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </div>
             </div>
 
-            {hasInsufficientMargin && (
+            {hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL') && (
               <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1.5 mt-1.5 border-t border-rose-500/20 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>Insufficient margin to execute order</span>
@@ -539,7 +615,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {/* Action CTA Button */}
           <button
             type="submit"
-            disabled={isSubmitting || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL'))}
+            disabled={isSubmitting || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) || isCncSellExceeded}
             className={`w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               isBuy
                 ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-950/60'

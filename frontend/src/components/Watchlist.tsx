@@ -22,6 +22,8 @@ interface WatchlistProps {
   activeWatchlistId: string
   onSelectWatchlist: (id: string) => void
   onRenameWatchlist: (id: string, newName: string) => void
+  onAddWatchlist?: () => void
+  onDeleteWatchlist?: (id: string) => void
   stocks: StockQuote[]
   selectedSymbol: string
   onSelectSymbol: (symbol: string) => void
@@ -38,6 +40,8 @@ export const Watchlist: React.FC<WatchlistProps> = ({
   activeWatchlistId,
   onSelectWatchlist,
   onRenameWatchlist,
+  onAddWatchlist,
+  onDeleteWatchlist,
   stocks,
   selectedSymbol,
   onSelectSymbol,
@@ -289,7 +293,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
             </div>
           )}
 
-        {/* Watchlist Tabs (1 to 5) */}
+        {/* Dynamic Watchlist Tabs with + Add Button (Max 5) */}
         <div className="flex items-center gap-1.5 pt-0.5">
           {watchlists.map((wl, index) => {
             const isActive = wl.id === activeWatchlistId
@@ -315,6 +319,16 @@ export const Watchlist: React.FC<WatchlistProps> = ({
               </button>
             )
           })}
+
+          {watchlists.length < 5 && onAddWatchlist && (
+            <button
+              onClick={onAddWatchlist}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-dashed border-obsidian-600 bg-obsidian-900/40 hover:bg-brand-blue/20 hover:border-brand-blue text-slate-400 hover:text-brand-cyan transition flex items-center justify-center gap-1 shrink-0"
+              title={`Add Watchlist ${watchlists.length + 1} (Max 5)`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
