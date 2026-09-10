@@ -15,6 +15,7 @@ class PlaceOrderRequest(BaseModel):
     quantity: int = Field(gt=0, description="Quantity of shares to buy or sell")
     price: Optional[float] = Field(default=None, description="Limit price if LIMIT order")
     trigger_price: Optional[float] = Field(default=None, description="Trigger price if SL_M order")
+    stoploss_trigger: Optional[float] = Field(default=None, description="Optional attached stoploss trigger price")
 
 @router.post("")
 async def place_order(
@@ -32,7 +33,8 @@ async def place_order(
             order_type=order_req.order_type,
             quantity=order_req.quantity,
             price=order_req.price,
-            trigger_price=order_req.trigger_price
+            trigger_price=order_req.trigger_price,
+            stoploss_trigger=order_req.stoploss_trigger
         )
         return result
     except Exception as e:

@@ -387,6 +387,24 @@ class DatabaseService:
             return [dict(r) for r in rows]
 
     @staticmethod
+    async def cancel_pending_sl_orders(user_id: str, symbol: str, product_type: str):
+        """Cancels any remaining pending SL_M orders for a closed position"""
+        now = datetime.now(timezone.utc).isoformat()
+        if supabase_client:
+            try:
+                supabase_client.table("orders").update({"status": "CANCELLED", "updated_at": now}).eq("user_id", user_id).eq("symbol", symbol).eq("product_type", product_type).eq("order_type", "SL_M").eq("status", "PENDING").execute()
+                return
+            except Exception as e:
+                logger.error(f"Supabase error cancel_pending_sl_orders: {e}")
+                
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                "UPDATE orders SET status = 'CANCELLED', updated_at = ? WHERE user_id = ? AND symbol = ? AND product_type = ? AND order_type = 'SL_M' AND status = 'PENDING'",
+                (now, user_id, symbol, product_type)
+            )
+            await db.commit()
+
+    @staticmethod
     async def create_trade(trade_data: Dict[str, Any]) -> Dict[str, Any]:
         now = datetime.now(timezone.utc).isoformat()
         trade_id = trade_data.get("id") or str(uuid.uuid4())

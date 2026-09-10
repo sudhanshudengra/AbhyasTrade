@@ -79,7 +79,72 @@ async def run_tests():
     print("Portfolio after order:", p_updated)
     assert p_updated["used_margin"] > 0
     
-    print(" Order Matching & Database test PASSED!\n")
+    # Test SL_M Order Trigger Matching
+    print("=== 3. Testing SL_M (Stoploss Market) Trigger Logic ===")
+    market_feed.market_cache["TCS"] = {"symbol": "TCS", "ltp": 4200.0}
+    # Place SL_M Sell order with trigger_price = 4100 (current TCS price is 4200)
+    sl_order = await order_matcher.place_order(
+        user_id="00000000-0000-0000-0000-000000000001",
+        symbol="TCS",
+        side="SELL",
+        product_type="MIS",
+        order_type="SL_M",
+        quantity=25,
+        trigger_price=4100.0
+    )
+    print("SL_M Order initially placed (LTP=4200, Trigger=4100):", sl_order)
+    assert sl_order["status"] == "PENDING", "SL order above trigger should remain PENDING"
+    assert sl_order["trigger_price"] == 4100.0
+
+    # Simulate price drop to 4095.0 (breaching trigger)
+    triggered_res = await order_matcher.check_order_trigger(sl_order, 4095.0)
+    print("SL_M Order after price drop below trigger (LTP=4095):", triggered_res)
+    assert triggered_res["status"] == "EXECUTED", "SL order must execute once price breaches trigger"
+    assert triggered_res["execution_price"] == 4095.0
+
+    print("=== 4. Testing User Scenario: Buy RELIANCE @ 1304 with Stoploss @ 1300 ===")
+    market_feed.market_cache["RELIANCE"] = {"symbol": "RELIANCE", "ltp": 1304.0}
+    # User buys RELIANCE with SL-M trigger @ 1300
+    buy_sl_order = await order_matcher.place_order(
+        user_id="00000000-0000-0000-0000-000000000001",
+        symbol="RELIANCE",
+        side="BUY",
+        product_type="CNC",
+        order_type="SL_M",
+        quantity=10,
+        trigger_price=1300.0
+    )
+    print("Buy with Stoploss result:", buy_sl_order)
+    assert buy_sl_order["status"] == "EXECUTED", "Entry BUY order must execute at market LTP"
+    assert buy_sl_order["execution_price"] == 1304.0
+
+    # Verify RELIANCE position is opened
+    pos_reliance = await DatabaseService.get_position("00000000-0000-0000-0000-000000000001", "RELIANCE", "CNC")
+    print("RELIANCE Position:", pos_reliance)
+    assert pos_reliance is not None and pos_reliance["quantity"] == 10
+    assert pos_reliance["average_price"] == 1304.0
+
+    # Verify protective exit SELL SL_M order exists in PENDING state
+    pending_orders = await DatabaseService.get_pending_orders()
+    reliance_sl = next((o for o in pending_orders if o["symbol"] == "RELIANCE" and o["side"] == "SELL" and o["order_type"] == "SL_M"), None)
+    print("Protective SELL SL_M Order:", reliance_sl)
+    assert reliance_sl is not None, "A protective SELL SL_M order must be created in PENDING state"
+    assert reliance_sl["trigger_price"] == 1300.0
+    assert reliance_sl["quantity"] == 10
+
+    # Simulate price drop to 1300.0
+    market_feed.market_cache["RELIANCE"]["ltp"] = 1300.0
+    sl_exec = await order_matcher.check_order_trigger(reliance_sl, 1300.0)
+    print("Executed Stoploss Order:", sl_exec)
+    assert sl_exec["status"] == "EXECUTED", "Protective SL order must execute when price drops to 1300"
+    assert sl_exec["execution_price"] == 1300.0
+
+    # Verify position is now closed (quantity = 0)
+    pos_closed = await DatabaseService.get_position("00000000-0000-0000-0000-000000000001", "RELIANCE", "CNC")
+    print("RELIANCE Position after Stoploss trigger:", pos_closed)
+    assert pos_closed["quantity"] == 0, "Position must be 0 after stoploss triggers"
+
+    print(" Buy with Stoploss Trigger PASSED!\n")
     print("ALL BACKEND TESTS COMPLETED SUCCESSFULLY!")
 
 if __name__ == "__main__":

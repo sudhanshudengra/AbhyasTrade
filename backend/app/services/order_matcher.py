@@ -35,16 +35,36 @@ class OrderMatcherService:
         order_type: str,
         quantity: int,
         price: Optional[float] = None,
-        trigger_price: Optional[float] = None
+        trigger_price: Optional[float] = None,
+        stoploss_trigger: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Validates margin, checks CNC constraints, and places order.
         If MARKET, executes immediately.
+        If entry order with attached stoploss (or SL_M with downside trigger),
+        executes the entry and automatically places the protective exit SL_M order.
         """
         symbol = symbol.upper()
         current_tick = market_feed.market_cache.get(symbol)
         ltp = current_tick["ltp"] if current_tick else (price or 100.0)
         
+        attached_sl = stoploss_trigger
+
+        existing_pos = await DatabaseService.get_position(user_id, symbol, product_type)
+        current_holding_qty = int(existing_pos["quantity"]) if existing_pos else 0
+
+        # When BUYing with SL_M and trigger_price < ltp: entry is market buy + protective sell SL
+        if order_type == "SL_M" and side == "BUY" and trigger_price is not None and trigger_price < ltp:
+            attached_sl = trigger_price
+            order_type = "MARKET"
+            trigger_price = None
+
+        # When short SELLING (MIS) with SL_M and trigger_price > ltp: entry is market short + protective buy SL
+        elif order_type == "SL_M" and side == "SELL" and trigger_price is not None and trigger_price > ltp and current_holding_qty <= 0:
+            attached_sl = trigger_price
+            order_type = "MARKET"
+            trigger_price = None
+
         # Determine reference price for margin calculation
         ref_price = price if (order_type == "LIMIT" and price and price > 0) else ltp
         required_margin = OrderMatcherService.calculate_required_margin(product_type, quantity, ref_price)
@@ -54,10 +74,8 @@ class OrderMatcherService:
         used_margin = float(portfolio["used_margin"])
         available_margin = virtual_cash - used_margin
         
-        # Check CNC Short Selling constraint
-        if product_type == "CNC" and side == "SELL":
-            existing_pos = await DatabaseService.get_position(user_id, symbol, "CNC")
-            current_holding_qty = existing_pos["quantity"] if existing_pos else 0
+        # Check CNC Short Selling constraint (only for standard sell when no short cover)
+        if product_type == "CNC" and side == "SELL" and attached_sl is None:
             if current_holding_qty < quantity:
                 order_doc = {
                     "user_id": user_id,
@@ -74,12 +92,9 @@ class OrderMatcherService:
                 return await DatabaseService.create_order(order_doc)
         
         # Check Margin constraint for opening new exposure
-        # Note: If order is closing an existing opposite position, it releases margin rather than requiring additional full margin
-        existing_pos = await DatabaseService.get_position(user_id, symbol, product_type)
         is_closing = False
-        if existing_pos:
-            existing_qty = existing_pos["quantity"]
-            if (side == "SELL" and existing_qty > 0) or (side == "BUY" and existing_qty < 0):
+        if current_holding_qty != 0:
+            if (side == "SELL" and current_holding_qty > 0) or (side == "BUY" and current_holding_qty < 0):
                 is_closing = True
         
         if not is_closing and available_margin < required_margin:
@@ -107,7 +122,7 @@ class OrderMatcherService:
             "order_type": order_type,
             "quantity": quantity,
             "price": price,
-            "trigger_price": trigger_price,
+            "trigger_price": trigger_price if order_type != "LIMIT" else attached_sl,
             "status": "PENDING",
             "brokerage_fees": 0.0,
             "regulatory_charges": 0.0
@@ -118,6 +133,27 @@ class OrderMatcherService:
         # If MARKET order, execute immediately at LTP
         if order_type == "MARKET":
             executed = await OrderMatcherService.execute_order(created_order, ltp)
+            
+            # If attached stoploss was specified, immediately place protective exit SL_M order
+            if attached_sl is not None and attached_sl > 0:
+                opp_side = "SELL" if side == "BUY" else "BUY"
+                sl_order_doc = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "symbol": symbol,
+                    "side": opp_side,
+                    "product_type": product_type,
+                    "order_type": "SL_M",
+                    "quantity": quantity,
+                    "price": None,
+                    "trigger_price": attached_sl,
+                    "status": "PENDING",
+                    "brokerage_fees": 0.0,
+                    "regulatory_charges": 0.0
+                }
+                await DatabaseService.create_order(sl_order_doc)
+                logger.info(f"Protective {opp_side} SL_M order placed for {user_id}: {quantity} {symbol} ({product_type}) @ Trigger ₹{attached_sl:.2f}")
+            
             return executed
             
         # Check immediate limit/trigger satisfaction
@@ -136,14 +172,17 @@ class OrderMatcherService:
         
         should_execute = False
         execution_price = current_ltp
+        attached_sl_to_activate = None
         
         if order_type == "LIMIT" and price is not None:
             if side == "BUY" and current_ltp <= price:
                 should_execute = True
                 execution_price = price
+                attached_sl_to_activate = trigger_price
             elif side == "SELL" and current_ltp >= price:
                 should_execute = True
                 execution_price = price
+                attached_sl_to_activate = trigger_price
                 
         elif order_type == "SL_M" and trigger_price is not None:
             if side == "BUY" and current_ltp >= trigger_price:
@@ -154,7 +193,29 @@ class OrderMatcherService:
                 execution_price = current_ltp
                 
         if should_execute:
-            return await OrderMatcherService.execute_order(order, execution_price)
+            executed = await OrderMatcherService.execute_order(order, execution_price)
+            
+            # If this executed order was a LIMIT order with an attached stoploss trigger, activate the SL order now
+            if attached_sl_to_activate is not None and attached_sl_to_activate > 0:
+                opp_side = "SELL" if side == "BUY" else "BUY"
+                sl_order_doc = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": order["user_id"],
+                    "symbol": order["symbol"],
+                    "side": opp_side,
+                    "product_type": order["product_type"],
+                    "order_type": "SL_M",
+                    "quantity": int(order["quantity"]),
+                    "price": None,
+                    "trigger_price": attached_sl_to_activate,
+                    "status": "PENDING",
+                    "brokerage_fees": 0.0,
+                    "regulatory_charges": 0.0
+                }
+                await DatabaseService.create_order(sl_order_doc)
+                logger.info(f"Activated attached Stoploss SL_M order for executed LIMIT order: {opp_side} {order['quantity']} {order['symbol']} @ Trigger ₹{attached_sl_to_activate:.2f}")
+
+            return executed
             
         return order
 
@@ -230,6 +291,10 @@ class OrderMatcherService:
             average_price=new_avg,
             realized_pnl=total_realized_pnl
         )
+        
+        # If position is completely closed, cancel any remaining pending SL_M orders for this symbol
+        if new_qty == 0:
+            await DatabaseService.cancel_pending_sl_orders(user_id, symbol, product_type)
         
         # Calculate new total used margin across all active positions
         all_positions = await DatabaseService.get_positions(user_id)

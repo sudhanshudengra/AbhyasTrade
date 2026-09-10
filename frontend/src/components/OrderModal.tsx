@@ -63,7 +63,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   });
 
   const [limitPrice, setLimitPrice] = useState<number>(stock?.ltp || 0);
-  const [triggerPrice, setTriggerPrice] = useState<number>(stock?.ltp || 0);
+  const [triggerPrice, setTriggerPrice] = useState<number>(() => {
+    const defaultLtp = stock?.ltp || 100;
+    return parseFloat((defaultLtp * 0.99).toFixed(2));
+  });
   
   const [showTaxBreakdown, setShowTaxBreakdown] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -206,10 +209,19 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           colors: isBuy ? ['#10b981', '#34d399', '#0ea5e9'] : ['#ef4444', '#f87171', '#f59e0b'],
         });
 
-        setSuccessMessage(`Order ${res.status}: ${side} ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice}`);
+        if (orderType === 'SL_M') {
+          if (isBuy && triggerPrice < stock.ltp) {
+            setSuccessMessage(`Order ${res.status}: BUY ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice} • Protective Stoploss placed @ ₹${triggerPrice.toFixed(2)}`);
+          } else {
+            setSuccessMessage(`Stoploss Order Placed: ${side} ${quantity} ${stock.symbol} @ Trigger ₹${triggerPrice.toFixed(2)}`);
+          }
+        } else {
+          setSuccessMessage(`Order ${res.status}: ${side} ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice}`);
+        }
+
         setTimeout(() => {
           onClose();
-        }, 1100);
+        }, 1200);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to place order');
@@ -498,25 +510,61 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           )}
 
           {orderType === 'SL_M' && (
-            <div className="space-y-1 animate-in fade-in duration-150">
+            <div className="space-y-2 bg-obsidian-900/80 p-2.5 rounded-xl border border-obsidian-700/80 animate-in fade-in duration-150">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-400">Stoploss Trigger Price (₹)</span>
+                <span className="font-semibold text-slate-300">Stoploss Trigger Price (₹)</span>
                 <button
                   type="button"
-                  onClick={() => setTriggerPrice(stock.ltp)}
+                  onClick={() => setTriggerPrice(parseFloat((stock.ltp * 0.99).toFixed(2)))}
                   className="font-bold text-brand-cyan hover:underline"
                 >
-                  Use LTP (₹{stock.ltp.toFixed(2)})
+                  Reset (-1%)
                 </button>
               </div>
-              <input
-                type="number"
-                step="0.05"
-                value={triggerPrice || ''}
-                onChange={(e) => setTriggerPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
-                placeholder={stock.ltp.toFixed(2)}
-              />
+
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.05"
+                  value={triggerPrice || ''}
+                  onChange={(e) => setTriggerPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-obsidian-950 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                  placeholder={stock.ltp.toFixed(2)}
+                />
+              </div>
+
+              {/* Quick % Stoploss Presets */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                <span className="text-[10px] text-slate-400 shrink-0 font-medium">Quick SL:</span>
+                {[0.5, 1, 2, 5].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setTriggerPrice(parseFloat((stock.ltp * (1 - pct / 100)).toFixed(2)))}
+                    className="flex-1 py-0.5 text-[10px] font-bold rounded bg-obsidian-950 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-obsidian-700 hover:border-rose-500/40 transition font-tabular"
+                  >
+                    -{pct}%
+                  </button>
+                ))}
+              </div>
+
+              {/* Helpful Explanation Strip */}
+              <div className="p-2 rounded-lg bg-obsidian-950/90 border border-obsidian-800 text-[11px] text-slate-300 font-tabular space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Current Market LTP:</span>
+                  <span className="font-bold text-white">₹{stock.ltp.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Execution Action:</span>
+                  <span className="font-bold text-amber-300">
+                    {isBuy && triggerPrice < stock.ltp
+                      ? `Buy @ Market ₹${stock.ltp.toFixed(2)} & auto-sell if price drops to ₹${triggerPrice.toFixed(2)}`
+                      : isBuy
+                      ? `Breakout Buy when price rises to ₹${triggerPrice.toFixed(2)}`
+                      : `Auto-sell holdings if price falls to ₹${triggerPrice.toFixed(2)}`}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -626,7 +674,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <span>Placing Order...</span>
             ) : (
               <span>
-                {side} {quantity > 0 ? quantity : 0} {stock.symbol} ({productType}) • ₹{requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {orderType === 'SL_M'
+                  ? `${side} ${quantity > 0 ? quantity : 0} ${stock.symbol} (SL @ ₹${triggerPrice.toFixed(2)}) • ₹${requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : `${side} ${quantity > 0 ? quantity : 0} ${stock.symbol} (${productType}) • ₹${requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </span>
             )}
           </button>
