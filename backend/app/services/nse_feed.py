@@ -349,26 +349,28 @@ class MarketDataFeed:
         clean_symbol = symbol.strip().upper()
         ticker_str = get_yf_ticker_string(clean_symbol)
         tf_key = timeframe.strip().upper()
-            
-        tf_map = {
-            "1D": ("5m", "1d"),
-            "5D": ("15m", "5d"),
-            "1M": ("1d", "1mo"),
-            "1Y": ("1d", "1y"),
-            "5Y": ("1wk", "5y"),
-            "MAX": ("1mo", "max"),
-            # Lowercase aliases
-            "1M_INTRA": ("1m", "1d"),
-            "5M": ("5m", "1d"),
-            "15M": ("15m", "5d"),
-            "1H": ("60m", "1mo"),
-        }
-        interval, period = tf_map.get(tf_key, ("5m", "1d"))
         current_ltp = self.market_cache.get(clean_symbol, {}).get("ltp")
         
         try:
             ticker = yf.Ticker(ticker_str)
-            df: pd.DataFrame = await asyncio.to_thread(ticker.history, period=period, interval=interval)
+            if tf_key == "1D" or tf_key == "1M_INTRA" or tf_key == "5M":
+                # Fetch recent 5 days of 5m bars to guarantee we get the latest trading session's full intraday series
+                df: pd.DataFrame = await asyncio.to_thread(ticker.history, period="5d", interval="5m")
+                if not df.empty:
+                    latest_date = df.index.normalize().max()
+                    df = df[df.index.normalize() == latest_date]
+            elif tf_key == "5D" or tf_key == "15M":
+                df = await asyncio.to_thread(ticker.history, period="5d", interval="15m")
+            elif tf_key == "1M" or tf_key == "1H":
+                df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
+            elif tf_key == "1Y":
+                df = await asyncio.to_thread(ticker.history, period="1y", interval="1d")
+            elif tf_key == "5Y":
+                df = await asyncio.to_thread(ticker.history, period="5y", interval="1wk")
+            elif tf_key == "MAX":
+                df = await asyncio.to_thread(ticker.history, period="max", interval="1mo")
+            else:
+                df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
             
             if df.empty:
                 df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
