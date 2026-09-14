@@ -175,9 +175,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-4 text-center text-xs text-slate-600 border-t border-obsidian-900 relative z-10">
-        AbhyasTrade &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders &bull; Educational Virtual
-        Trading Environment
+      <footer className="w-full py-4 px-6 text-center text-xs text-slate-500 border-t border-obsidian-900 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl mx-auto">
+        <div>
+          AbhyasTrade &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders &bull; Educational Virtual Trading Environment
+        </div>
+        <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
+          <a href="/privacy" className="hover:text-brand-cyan transition-colors">
+            Privacy Policy
+          </a>
+          <span>&bull;</span>
+          <a href="/terms" className="hover:text-emerald-400 transition-colors">
+            Terms of Service
+          </a>
+        </div>
       </footer>
     </div>
   );

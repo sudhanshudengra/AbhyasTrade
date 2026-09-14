@@ -13,6 +13,8 @@ import { OrderModal } from './components/OrderModal';
 import { ChargesCalculatorModal } from './components/ChargesCalculatorModal';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { LoginPage } from './components/LoginPage';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { OrderSide } from './lib/types';
 import { Layers, FileText, PieChart, ChevronUp, ChevronDown, GripHorizontal } from 'lucide-react';
 
@@ -128,6 +130,7 @@ export const App: React.FC = () => {
   // Sync URL Path with Authentication State (/ vs /login)
   useEffect(() => {
     if (loading) return;
+    if (window.location.pathname === '/privacy' || window.location.pathname === '/terms') return;
     if (!userProfile) {
       if (window.location.pathname !== '/login') {
         window.history.replaceState(null, '', '/login');
@@ -138,6 +141,14 @@ export const App: React.FC = () => {
       }
     }
   }, [userProfile, loading]);
+
+  // Direct public routes for Google branding & legal compliance
+  if (window.location.pathname === '/privacy') {
+    return <PrivacyPolicyPage />;
+  }
+  if (window.location.pathname === '/terms') {
+    return <TermsOfServicePage />;
+  }
 
   // Loading auth session check
   if (loading) {

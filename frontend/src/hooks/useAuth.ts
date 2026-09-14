@@ -26,7 +26,10 @@ export function useAuth() {
       setLoading(false);
       // Clean hash after session is loaded
       if (window.location.hash) {
-        window.history.replaceState(null, '', session?.user ? '/' : '/login');
+        const isPublicPage = window.location.pathname === '/privacy' || window.location.pathname === '/terms';
+        if (!isPublicPage) {
+          window.history.replaceState(null, '', session?.user ? '/' : '/login');
+        }
       }
     }).catch(() => {
       setLoading(false);
@@ -36,12 +39,15 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      const isPublicPage = window.location.pathname === '/privacy' || window.location.pathname === '/terms';
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        if (window.location.pathname === '/login' || window.location.hash) {
+        if (!isPublicPage && (window.location.pathname === '/login' || window.location.hash)) {
           window.history.replaceState(null, '', '/');
         }
       } else if (event === 'SIGNED_OUT') {
-        window.history.replaceState(null, '', '/login');
+        if (!isPublicPage) {
+          window.history.replaceState(null, '', '/login');
+        }
       }
     });
 
