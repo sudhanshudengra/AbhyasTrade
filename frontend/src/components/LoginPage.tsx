@@ -172,6 +172,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
             </div>
           </div>
         </div>
+
+        {/* Google OAuth & Data Usage Disclosure (Required by Google Trust & Safety) */}
+        <div className="mt-8 w-full max-w-4xl p-6 rounded-2xl bg-obsidian-900/70 border border-obsidian-800 text-left">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              Why We Request Your Google User Data &amp; How It Is Used
+            </h2>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed mb-3">
+            AbhyasTrade is an educational, zero-risk virtual stock trading terminal designed for learning Indian Equity markets. When you sign in with Google, we only request standard, non-sensitive profile permissions (<span className="text-slate-200 font-semibold">email, name, and profile picture</span>).
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-300">
+            <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
+              <span className="font-bold text-emerald-400 block mb-1">1. Purpose of Data Collection</span>
+              Your email is used solely to authenticate your session and create a private, isolated virtual paper trading account with ₹10,00,000 virtual balance.
+            </div>
+            <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
+              <span className="font-bold text-brand-cyan block mb-1">2. Strict Privacy &amp; Non-Disclosure</span>
+              We never access passwords, contacts, or Google Drive files. We never sell, share, or monetize user information. You can delete your account and data anytime.
+            </div>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
