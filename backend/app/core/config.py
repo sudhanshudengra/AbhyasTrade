@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # Market Data
     NSE_REFRESH_INTERVAL: float = 1.5  # seconds
-    SIMULATION_MODE_AUTO: bool = True  # Auto-fallback to realistic brownian motion ticks off-hours
+    SIMULATION_MODE_AUTO: bool = False  # Strictly disabled by default: only real NSE exchange prices used
     
     # CORS
     CORS_ORIGINS: list[str] = ["*"]

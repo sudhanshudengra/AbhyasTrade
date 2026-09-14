@@ -3,7 +3,7 @@ import io
 import logging
 import random
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import pandas as pd
 import requests
@@ -11,6 +11,8 @@ import yfinance as yf
 from app.core.config import settings
 
 logger = logging.getLogger("abhyastrade.nse_feed")
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # Default Core NSE Symbols to load into the initial watchlist on startup
 DEFAULT_NSE_SYMBOLS = [
@@ -37,9 +39,7 @@ DEFAULT_NSE_SYMBOLS = [
 
 def is_market_open_ist() -> bool:
     """Checks if Indian Equity Market (NSE) is currently in live trading hours (Mon-Fri 09:15 - 15:30 IST)"""
-    now_utc = datetime.now(timezone.utc)
-    # Convert to IST timestamp (+5:30)
-    now_ist = datetime.fromtimestamp(now_utc.timestamp() + (5 * 3600 + 30 * 60), tz=timezone.utc)
+    now_ist = datetime.now(IST)
     
     # Monday = 0, Friday = 4, Saturday = 5, Sunday = 6
     if now_ist.weekday() >= 5:
@@ -435,7 +435,7 @@ class MarketDataFeed:
                             if new_ltp != prev_ltp:
                                 tick_diffs.append(updated)
                 elif settings.SIMULATION_MODE_AUTO:
-                    # Off-market hours simulation (realistic micro-fluctuations around closing price for testing)
+                    # Optional simulation mode (only if explicitly enabled in environment variables)
                     for symbol in symbols_to_update:
                         cached = self.market_cache.get(symbol)
                         if cached and random.random() < 0.35:
@@ -464,7 +464,7 @@ class MarketDataFeed:
             except Exception as e:
                 logger.error(f"Error in market feed tick loop: {e}")
                 
-            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 2.5)
+            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 5.0)
 
     def subscribe(self) -> asyncio.Queue:
         q = asyncio.Queue(maxsize=100)
