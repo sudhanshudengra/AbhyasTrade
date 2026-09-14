@@ -44,43 +44,50 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
 
   const isPositive = (stock?.change ?? 0) >= 0;
 
-  // Format date and time in IST (12-hour AM/PM format)
+  // Format date and time in IST (12-hour AM/PM format) matching Google Finance / TradingView
   const formatISTTimestamp = (timestamp: number, tf: string) => {
     const date = new Date(timestamp * 1000);
-    if (tf === '1D') {
-      const timeStr = date.toLocaleTimeString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).toLowerCase();
-      const monthStr = date.toLocaleDateString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        day: 'numeric',
-        month: 'short',
-      });
-      return `${monthStr}, ${timeStr}`;
-    }
-    if (tf === '5D' || tf === '1M') {
-      const dStr = date.toLocaleDateString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        day: 'numeric',
-        month: 'short',
-      });
-      const tStr = date.toLocaleTimeString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).toLowerCase();
-      return `${dStr}, ${tStr}`;
-    }
-    return date.toLocaleDateString('en-IN', {
+
+    const istDate = date.toLocaleDateString('en-IN', {
       timeZone: 'Asia/Kolkata',
       day: 'numeric',
       month: 'short',
+    });
+
+    const istYear = date.toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata',
       year: 'numeric',
     });
+
+    const istTime = date.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).toLowerCase();
+
+    // 1D: Full intraday time e.g., "11 Sep, 11:35 am"
+    if (tf === '1D') {
+      return `${istDate}, ${istTime}`;
+    }
+
+    // 5D: Multi-day intraday e.g., "10 Sep, 2:15 pm"
+    if (tf === '5D') {
+      const hours = parseInt(date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit' }), 10);
+      const minutes = parseInt(date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, minute: '2-digit' }), 10);
+      if (hours !== 0 || minutes !== 0) {
+        return `${istDate}, ${istTime}`;
+      }
+      return istDate;
+    }
+
+    // 1M: Daily bars -> Date only e.g., "31 Aug"
+    if (tf === '1M') {
+      return istDate;
+    }
+
+    // 1Y, 5Y, Max: Multi-year daily/weekly/monthly bars -> Date with Year e.g., "31 Aug 2025"
+    return `${istDate} ${istYear}`;
   };
 
   // Initialize or re-create chart instance with dynamic timeframe localization
