@@ -9,15 +9,17 @@ import {
   ShieldAlert,
   ArrowRight
 } from 'lucide-react';
-import { Order, Trade } from '../lib/types';
+import { Order, Trade, StockQuote } from '../lib/types';
 
 interface OrderBookProps {
   orders: Order[];
   trades: Trade[];
+  quotesMap?: Record<string, StockQuote>;
+  flashMap?: Record<string, 'UP' | 'DOWN'>;
   onCancelOrder: (orderId: string) => Promise<any>;
 }
 
-export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOrder }) => {
+export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap, flashMap, onCancelOrder }) => {
   const [activeTab, setActiveTab] = useState<'ALL' | 'OPEN' | 'EXECUTED'>('ALL');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
@@ -192,6 +194,9 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
             const isCancelled = order.status === 'CANCELLED';
             const isSlOrder = order.order_type === 'SL_M' || (order.trigger_price != null && order.trigger_price > 0);
             const dateTimeStr = formatDateTime(order.created_at);
+            const liveQuote = quotesMap?.[order.symbol.toUpperCase()];
+            const liveLtp = liveQuote?.ltp;
+            const liveFlash = flashMap?.[order.symbol.toUpperCase()];
 
             return (
               <div
@@ -237,6 +242,16 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
                           @ Stoploss Trigger ₹{order.trigger_price.toFixed(2)}
                         </span>
                       ) : null}
+                      {liveLtp != null && liveLtp > 0 && (
+                        <>
+                          <span>&bull;</span>
+                          <span className={`font-bold transition-colors rounded px-1 py-0.2 ${
+                            liveFlash === 'UP' ? 'flash-up text-emerald-400' : liveFlash === 'DOWN' ? 'flash-down text-rose-400' : 'text-brand-cyan'
+                          }`}>
+                            Live LTP: ₹{liveLtp.toFixed(2)}
+                          </span>
+                        </>
+                      )}
                     </div>
                     {isRejected && order.rejection_reason && (
                       <div className="text-[10px] text-rose-400 mt-1">
@@ -263,7 +278,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
                     >
                       {isExecuted && isSlOrder ? 'EXECUTED (SL)' : order.status}
                     </span>
-                    {order.execution_price != null && (
+                    {order.execution_price != null ? (
                       <div className="mt-0.5">
                         {isSlOrder && order.trigger_price != null ? (
                           <div className="text-[11px] font-tabular">
@@ -278,7 +293,11 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, onCancelOr
                           </div>
                         )}
                       </div>
-                    )}
+                    ) : isPending && liveLtp != null && liveLtp > 0 ? (
+                      <div className="text-[11px] text-brand-cyan font-bold mt-0.5">
+                        LTP: ₹{liveLtp.toFixed(2)}
+                      </div>
+                    ) : null}
                   </div>
 
                   {isPending && (

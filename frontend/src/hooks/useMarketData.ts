@@ -17,25 +17,13 @@ const DEFAULT_SYMBOLS_WL1 = [
   'SBIN',
   'BHARTIARTL',
   'ITC',
-  'LT',
-  'KOTAKBANK',
-  'AXISBANK',
-  'MARUTI',
-  'SUNPHARMA',
-  'TITAN',
-  'BAJFINANCE',
-  'WIPRO',
-  'TATASTEEL',
-  'NIFTY 50',
-  'BANKNIFTY',
 ];
 
 const DEFAULT_WATCHLISTS: WatchlistGroup[] = [
   { id: 'wl_1', name: 'Watchlist 1', symbols: DEFAULT_SYMBOLS_WL1 },
-  { id: 'wl_2', name: 'Watchlist 2', symbols: ['NIFTY 50', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'] },
 ];
 
-const STORAGE_KEY_WATCHLISTS = 'abhyastrade_watchlists_v2';
+const STORAGE_KEY_WATCHLISTS = 'abhyastrade_watchlists_v5';
 const STORAGE_KEY_ACTIVE_WL = 'abhyastrade_active_wl_id';
 
 function loadSavedWatchlists(): WatchlistGroup[] {
@@ -61,7 +49,7 @@ function loadSavedActiveWlId(): string {
   return 'wl_1';
 }
 
-export function useMarketData() {
+export function useMarketData(extraSymbols: string[] = []) {
   const [watchlists, setWatchlists] = useState<WatchlistGroup[]>(loadSavedWatchlists);
   const [activeWatchlistId, setActiveWatchlistIdState] = useState<string>(loadSavedActiveWlId);
   const [quotesMap, setQuotesMap] = useState<Record<string, StockQuote>>({});
@@ -238,10 +226,22 @@ export function useMarketData() {
     };
   }, []);
 
-  // Ensure missing quotes for symbols in active watchlist are fetched
+  // Ensure missing quotes for symbols in active watchlist, extraSymbols (from orders/positions), and selectedSymbol are fetched
   useEffect(() => {
-    if (!activeWatchlist || activeWatchlist.symbols.length === 0) return;
-    activeWatchlist.symbols.forEach((sym) => {
+    const allRequiredSymbols = new Set<string>();
+    if (activeWatchlist && activeWatchlist.symbols) {
+      activeWatchlist.symbols.forEach((s) => allRequiredSymbols.add(s.toUpperCase()));
+    }
+    if (extraSymbols && Array.isArray(extraSymbols)) {
+      extraSymbols.forEach((s) => {
+        if (s) allRequiredSymbols.add(s.toUpperCase());
+      });
+    }
+    if (selectedSymbol) {
+      allRequiredSymbols.add(selectedSymbol.toUpperCase());
+    }
+
+    allRequiredSymbols.forEach((sym) => {
       if (!quotesMap[sym]) {
         addSymbolToWatchlist(sym)
           .then((quote) => {
@@ -252,20 +252,7 @@ export function useMarketData() {
           .catch(() => {});
       }
     });
-  }, [activeWatchlist, quotesMap]);
-
-  // Ensure quote is fetched for selectedSymbol even if it is not in current active watchlist
-  useEffect(() => {
-    if (selectedSymbol && !quotesMap[selectedSymbol]) {
-      addSymbolToWatchlist(selectedSymbol)
-        .then((quote) => {
-          if (quote) {
-            setQuotesMap((prev) => ({ ...prev, [quote.symbol]: quote }));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [selectedSymbol, quotesMap]);
+  }, [activeWatchlist, extraSymbols, selectedSymbol, quotesMap]);
 
   // Connect WebSocket
   useEffect(() => {
@@ -417,6 +404,7 @@ export function useMarketData() {
     deleteWatchlist,
     renameWatchlist,
     stocks,
+    quotesMap,
     selectedSymbol,
     setSelectedSymbol,
     selectedStock,

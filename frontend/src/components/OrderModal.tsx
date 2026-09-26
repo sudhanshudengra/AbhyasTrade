@@ -10,7 +10,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { StockQuote, ProductType, OrderType, OrderSide, Position } from '../lib/types';
+import { StockQuote, ProductType, OrderType, OrderSide, Position, isIndexSymbol } from '../lib/types';
 import { calculateSingleLegCharges } from '../lib/charges';
 
 interface OrderModalProps {
@@ -154,6 +154,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    if (isIndexSymbol(stock.symbol)) {
+      setErrorMessage(`Indices (${stock.symbol}) are benchmark indicators and cannot be bought/sold directly in equity spot.`);
+      return;
+    }
 
     if (quantity <= 0) {
       setErrorMessage('Please enter a valid quantity');
@@ -663,7 +668,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {/* Action CTA Button */}
           <button
             type="submit"
-            disabled={isSubmitting || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) || isCncSellExceeded}
+            disabled={isSubmitting || isIndexSymbol(stock?.symbol) || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) || isCncSellExceeded}
             className={`w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               isBuy
                 ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-950/60'
@@ -672,6 +677,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           >
             {isSubmitting ? (
               <span>Placing Order...</span>
+            ) : isIndexSymbol(stock?.symbol) ? (
+              <span>Indices Cannot Be Traded in Spot</span>
             ) : (
               <span>
                 {orderType === 'SL_M'

@@ -34,24 +34,6 @@ export const App: React.FC = () => {
     await signOut();
   };
 
-  // Market Data Hook
-  const {
-    watchlists,
-    activeWatchlistId,
-    setActiveWatchlistId,
-    addWatchlist,
-    deleteWatchlist,
-    renameWatchlist,
-    stocks,
-    selectedSymbol,
-    setSelectedSymbol,
-    selectedStock,
-    flashMap,
-    isConnected,
-    addSymbol,
-    removeSymbol,
-  } = useMarketData();
-
   // Portfolio Hook
   const {
     portfolio,
@@ -65,6 +47,37 @@ export const App: React.FC = () => {
     resetPortfolio,
     refreshAll,
   } = usePortfolio();
+
+  // Compute all unique symbols from active orders and positions so their quotes are always live
+  const orderAndPositionSymbols = React.useMemo(() => {
+    const syms = new Set<string>();
+    orders.forEach((o) => {
+      if (o.symbol) syms.add(o.symbol.toUpperCase());
+    });
+    positions.forEach((p) => {
+      if (p.symbol) syms.add(p.symbol.toUpperCase());
+    });
+    return Array.from(syms);
+  }, [orders, positions]);
+
+  // Market Data Hook (subscribes to active watchlist + all order and position symbols)
+  const {
+    watchlists,
+    activeWatchlistId,
+    setActiveWatchlistId,
+    addWatchlist,
+    deleteWatchlist,
+    renameWatchlist,
+    stocks,
+    quotesMap,
+    selectedSymbol,
+    setSelectedSymbol,
+    selectedStock,
+    flashMap,
+    isConnected,
+    addSymbol,
+    removeSymbol,
+  } = useMarketData(orderAndPositionSymbols);
 
   // Refresh user portfolio whenever userId changes
   useEffect(() => {
@@ -417,6 +430,8 @@ export const App: React.FC = () => {
                     <OrderBook
                       orders={orders}
                       trades={trades}
+                      quotesMap={quotesMap}
+                      flashMap={flashMap}
                       onCancelOrder={cancelOrder}
                     />
                   )}
@@ -476,6 +491,8 @@ export const App: React.FC = () => {
             <OrderBook
               orders={orders}
               trades={trades}
+              quotesMap={quotesMap}
+              flashMap={flashMap}
               onCancelOrder={cancelOrder}
             />
           )}

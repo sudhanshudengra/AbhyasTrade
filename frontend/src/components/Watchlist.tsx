@@ -15,7 +15,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { WatchlistGroup } from '../hooks/useMarketData'
 import { searchSymbols } from '../lib/api'
-import { StockQuote } from '../lib/types'
+import { StockQuote, isIndexSymbol } from '../lib/types'
 
 interface WatchlistProps {
   watchlists: WatchlistGroup[]
@@ -240,7 +240,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 }
               }
             }}
-            placeholder="Search & add NSE stocks (e.g. Zomato, Tata, Adani)..."
+            placeholder="Search & add NSE stocks (e.g. Tata, Adani, Reliance)..."
             className="w-full pl-9 pr-8 py-2 text-xs bg-obsidian-900 border border-obsidian-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors"
           />
           {searchQuery && (
@@ -334,9 +334,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({
 
       {/* Stock List & Global Search Results */}
       <div className="flex-1 overflow-y-auto divide-y divide-obsidian-700/40">
-        {/* Monitored Active Stocks */}
         {filteredStocks.map(stock => {
           const isSelected = stock.symbol === selectedSymbol
+          const isIndex = isIndexSymbol(stock.symbol)
           const flash = flashMap[stock.symbol]
           const isPositive = stock.change >= 0
           const rangeSpan = Math.max(
@@ -367,9 +367,15 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                     <span className="font-extrabold text-sm text-slate-100 tracking-tight">
                       {stock.symbol}
                     </span>
-                    <span className="text-[9px] uppercase font-semibold text-slate-400 px-1 py-0.5 rounded bg-obsidian-900 border border-obsidian-700">
-                      NSE
-                    </span>
+                    {isIndex ? (
+                      <span className="text-[9px] uppercase font-bold text-amber-400 px-1 py-0.5 rounded bg-amber-950/70 border border-amber-500/40">
+                        INDEX
+                      </span>
+                    ) : (
+                      <span className="text-[9px] uppercase font-semibold text-slate-400 px-1 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
+                        NSE
+                      </span>
+                    )}
                   </div>
                   <div className="text-[11px] text-slate-400 truncate max-w-[130px] sm:max-w-[160px]">
                     {stock.name}
@@ -429,28 +435,36 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 </span>
               </div>
 
-              {/* Quick Action Hover Buttons (Buy, Sell, Remove) */}
+              {/* Quick Action Hover Buttons (Buy, Sell, Remove - Buy/Sell disabled for indices) */}
               <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-1 bg-obsidian-800/95 p-1 rounded-lg border border-obsidian-600 shadow-xl z-10">
-                <button
-                  onClick={e => {
-                    e.stopPropagation()
-                    onOpenOrderModal(stock.symbol, 'BUY')
-                  }}
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
-                  title="Buy"
-                >
-                  B
-                </button>
-                <button
-                  onClick={e => {
-                    e.stopPropagation()
-                    onOpenOrderModal(stock.symbol, 'SELL')
-                  }}
-                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
-                  title="Sell"
-                >
-                  S
-                </button>
+                {!isIndex ? (
+                  <>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        onOpenOrderModal(stock.symbol, 'BUY')
+                      }}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
+                      title="Buy"
+                    >
+                      B
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        onOpenOrderModal(stock.symbol, 'SELL')
+                      }}
+                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
+                      title="Sell"
+                    >
+                      S
+                    </button>
+                  </>
+                ) : (
+                  <span className="px-2 py-0.5 text-[10px] font-bold text-amber-400 bg-amber-950/80 rounded border border-amber-500/30">
+                    Index Spot
+                  </span>
+                )}
                 {onRemoveSymbol && (
                   <button
                     onClick={e => handleRemoveStock(e, stock.symbol)}

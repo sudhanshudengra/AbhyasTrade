@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts';
-import { StockQuote, CandleData } from '../lib/types';
+import { StockQuote, CandleData, isIndexSymbol } from '../lib/types';
 import { getChartCandles } from '../lib/api';
 import { BarChart2, TrendingUp, TrendingDown, CandlestickChart } from 'lucide-react';
 
@@ -466,20 +466,28 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </button>
           </div>
 
-          {/* Buy & Sell Actions */}
+          {/* Buy & Sell Actions - Stocks only, disabled for Benchmark Indices */}
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onOpenOrderModal(stock.symbol, 'BUY')}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black shadow-md transition active:scale-95"
-            >
-              BUY
-            </button>
-            <button
-              onClick={() => onOpenOrderModal(stock.symbol, 'SELL')}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white text-xs font-black shadow-md transition active:scale-95"
-            >
-              SELL
-            </button>
+            {!isIndexSymbol(stock?.symbol) ? (
+              <>
+                <button
+                  onClick={() => stock && onOpenOrderModal(stock.symbol, 'BUY')}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black shadow-md transition active:scale-95"
+                >
+                  BUY
+                </button>
+                <button
+                  onClick={() => stock && onOpenOrderModal(stock.symbol, 'SELL')}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white text-xs font-black shadow-md transition active:scale-95"
+                >
+                  SELL
+                </button>
+              </>
+            ) : (
+              <div className="px-2.5 py-1 rounded-xl bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-bold shadow-sm">
+                Benchmark Index &bull; Spot View Only
+              </div>
+            )}
           </div>
         </div>
       </div>
