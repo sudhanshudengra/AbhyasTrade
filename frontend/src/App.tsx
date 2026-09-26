@@ -15,8 +15,8 @@ import { BottomNav, MobileTab } from './components/BottomNav';
 import { LoginPage } from './components/LoginPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
-import { OrderSide } from './lib/types';
-import { Layers, FileText, PieChart, ChevronUp, ChevronDown, GripHorizontal } from 'lucide-react';
+import { OrderSide, Order } from './lib/types';
+import { Layers, FileText, PieChart, ChevronUp, ChevronDown, GripHorizontal, ShieldAlert, X } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Auth Hook
@@ -79,6 +79,50 @@ export const App: React.FC = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
   const [orderModalSide, setOrderModalSide] = useState<OrderSide>('BUY');
   const [isChargesCalcOpen, setIsChargesCalcOpen] = useState<boolean>(false);
+
+  // Stop-Loss Live Trigger Toast Notification State
+  interface SLNotification {
+    id: string;
+    symbol: string;
+    side: string;
+    quantity: number;
+    triggerPrice: number;
+    executionPrice: number;
+    timestamp: number;
+  }
+  const [slNotifications, setSlNotifications] = useState<SLNotification[]>([]);
+  const prevOrdersRef = React.useRef<Order[]>([]);
+
+  // Detect when a pending stop-loss order is automatically executed
+  useEffect(() => {
+    if (prevOrdersRef.current.length > 0) {
+      orders.forEach((currentOrder) => {
+        if (
+          currentOrder.status === 'EXECUTED' &&
+          (currentOrder.order_type === 'SL_M' || (currentOrder.trigger_price != null && currentOrder.trigger_price > 0))
+        ) {
+          const prevOrder = prevOrdersRef.current.find((p) => p.id === currentOrder.id);
+          if (prevOrder && prevOrder.status === 'PENDING') {
+            const newNotif: SLNotification = {
+              id: `${currentOrder.id}-${Date.now()}`,
+              symbol: currentOrder.symbol,
+              side: currentOrder.side,
+              quantity: currentOrder.quantity,
+              triggerPrice: currentOrder.trigger_price || 0,
+              executionPrice: currentOrder.execution_price || currentOrder.trigger_price || 0,
+              timestamp: Date.now(),
+            };
+            setSlNotifications((prev) => [newNotif, ...prev.slice(0, 3)]);
+          }
+        }
+      });
+    }
+    prevOrdersRef.current = orders;
+  }, [orders]);
+
+  const dismissSlNotification = (id: string) => {
+    setSlNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   // Collapsible Watchlist Sidebar State
   const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState<boolean>(() => {
@@ -476,6 +520,51 @@ export const App: React.FC = () => {
           defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
           defaultPrice={selectedStock?.ltp || 3000}
         />
+      )}
+
+      {/* Real-time Stop-loss Trigger Toast Banner */}
+      {slNotifications.length > 0 && (
+        <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+          {slNotifications.map((notif) => (
+            <div
+              key={notif.id}
+              className="pointer-events-auto bg-obsidian-850 border border-amber-500/50 glow-amber shadow-2xl rounded-2xl p-3.5 flex items-start gap-3 animate-in slide-in-from-top-3 duration-200"
+            >
+              <div className="p-2 rounded-xl bg-amber-950/80 text-amber-400 border border-amber-500/40 shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-extrabold text-sm text-white">{notif.symbol}</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${notif.side === 'BUY' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                      {notif.side}
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-950/90 text-amber-300 border border-amber-500/40">
+                      SL TRIGGERED
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => dismissSlNotification(notif.id)}
+                    className="text-slate-400 hover:text-white p-0.5 rounded transition"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-300 mt-1">
+                  Protective stop-loss for <strong>{notif.quantity} shares</strong> was automatically triggered & executed.
+                </p>
+                <div className="mt-1.5 flex items-center gap-2 text-xs font-tabular bg-obsidian-950/80 px-2.5 py-1 rounded-lg border border-obsidian-700">
+                  <span className="text-slate-400">Trigger:</span>
+                  <span className="text-amber-300 font-bold">₹{notif.triggerPrice.toFixed(2)}</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-slate-400">Filled:</span>
+                  <span className="text-emerald-400 font-extrabold">₹{notif.executionPrice.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
