@@ -11,6 +11,7 @@ import { OrderBook } from './components/OrderBook';
 import { PortfolioSummary } from './components/PortfolioSummary';
 import { OrderModal } from './components/OrderModal';
 import { ChargesCalculatorModal } from './components/ChargesCalculatorModal';
+import { AbhyasLearningScreen } from './components/AbhyasLearningScreen';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { LoginPage } from './components/LoginPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
@@ -237,17 +238,25 @@ export const App: React.FC = () => {
               </button>
             )}
 
-            {/* Upper: TradingView Lightweight Chart */}
+            {/* Upper: TradingView Lightweight Chart or Abhyas Learning & Growth Screen */}
             <div
               className="w-full overflow-hidden"
               style={{
                 height: isDeskCollapsed ? 'calc(100% - 40px)' : `calc(100% - ${deskHeight}px)`,
               }}
             >
-              <TradingChart
-                stock={selectedStock}
-                onOpenOrderModal={handleOpenOrderModal}
-              />
+              {selectedStock ? (
+                <TradingChart
+                  stock={selectedStock}
+                  onOpenOrderModal={handleOpenOrderModal}
+                  onBackToLearning={() => setSelectedSymbol('')}
+                />
+              ) : (
+                <AbhyasLearningScreen
+                  onSelectSymbol={setSelectedSymbol}
+                  onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
+                />
+              )}
             </div>
 
             {/* Splitter / Resizer Drag Bar */}
@@ -412,10 +421,21 @@ export const App: React.FC = () => {
           )}
 
           {mobileTab === 'CHART' && (
-            <TradingChart
-              stock={selectedStock}
-              onOpenOrderModal={handleOpenOrderModal}
-            />
+            selectedStock ? (
+              <TradingChart
+                stock={selectedStock}
+                onOpenOrderModal={handleOpenOrderModal}
+                onBackToLearning={() => setSelectedSymbol('')}
+              />
+            ) : (
+              <AbhyasLearningScreen
+                onSelectSymbol={(sym) => {
+                  setSelectedSymbol(sym);
+                  setMobileTab('CHART');
+                }}
+                onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
+              />
+            )
           )}
 
           {mobileTab === 'POSITIONS' && (

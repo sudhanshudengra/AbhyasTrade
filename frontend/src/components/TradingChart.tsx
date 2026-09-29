@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts';
 import { StockQuote, CandleData } from '../lib/types';
 import { getChartCandles } from '../lib/api';
-import { BarChart2, TrendingUp, TrendingDown, CandlestickChart } from 'lucide-react';
+import { BarChart2, TrendingUp, TrendingDown, CandlestickChart, Sparkles } from 'lucide-react';
 
 interface TradingChartProps {
   stock: StockQuote | null;
   onOpenOrderModal: (symbol: string, side: 'BUY' | 'SELL') => void;
+  onBackToLearning?: () => void;
 }
 
 type ChartType = 'AREA' | 'CANDLE';
@@ -20,7 +21,11 @@ const TIMEFRAMES = [
   { id: 'Max', label: 'Max' },
 ];
 
-export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderModal }) => {
+export const TradingChart: React.FC<TradingChartProps> = ({
+  stock,
+  onOpenOrderModal,
+  onBackToLearning,
+}) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -405,24 +410,37 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
     <div className="flex-1 flex flex-col h-full bg-obsidian-900 overflow-hidden select-none">
       {/* Top Header Controls Bar */}
       <div className="px-4 py-2.5 bg-obsidian-800/95 border-b border-obsidian-700/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        {/* Left: Timeframe Switcher matching Groww / Google Finance (1D, 5D, 1M, 1Y, 5Y, Max) */}
-        <div className="flex items-center gap-1.5">
-          {TIMEFRAMES.map((tf) => {
-            const isActive = timeframe === tf.id;
-            return (
-              <button
-                key={tf.id}
-                onClick={() => setTimeframe(tf.id)}
-                className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
-                  isActive
-                    ? 'bg-white text-obsidian-950 shadow-md shadow-white/10 ring-1 ring-white/20'
-                    : 'text-slate-300 hover:text-white hover:bg-obsidian-700/70'
-                }`}
-              >
-                {tf.label}
-              </button>
-            );
-          })}
+        {/* Left: Abhyas Hub Button & Timeframe Switcher */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {onBackToLearning && (
+            <button
+              onClick={onBackToLearning}
+              className="px-2.5 py-1 text-xs font-bold rounded-xl bg-amber-950/50 hover:bg-amber-900/60 text-amber-300 hover:text-amber-200 border border-amber-500/40 hover:border-amber-400 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+              title="Return to Abhyas Learning & Growth Screen"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Abhyas Hub</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            {TIMEFRAMES.map((tf) => {
+              const isActive = timeframe === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  onClick={() => setTimeframe(tf.id)}
+                  className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-white text-obsidian-950 shadow-md shadow-white/10 ring-1 ring-white/20'
+                      : 'text-slate-300 hover:text-white hover:bg-obsidian-700/70'
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Right: Symbol Info, Chart Type Toggle & BUY/SELL buttons */}

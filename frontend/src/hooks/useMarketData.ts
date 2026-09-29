@@ -65,7 +65,7 @@ export function useMarketData() {
   const [watchlists, setWatchlists] = useState<WatchlistGroup[]>(loadSavedWatchlists);
   const [activeWatchlistId, setActiveWatchlistIdState] = useState<string>(loadSavedActiveWlId);
   const [quotesMap, setQuotesMap] = useState<Record<string, StockQuote>>({});
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('RELIANCE');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('');
   const [flashMap, setFlashMap] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [lastTickTime, setLastTickTime] = useState<number>(Date.now());
@@ -399,15 +399,10 @@ export function useMarketData() {
       });
   }, [activeWatchlist, quotesMap]);
 
-  // Initialize selected symbol on first load if not set
-  useEffect(() => {
-    if (!selectedSymbol && stocks.length > 0) {
-      setSelectedSymbol(stocks[0].symbol);
-    }
-  }, [stocks, selectedSymbol]);
-
   // Resolve selected stock object from quote cache regardless of active watchlist tab
-  const selectedStock = quotesMap[selectedSymbol] || stocks.find((s) => s.symbol === selectedSymbol) || stocks[0] || null;
+  const selectedStock = selectedSymbol
+    ? quotesMap[selectedSymbol] || stocks.find((s) => s.symbol === selectedSymbol) || null
+    : null;
 
   return {
     watchlists,
