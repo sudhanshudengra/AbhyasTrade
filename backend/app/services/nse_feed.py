@@ -409,6 +409,17 @@ class MarketDataFeed:
         last_resync_time = time.time()
         while self.is_running:
             try:
+                # Ensure all symbols from active pending orders are included in live tick stream
+                try:
+                    from app.core.database import DatabaseService
+                    pending_orders = await DatabaseService.get_pending_orders()
+                    for o in pending_orders:
+                        sym = o["symbol"].upper()
+                        if sym not in self.market_cache:
+                            await self.fetch_symbol_data_dynamically(sym, broadcast=False)
+                except Exception as e:
+                    logger.debug(f"Error checking pending order symbols in feed: {e}")
+
                 symbols_to_update = list(self.market_cache.keys())
                 tick_diffs = []
                 market_open = is_market_open_ist()

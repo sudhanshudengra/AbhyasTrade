@@ -45,7 +45,26 @@ class OrderMatcherService:
         executes the entry and automatically places the protective exit SL_M order.
         """
         symbol = symbol.upper()
+
+        # Reject orders for benchmark indices (Indices are non-tradable in spot equity)
+        if symbol in ["NIFTY 50", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "SENSEX", "^NSEI", "^NSEBANK"] or "INDEX" in symbol:
+            order_doc = {
+                "user_id": user_id,
+                "symbol": symbol,
+                "side": side,
+                "product_type": product_type,
+                "order_type": order_type,
+                "quantity": quantity,
+                "price": price,
+                "trigger_price": trigger_price,
+                "status": "REJECTED",
+                "rejection_reason": f"Indices ({symbol}) cannot be traded directly in equity spot. Please trade individual equity stocks."
+            }
+            return await DatabaseService.create_order(order_doc)
+
         current_tick = market_feed.market_cache.get(symbol)
+        if not current_tick:
+            current_tick = await market_feed.get_or_fetch_symbol(symbol)
         ltp = current_tick["ltp"] if current_tick else (price or 100.0)
         
         attached_sl = stoploss_trigger
@@ -346,12 +365,15 @@ class OrderMatcherService:
 
     @staticmethod
     async def match_all_pending_orders():
-        """Evaluates all pending orders against current market cache"""
+        # Evaluates all pending orders against current market cache
         pending_orders = await DatabaseService.get_pending_orders()
         for order in pending_orders:
-            symbol = order["symbol"]
+            symbol = order["symbol"].upper()
             tick = market_feed.market_cache.get(symbol)
-            if tick:
+            if not tick:
+                tick = await market_feed.get_or_fetch_symbol(symbol)
+            if tick and "ltp" in tick:
                 await OrderMatcherService.check_order_trigger(order, tick["ltp"])
 
 order_matcher = OrderMatcherService()
+
