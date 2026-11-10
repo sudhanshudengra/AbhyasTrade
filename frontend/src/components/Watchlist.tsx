@@ -202,6 +202,20 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 >
                   <Edit2 className="w-3 h-3" />
                 </button>
+                {watchlists.length > 1 && onDeleteWatchlist && activeWatchlist && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Delete "${activeWatchlist.name}"?`)) {
+                        onDeleteWatchlist(activeWatchlist.id);
+                      }
+                    }}
+                    className="p-0.5 text-slate-500 hover:text-rose-400 opacity-60 group-hover:opacity-100 transition"
+                    title={`Delete ${activeWatchlist.name}`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             )}
             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-obsidian-900 border border-obsidian-700 text-slate-400">
