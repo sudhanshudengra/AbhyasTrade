@@ -10,7 +10,7 @@ import {
   Zap,
   ArrowUpRight,
   ArrowDownRight,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import { Position, OrderSide } from '../lib/types';
 
@@ -91,7 +91,9 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           <div className="flex items-center gap-3">
             <div
               className={`w-2.5 h-10 rounded-full ${
-                isLong ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-rose-500 shadow-sm shadow-rose-500/50'
+                isLong
+                  ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                  : 'bg-rose-500 shadow-sm shadow-rose-500/50'
               }`}
             />
             <div>
@@ -115,7 +117,9 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
               <div className="flex items-center gap-2 text-xs font-tabular mt-1">
                 <span
                   className={`font-extrabold px-1.5 py-0.2 rounded text-[10px] ${
-                    isLong ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30' : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                    isLong
+                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
                   }`}
                 >
                   {isLong ? 'LONG POSITION' : 'SHORT POSITION'}
@@ -156,9 +160,17 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   isProfit ? 'text-emerald-400' : 'text-rose-400'
                 }`}
               >
-                {isProfit ? <TrendingUp className="w-7 h-7" /> : <TrendingDown className="w-7 h-7" />}
+                {isProfit ? (
+                  <TrendingUp className="w-7 h-7" />
+                ) : (
+                  <TrendingDown className="w-7 h-7" />
+                )}
                 <span>
-                  {isProfit ? '+' : ''}₹{(position.unrealized_pnl || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {isProfit ? '+' : ''}₹
+                  {(position.unrealized_pnl || 0).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-1">
@@ -167,10 +179,12 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                     isProfit ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'
                   }`}
                 >
-                  {isProfit ? '+' : ''}{(position.pnl_percent || 0).toFixed(2)}% ROI
+                  {isProfit ? '+' : ''}
+                  {(position.pnl_percent || 0).toFixed(2)}% ROI
                 </span>
                 <span className="text-[11px] text-slate-400 font-tabular">
-                  ({effectiveChangePerShare >= 0 ? '+' : ''}₹{effectiveChangePerShare.toFixed(2)}/share)
+                  ({effectiveChangePerShare >= 0 ? '+' : ''}₹{effectiveChangePerShare.toFixed(2)}
+                  /share)
                 </span>
               </div>
             </div>
@@ -178,8 +192,14 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             {/* Realized P&L Badge */}
             <div className="sm:text-right border-t sm:border-t-0 sm:border-l border-obsidian-700/60 pt-3 sm:pt-0 sm:pl-4">
               <div className="text-[11px] font-semibold text-slate-400">Realized P&L (Booked)</div>
-              <div className={`text-base font-bold font-tabular mt-0.5 ${isRealizedProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isRealizedProfit ? '+' : ''}₹{(position.realized_pnl || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div
+                className={`text-base font-bold font-tabular mt-0.5 ${isRealizedProfit ? 'text-emerald-400' : 'text-rose-400'}`}
+              >
+                {isRealizedProfit ? '+' : ''}₹
+                {(position.realized_pnl || 0).toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <div className="text-[10px] text-slate-500 mt-0.5">Net of brokerage & taxes</div>
             </div>
@@ -193,7 +213,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 Average Price
               </div>
               <div className="text-base font-extrabold text-white mt-1">
-                ₹{position.average_price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹
+                {position.average_price.toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
 
@@ -207,8 +231,14 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
                 )}
               </div>
-              <div className={`text-base font-extrabold mt-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                ₹{ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div
+                className={`text-base font-extrabold mt-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}
+              >
+                ₹
+                {ltp.toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
 
@@ -228,7 +258,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 Invested Value
               </div>
               <div className="text-base font-extrabold text-slate-200 mt-1">
-                ₹{investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹
+                {investedValue.toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
 
@@ -238,7 +272,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 Current Value
               </div>
               <div className="text-base font-extrabold text-white mt-1">
-                ₹{currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹
+                {currentValue.toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
 
@@ -253,7 +291,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 )}
               </div>
               <div className="text-base font-extrabold text-brand-cyan mt-1">
-                ₹{marginRequired.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹
+                {marginRequired.toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
           </div>
@@ -272,7 +314,8 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 <>
                   <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
                   <span>
-                    <strong>Delivery CNC:</strong> 100% upfront delivery holding, can be held overnight.
+                    <strong>Delivery CNC:</strong> 100% upfront delivery holding, can be held
+                    overnight.
                   </span>
                 </>
               )}

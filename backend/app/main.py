@@ -11,8 +11,7 @@ from app.api import market, orders, portfolio, charges, ws
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 # Silence verbose third-party HTTP client logs
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -22,17 +21,18 @@ logging.getLogger("yfinance").setLevel(logging.WARNING)
 
 logger = logging.getLogger("abhyastrade")
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Initializing AbhyasTrade Backend...")
     await init_db()
-    
+
     tick_task = asyncio.create_task(market_feed.update_tick_loop())
     squareoff_task = asyncio.create_task(auto_squareoff_service.schedule_loop())
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down background tasks...")
     market_feed.is_running = False
@@ -44,11 +44,12 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Real-Time Virtual Trading Platform tailored to Indian Equity Market (NSE)",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS Configuration
@@ -67,6 +68,7 @@ app.include_router(portfolio.router, prefix=settings.API_V1_STR)
 app.include_router(charges.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
+
 @app.get("/")
 async def root():
     return {
@@ -74,9 +76,11 @@ async def root():
         "status": "ONLINE",
         "market": "NSE (National Stock Exchange of India)",
         "cached_symbols_count": len(market_feed.market_cache),
-        "docs_url": "/docs"
+        "docs_url": "/docs",
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

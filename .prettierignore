@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+.git
+.vscode
+.idea
+backend/venv
+**/venv/**
+__pycache__
+*.pyc
+*.lock
+*.log
+.system_generated
+.env
+.env.*
+!.env.example

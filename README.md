@@ -30,12 +30,14 @@ User → Google Sign-In (Supabase OAuth)
 ```
 
 The **backend** is a FastAPI Python server that:
+
 - Fetches real NSE prices every few seconds
 - Matches and executes orders against live prices
 - Calculates exact SEBI-mandated charges on every trade
 - Auto-squares off all intraday positions at market close
 
 The **frontend** is a React + Vite PWA that:
+
 - Streams live prices via WebSocket
 - Renders interactive line/candlestick charts (TradingView Lightweight Charts)
 - Shows a full trading desk: Watchlist, Chart, Order Book, Positions, Analytics
@@ -45,35 +47,44 @@ The **frontend** is a React + Vite PWA that:
 ## Getting Started
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+ and npm
 
 ### 1. Clone the repo
+
 ```bash
 git clone https://github.com/your-username/AbhyasTrade.git
 cd AbhyasTrade
 ```
 
 ### 2. Set up the backend
+
 ```bash
 # Copy the env template and fill in your Supabase credentials
 cp .env.example .env
 ```
+
 Edit `.env` and add your `SUPABASE_URL` and `SUPABASE_KEY`.
 
 Then run the Supabase schema once:
+
 - Open your [Supabase project](https://supabase.com) → SQL Editor → paste contents of `backend/supabase_schema.sql` → Run.
 
 ### 3. Start the backend
+
 ```bash
 npm run dev:backend
 ```
+
 Runs at → **http://127.0.0.1:8000** | API docs at → **http://127.0.0.1:8000/docs**
 
 ### 4. Start the frontend
+
 ```bash
 npm run dev:frontend
 ```
+
 Runs at → **http://localhost:5173**
 
 > Or run both at once with `npm run dev` from the project root.
@@ -82,15 +93,15 @@ Runs at → **http://localhost:5173**
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
-| Charts | TradingView Lightweight Charts |
-| Backend | Python 3.11, FastAPI, Uvicorn |
+| Layer       | Tech                                         |
+| ----------- | -------------------------------------------- |
+| Frontend    | React 18, TypeScript, Vite, Tailwind CSS     |
+| Charts      | TradingView Lightweight Charts               |
+| Backend     | Python 3.11, FastAPI, Uvicorn                |
 | Market Data | Yahoo Finance (`yfinance`), NSE live scraper |
-| Auth | Supabase Google OAuth |
-| Database | Supabase PostgreSQL |
-| PWA | vite-plugin-pwa |
+| Auth        | Supabase Google OAuth                        |
+| Database    | Supabase PostgreSQL                          |
+| PWA         | vite-plugin-pwa                              |
 
 ---
 

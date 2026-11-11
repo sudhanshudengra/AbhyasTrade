@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  List,
-  LineChart,
-  Layers,
-  FileText,
-  PieChart
-} from 'lucide-react';
+import { List, LineChart, Layers, FileText, PieChart } from 'lucide-react';
 
 export type MobileTab = 'WATCHLIST' | 'CHART' | 'POSITIONS' | 'ORDERS' | 'ANALYTICS';
 

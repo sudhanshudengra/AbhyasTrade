@@ -7,7 +7,7 @@ import {
   Trash2,
   FileText,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 import { Order, Trade, StockQuote } from '../lib/types';
 
@@ -19,7 +19,13 @@ interface OrderBookProps {
   onCancelOrder: (orderId: string) => Promise<any>;
 }
 
-export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap, flashMap, onCancelOrder }) => {
+export const OrderBook: React.FC<OrderBookProps> = ({
+  orders,
+  trades,
+  quotesMap,
+  flashMap,
+  onCancelOrder,
+}) => {
   const [activeTab, setActiveTab] = useState<'ALL' | 'OPEN' | 'EXECUTED'>('ALL');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
@@ -53,7 +59,8 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
     return `${dateFormatted}, ${timeFormatted}`;
   };
 
-  const displayOrders = activeTab === 'OPEN' ? pendingOrders : (activeTab === 'EXECUTED' ? executedOrders : orders);
+  const displayOrders =
+    activeTab === 'OPEN' ? pendingOrders : activeTab === 'EXECUTED' ? executedOrders : orders;
 
   return (
     <div className="flex flex-col h-full bg-obsidian-900 overflow-hidden">
@@ -119,20 +126,31 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
             trades.map((trade) => {
               const isBuy = trade.side === 'BUY';
               const matchedOrder = orders.find((o) => o.id === trade.order_id);
-              const isSlTriggered = matchedOrder?.order_type === 'SL_M' || (matchedOrder?.trigger_price != null && matchedOrder.trigger_price > 0);
+              const isSlTriggered =
+                matchedOrder?.order_type === 'SL_M' ||
+                (matchedOrder?.trigger_price != null && matchedOrder.trigger_price > 0);
               const triggerPrice = matchedOrder?.trigger_price;
               const dateTimeStr = formatDateTime(trade.executed_at);
 
               return (
-                <div key={trade.id} className="px-4 py-3 hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div
+                  key={trade.id}
+                  className="px-4 py-3 hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`p-1.5 rounded-lg shrink-0 ${isBuy ? 'bg-emerald-950/60 text-emerald-400' : 'bg-rose-950/60 text-rose-400'}`}>
+                    <div
+                      className={`p-1.5 rounded-lg shrink-0 ${isBuy ? 'bg-emerald-950/60 text-emerald-400' : 'bg-rose-950/60 text-rose-400'}`}
+                    >
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-extrabold text-sm text-white tracking-tight">{trade.symbol}</span>
-                        <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${isBuy ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                        <span className="font-extrabold text-sm text-white tracking-tight">
+                          {trade.symbol}
+                        </span>
+                        <span
+                          className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${isBuy ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}
+                        >
                           {trade.side}
                         </span>
                         <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
@@ -148,7 +166,10 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
                       <div className="text-[11px] text-slate-400 mt-1 font-tabular flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span className="text-slate-300 font-medium">{dateTimeStr}</span>
                         <span>&bull;</span>
-                        <span>Turnover: ₹{trade.turnover.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span>
+                          Turnover: ₹
+                          {trade.turnover.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </span>
                         {isSlTriggered && triggerPrice != null && (
                           <>
                             <span>&bull;</span>
@@ -169,7 +190,9 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
                       <div className="text-[11px] text-amber-300/90 font-medium flex items-center sm:justify-end gap-1">
                         <span>Trigger: ₹{triggerPrice.toFixed(2)}</span>
                         <ArrowRight className="w-3 h-3 text-slate-500 inline" />
-                        <span className="text-emerald-400 font-semibold">Filled: ₹{trade.price.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-semibold">
+                          Filled: ₹{trade.price.toFixed(2)}
+                        </span>
                       </div>
                     )}
                     <div className="text-[11px] text-slate-400">
@@ -192,7 +215,9 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
             const isRejected = order.status === 'REJECTED';
             const isExecuted = order.status === 'EXECUTED';
             const isCancelled = order.status === 'CANCELLED';
-            const isSlOrder = order.order_type === 'SL_M' || (order.trigger_price != null && order.trigger_price > 0);
+            const isSlOrder =
+              order.order_type === 'SL_M' ||
+              (order.trigger_price != null && order.trigger_price > 0);
             const dateTimeStr = formatDateTime(order.created_at);
             const liveQuote = quotesMap?.[order.symbol.toUpperCase()];
             const liveLtp = liveQuote?.ltp;
@@ -213,8 +238,12 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-extrabold text-sm text-white tracking-tight">{order.symbol}</span>
-                      <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${isBuy ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                      <span className="font-extrabold text-sm text-white tracking-tight">
+                        {order.symbol}
+                      </span>
+                      <span
+                        className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${isBuy ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}
+                      >
                         {order.side}
                       </span>
                       <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
@@ -245,9 +274,15 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
                       {liveLtp != null && liveLtp > 0 && (
                         <>
                           <span>&bull;</span>
-                          <span className={`font-bold transition-colors rounded px-1 py-0.2 ${
-                            liveFlash === 'UP' ? 'flash-up text-emerald-400' : liveFlash === 'DOWN' ? 'flash-down text-rose-400' : 'text-brand-cyan'
-                          }`}>
+                          <span
+                            className={`font-bold transition-colors rounded px-1 py-0.2 ${
+                              liveFlash === 'UP'
+                                ? 'flash-up text-emerald-400'
+                                : liveFlash === 'DOWN'
+                                  ? 'flash-down text-rose-400'
+                                  : 'text-brand-cyan'
+                            }`}
+                          >
                             Live LTP: ₹{liveLtp.toFixed(2)}
                           </span>
                         </>
@@ -268,12 +303,12 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
                         isPending
                           ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
                           : isExecuted
-                          ? isSlOrder
-                            ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-extrabold'
-                            : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                          : isRejected
-                          ? 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
-                          : 'bg-slate-800 text-slate-400'
+                            ? isSlOrder
+                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-extrabold'
+                              : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                            : isRejected
+                              ? 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                              : 'bg-slate-800 text-slate-400'
                       }`}
                     >
                       {isExecuted && isSlOrder ? 'EXECUTED (SL)' : order.status}
@@ -283,9 +318,13 @@ export const OrderBook: React.FC<OrderBookProps> = ({ orders, trades, quotesMap,
                         {isSlOrder && order.trigger_price != null ? (
                           <div className="text-[11px] font-tabular">
                             <span className="text-slate-400">Trigger: </span>
-                            <span className="text-amber-300 font-semibold">₹{order.trigger_price.toFixed(2)}</span>
+                            <span className="text-amber-300 font-semibold">
+                              ₹{order.trigger_price.toFixed(2)}
+                            </span>
                             <span className="text-slate-500 mx-1">&rarr;</span>
-                            <span className="text-emerald-400 font-bold">Filled: ₹{order.execution_price.toFixed(2)}</span>
+                            <span className="text-emerald-400 font-bold">
+                              Filled: ₹{order.execution_price.toFixed(2)}
+                            </span>
                           </div>
                         ) : (
                           <div className="text-[11px] text-slate-300 font-semibold">

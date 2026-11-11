@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  Percent,
-  Award,
-  Receipt,
-  Scale
-} from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Percent, Award, Receipt, Scale } from 'lucide-react';
 import { PortfolioSummary as IPortfolioSummary, Trade } from '../lib/types';
 
 interface PortfolioSummaryProps {
@@ -31,21 +23,37 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
       {/* Top Banner Card */}
       <div className="bg-gradient-to-r from-obsidian-800 via-obsidian-800 to-obsidian-700/80 border border-obsidian-700 rounded-2xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-brand-blue/10 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
           <div>
             <div className="text-xs uppercase font-bold tracking-wider text-slate-400">
               Account Value / Net Worth
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-white font-tabular mt-1">
-              ₹{equity.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹
+              {equity.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                isOverallProfitable ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30' : 'bg-rose-950/60 text-rose-400 border border-rose-500/30'
-              }`}>
-                {isOverallProfitable ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                <span>{isOverallProfitable ? '+' : ''}₹{netReturn.toFixed(2)} ({isOverallProfitable ? '+' : ''}{netReturnPct}%)</span>
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isOverallProfitable
+                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-rose-950/60 text-rose-400 border border-rose-500/30'
+                }`}
+              >
+                {isOverallProfitable ? (
+                  <TrendingUp className="w-3 h-3" />
+                ) : (
+                  <TrendingDown className="w-3 h-3" />
+                )}
+                <span>
+                  {isOverallProfitable ? '+' : ''}₹{netReturn.toFixed(2)} (
+                  {isOverallProfitable ? '+' : ''}
+                  {netReturnPct}%)
+                </span>
               </span>
               <span className="text-xs text-slate-400">Since inception</span>
             </div>
@@ -71,11 +79,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
             <Wallet className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-lg font-extrabold text-emerald-400 font-tabular">
-            ₹{portfolio?.available_margin?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+            ₹
+            {portfolio?.available_margin?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) ||
+              '0.00'}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Free cash for new positions
-          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Free cash for new positions</div>
         </div>
 
         {/* Deployed Capital */}
@@ -85,11 +93,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
             <Scale className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-lg font-extrabold text-slate-200 font-tabular">
-            ₹{portfolio?.used_margin?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+            ₹
+            {portfolio?.used_margin?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) ||
+              '0.00'}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Active in open trades
-          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Active in open trades</div>
         </div>
 
         {/* Realized PnL */}
@@ -98,14 +106,15 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
             <span className="text-xs font-bold uppercase tracking-wider">Total Realized P&L</span>
             <Award className="w-4 h-4 text-brand-cyan" />
           </div>
-          <div className={`text-lg font-extrabold font-tabular ${
-            (portfolio?.total_realized_pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-          }`}>
-            {(portfolio?.total_realized_pnl ?? 0) >= 0 ? '+' : ''}₹{portfolio?.total_realized_pnl?.toFixed(2) || '0.00'}
+          <div
+            className={`text-lg font-extrabold font-tabular ${
+              (portfolio?.total_realized_pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+            }`}
+          >
+            {(portfolio?.total_realized_pnl ?? 0) >= 0 ? '+' : ''}₹
+            {portfolio?.total_realized_pnl?.toFixed(2) || '0.00'}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Booked profits/losses
-          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Booked profits/losses</div>
         </div>
 
         {/* Total Charges Paid */}
@@ -133,7 +142,8 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
           <div className="bg-obsidian-900 p-3 rounded-xl border border-obsidian-700/60">
             <div className="font-bold text-brand-cyan mb-1">Intraday MIS (5x)</div>
             <p className="text-slate-400 leading-relaxed">
-              Provides 5x leverage. All open MIS positions are automatically squared off at 3:15 PM IST.
+              Provides 5x leverage. All open MIS positions are automatically squared off at 3:15 PM
+              IST.
             </p>
           </div>
           <div className="bg-obsidian-900 p-3 rounded-xl border border-obsidian-700/60">
@@ -145,7 +155,8 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
           <div className="bg-obsidian-900 p-3 rounded-xl border border-obsidian-700/60">
             <div className="font-bold text-amber-400 mb-1">Realistic Friction</div>
             <p className="text-slate-400 leading-relaxed">
-              Includes STT, Exchange fee, SEBI fee, Stamp duty, Brokerage, and GST to test real edge.
+              Includes STT, Exchange fee, SEBI fee, Stamp duty, Brokerage, and GST to test real
+              edge.
             </p>
           </div>
         </div>

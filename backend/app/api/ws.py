@@ -10,21 +10,22 @@ logger = logging.getLogger("abhyastrade.ws")
 
 router = APIRouter(tags=["WebSocket"])
 
+
 @router.websocket("/ws/market")
 async def websocket_market_endpoint(websocket: WebSocket):
     await websocket.accept()
     logger.info("WebSocket client connected to /ws/market")
-    
+
     # Send initial snapshot of all symbols
     initial_snapshot = {
         "type": "SNAPSHOT",
-        "data": list(market_feed.market_cache.values())
+        "data": list(market_feed.market_cache.values()),
     }
     await websocket.send_json(initial_snapshot)
-    
+
     # Subscribe to feed queue
     queue = market_feed.subscribe()
-    
+
     async def listen_client():
         try:
             while True:
@@ -36,7 +37,7 @@ async def websocket_market_endpoint(websocket: WebSocket):
             pass
 
     client_task = asyncio.create_task(listen_client())
-    
+
     try:
         while True:
             try:
@@ -47,17 +48,17 @@ async def websocket_market_endpoint(websocket: WebSocket):
                 payload = {
                     "type": "SNAPSHOT",
                     "data": list(market_feed.market_cache.values()),
-                    "timestamp": int(time.time()) if 'time' in globals() else 0
+                    "timestamp": int(time.time()) if "time" in globals() else 0,
                 }
-            
+
             # Match pending orders on every tick update / heartbeat
             try:
                 await order_matcher.match_all_pending_orders()
             except Exception as e:
                 logger.error(f"Error matching pending orders in WS loop: {e}")
-                
+
             await websocket.send_json(payload)
-            
+
     except (WebSocketDisconnect, asyncio.CancelledError):
         logger.info("WebSocket client disconnected from /ws/market")
     except Exception as e:

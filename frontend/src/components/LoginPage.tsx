@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  TrendingUp,
-  ShieldCheck,
-  Zap,
-  Sparkles,
-  Compass,
-  CheckCircle2,
-} from 'lucide-react';
+import { TrendingUp, ShieldCheck, Zap, Sparkles, Compass, CheckCircle2 } from 'lucide-react';
 
 interface LoginPageProps {
   onSignInWithGoogle: () => Promise<any>;
@@ -23,7 +16,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       await onSignInWithGoogle();
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
-      setErrorMessage(err?.message || 'Could not connect to Google. Please check your Supabase OAuth setup.');
+      setErrorMessage(
+        err?.message || 'Could not connect to Google. Please check your Supabase OAuth setup.'
+      );
       setIsLoading(false);
     }
   };
@@ -62,7 +57,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
 
       {/* Hero & Login Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-8 relative z-10 max-w-4xl mx-auto text-center">
-        
         {/* Sacred Sanskrit Shloka Banner */}
         <div className="w-full max-w-3xl bg-gradient-to-b from-obsidian-800/90 via-obsidian-900/90 to-obsidian-950/95 border border-amber-500/25 rounded-3xl p-5 sm:p-7 pt-7 sm:pt-8 shadow-2xl backdrop-blur-xl relative overflow-hidden mb-8 group">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
@@ -75,7 +69,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
           </p>
 
           <p className="text-xs sm:text-sm text-slate-300 mt-3 max-w-xl mx-auto font-medium leading-relaxed">
-            &ldquo;Through continuous, disciplined practice (<span className="text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (<span className="text-emerald-400 font-bold">वैराग्य</span>), market mastery is attained.&rdquo;
+            &ldquo;Through continuous, disciplined practice (
+            <span className="text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (
+            <span className="text-emerald-400 font-bold">वैराग्य</span>), market mastery is
+            attained.&rdquo;
           </p>
         </div>
 
@@ -90,7 +87,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
 
         {/* Subtitle */}
         <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mb-8 leading-relaxed">
-          Cultivate emotional discipline and test intraday (5x MIS) &amp; delivery (CNC) strategies in a high-fidelity virtual terminal with real-time NSE prices and exact SEBI regulatory charge calculations.
+          Cultivate emotional discipline and test intraday (5x MIS) &amp; delivery (CNC) strategies
+          in a high-fidelity virtual terminal with real-time NSE prices and exact SEBI regulatory
+          charge calculations.
         </p>
 
         {/* Primary Auth Action Card */}
@@ -163,7 +162,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <span className="text-xs font-extrabold text-white">१. अनुशासन (Discipline)</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Define your Stop-Loss on every trade. Enforce strict capital protection and 1-2% position sizing.
+              Define your Stop-Loss on every trade. Enforce strict capital protection and 1-2%
+              position sizing.
             </p>
           </div>
 
@@ -176,7 +176,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <span className="text-xs font-extrabold text-white">२. धैर्य (Patience)</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Conquer emotional impulses and FOMO. Wait patiently for high-probability setups at key levels.
+              Conquer emotional impulses and FOMO. Wait patiently for high-probability setups at key
+              levels.
             </p>
           </div>
 
@@ -189,7 +190,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <span className="text-xs font-extrabold text-white">३. अभ्यास (Practice)</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Hone strategies risk-free on real-time NSE ticks with ₹10,00,000 virtual balance and exact charges.
+              Hone strategies risk-free on real-time NSE ticks with ₹10,00,000 virtual balance and
+              exact charges.
             </p>
           </div>
         </div>
@@ -203,16 +205,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
             </h2>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed mb-3">
-            AbhyasTrade is an educational, zero-risk virtual stock trading terminal designed for learning Indian Equity markets. When you sign in with Google, we only request standard, non-sensitive profile permissions (<span className="text-slate-200 font-semibold">email, name, and profile picture</span>).
+            AbhyasTrade is an educational, zero-risk virtual stock trading terminal designed for
+            learning Indian Equity markets. When you sign in with Google, we only request standard,
+            non-sensitive profile permissions (
+            <span className="text-slate-200 font-semibold">email, name, and profile picture</span>).
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-300">
             <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
-              <span className="font-bold text-emerald-400 block mb-1">1. Purpose of Data Collection</span>
-              Your email is used solely to authenticate your session and create a private, isolated virtual paper trading account with ₹10,00,000 virtual balance.
+              <span className="font-bold text-emerald-400 block mb-1">
+                1. Purpose of Data Collection
+              </span>
+              Your email is used solely to authenticate your session and create a private, isolated
+              virtual paper trading account with ₹10,00,000 virtual balance.
             </div>
             <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
-              <span className="font-bold text-brand-cyan block mb-1">2. Strict Privacy &amp; Non-Disclosure</span>
-              We never access passwords, contacts, or Google Drive files. We never sell, share, or monetize user information. You can delete your account and data anytime.
+              <span className="font-bold text-brand-cyan block mb-1">
+                2. Strict Privacy &amp; Non-Disclosure
+              </span>
+              We never access passwords, contacts, or Google Drive files. We never sell, share, or
+              monetize user information. You can delete your account and data anytime.
             </div>
           </div>
         </div>
@@ -221,7 +232,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       {/* Footer */}
       <footer className="w-full py-4 px-6 text-center text-xs text-slate-500 border-t border-obsidian-900 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl mx-auto">
         <div>
-          AbhyasTrade &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders &bull; Educational Virtual Trading Environment
+          AbhyasTrade &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders
+          &bull; Educational Virtual Trading Environment
         </div>
         <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
           <a href="/privacy" className="hover:text-brand-cyan transition-colors">

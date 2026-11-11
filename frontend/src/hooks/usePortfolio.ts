@@ -9,7 +9,7 @@ import {
   cancelOrder as apiCancelOrder,
   exitPosition as apiExitPosition,
   squareoffAllMis as apiSquareoffAllMis,
-  resetPortfolio as apiResetPortfolio
+  resetPortfolio as apiResetPortfolio,
 } from '../lib/api';
 
 export function usePortfolio() {
@@ -30,7 +30,7 @@ export function usePortfolio() {
         getPortfolioSummary().catch(() => null),
         getPositions().catch(() => []),
         getOrders().catch(() => []),
-        getTrades().catch(() => [])
+        getTrades().catch(() => []),
       ]);
 
       if (summaryData) setPortfolio(summaryData);
@@ -93,9 +93,7 @@ export function usePortfolio() {
   const squareoffAllMis = async () => {
     setPositions((prev) =>
       prev.map((p) =>
-        p.product_type === 'MIS'
-          ? { ...p, quantity: 0, unrealized_pnl: 0, is_open: false }
-          : p
+        p.product_type === 'MIS' ? { ...p, quantity: 0, unrealized_pnl: 0, is_open: false } : p
       )
     );
     try {
@@ -129,6 +127,6 @@ export function usePortfolio() {
     cancelOrder,
     exitPosition,
     squareoffAllMis,
-    resetPortfolio
+    resetPortfolio,
   };
 }

@@ -25,7 +25,12 @@ export const TermsOfServicePage: React.FC = () => {
               Terms of Service for AbhyasTrade
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-2">
-              Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              Last updated:{' '}
+              {new Date().toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
             </p>
           </div>
 
@@ -36,7 +41,10 @@ export const TermsOfServicePage: React.FC = () => {
               1. Educational Simulation Disclaimer
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              AbhyasTrade is strictly a <strong>virtual paper trading simulation platform</strong> built for learning and practicing stock market trading. All currency, cash balances (₹10,00,000), profits, losses, and order executions are entirely simulated with virtual money. No real funds or financial transactions occur on this platform.
+              AbhyasTrade is strictly a <strong>virtual paper trading simulation platform</strong>{' '}
+              built for learning and practicing stock market trading. All currency, cash balances
+              (₹10,00,000), profits, losses, and order executions are entirely simulated with
+              virtual money. No real funds or financial transactions occur on this platform.
             </p>
           </div>
 
@@ -47,7 +55,9 @@ export const TermsOfServicePage: React.FC = () => {
               2. Not Financial Advice
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              The market information, price charts, regulatory charge calculations, and analytics presented on AbhyasTrade are for educational and simulation purposes only. None of the content provided constitutes investment, financial, or trading advice.
+              The market information, price charts, regulatory charge calculations, and analytics
+              presented on AbhyasTrade are for educational and simulation purposes only. None of the
+              content provided constitutes investment, financial, or trading advice.
             </p>
           </div>
 
@@ -55,7 +65,9 @@ export const TermsOfServicePage: React.FC = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-white">3. User Accounts & Authenticity</h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Users authenticate via Google Sign-In to preserve their personal simulation state. You agree to use the service responsibly and not to attempt any unauthorized access or abuse of the infrastructure.
+              Users authenticate via Google Sign-In to preserve their personal simulation state. You
+              agree to use the service responsibly and not to attempt any unauthorized access or
+              abuse of the infrastructure.
             </p>
           </div>
 

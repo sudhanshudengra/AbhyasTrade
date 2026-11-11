@@ -9,20 +9,20 @@ import {
   TrendingDown,
   TrendingUp,
   User,
-  Wallet
-} from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
-import { UserProfile } from '../hooks/useAuth'
-import { PortfolioSummary } from '../lib/types'
+  Wallet,
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { UserProfile } from '../hooks/useAuth';
+import { PortfolioSummary } from '../lib/types';
 
 interface HeaderProps {
-  portfolio: PortfolioSummary | null
-  onResetPortfolio: () => Promise<any>
-  onOpenChargesCalc: () => void
-  isConnected: boolean
-  userProfile: UserProfile | null
-  onSignInWithGoogle: () => Promise<any>
-  onSignOut: () => Promise<any>
+  portfolio: PortfolioSummary | null;
+  onResetPortfolio: () => Promise<any>;
+  onOpenChargesCalc: () => void;
+  isConnected: boolean;
+  userProfile: UserProfile | null;
+  onSignInWithGoogle: () => Promise<any>;
+  onSignOut: () => Promise<any>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,106 +32,101 @@ export const Header: React.FC<HeaderProps> = ({
   isConnected,
   userProfile,
   onSignInWithGoogle,
-  onSignOut
+  onSignOut,
 }) => {
-  const [isResetting, setIsResetting] = useState(false)
-  const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [avatarFailed, setAvatarFailed] = useState(false)
-  const [isMarketOpen, setIsMarketOpen] = useState(false)
-  const [istTimeStr, setIstTimeStr] = useState('')
-  const userMenuRef = useRef<HTMLDivElement>(null)
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [isMarketOpen, setIsMarketOpen] = useState(false);
+  const [istTimeStr, setIstTimeStr] = useState('');
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown menu when clicking outside or pressing Escape
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        setShowUserMenu(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setShowUserMenu(false)
+        setShowUserMenu(false);
       }
     }
 
     if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-      document.addEventListener('keydown', handleKeyDown)
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [showUserMenu])
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showUserMenu]);
 
   // Check IST Market Hours (Mon-Fri 09:15 AM to 03:30 PM IST)
   useEffect(() => {
     function updateMarketStatus() {
-      const now = new Date()
+      const now = new Date();
       // Format to IST
       const istOptions: Intl.DateTimeFormatOptions = {
         timeZone: 'Asia/Kolkata',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true
-      }
-      setIstTimeStr(now.toLocaleTimeString('en-IN', istOptions))
+        hour12: true,
+      };
+      setIstTimeStr(now.toLocaleTimeString('en-IN', istOptions));
 
       const istHoursStr = now.toLocaleTimeString('en-IN', {
         timeZone: 'Asia/Kolkata',
         hour12: false,
-        hour: '2-digit'
-      })
+        hour: '2-digit',
+      });
       const istMinutesStr = now.toLocaleTimeString('en-IN', {
         timeZone: 'Asia/Kolkata',
         hour12: false,
-        minute: '2-digit'
-      })
-      const day = now.getDay() // 0 = Sun, 6 = Sat
+        minute: '2-digit',
+      });
+      const day = now.getDay(); // 0 = Sun, 6 = Sat
 
-      const totalMinutes =
-        parseInt(istHoursStr, 10) * 60 + parseInt(istMinutesStr, 10)
-      const isWeekday = day >= 1 && day <= 5
-      const isOpen =
-        isWeekday && totalMinutes >= 9 * 60 + 15 && totalMinutes <= 15 * 60 + 30
-      setIsMarketOpen(isOpen)
+      const totalMinutes = parseInt(istHoursStr, 10) * 60 + parseInt(istMinutesStr, 10);
+      const isWeekday = day >= 1 && day <= 5;
+      const isOpen = isWeekday && totalMinutes >= 9 * 60 + 15 && totalMinutes <= 15 * 60 + 30;
+      setIsMarketOpen(isOpen);
     }
 
-    updateMarketStatus()
-    const interval = setInterval(updateMarketStatus, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    updateMarketStatus();
+    const interval = setInterval(updateMarketStatus, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Truncate long names to 15 chars max for the header pill
   const truncateName = (name: string, max = 15) =>
     name.length > max ? name.slice(0, max).trimEnd() + '…' : name;
 
-  const initialCap = portfolio?.initial_capital ?? 1000000
-  const virtualCash = portfolio?.virtual_cash ?? 1000000
-  const deployedCapital = portfolio?.used_margin ?? 0
-  const availableCapital = portfolio?.available_margin ?? virtualCash
-  const totalEquity = portfolio?.total_equity ?? virtualCash
+  const initialCap = portfolio?.initial_capital ?? 1000000;
+  const virtualCash = portfolio?.virtual_cash ?? 1000000;
+  const deployedCapital = portfolio?.used_margin ?? 0;
+  const availableCapital = portfolio?.available_margin ?? virtualCash;
+  const totalEquity = portfolio?.total_equity ?? virtualCash;
 
   // Overall Net P&L = Current Total Account Equity - Base Starting Capital (10 Lakhs)
-  const overallPnl = totalEquity - initialCap
-  const overallPnlPercent = ((overallPnl / initialCap) * 100).toFixed(2)
-  const isProfit = overallPnl >= 0
+  const overallPnl = totalEquity - initialCap;
+  const overallPnlPercent = ((overallPnl / initialCap) * 100).toFixed(2);
+  const isProfit = overallPnl >= 0;
 
   const handleReset = async () => {
-    setIsResetting(true)
+    setIsResetting(true);
     try {
-      await onResetPortfolio()
-      setShowResetConfirm(false)
+      await onResetPortfolio();
+      setShowResetConfirm(false);
     } finally {
-      setIsResetting(false)
+      setIsResetting(false);
     }
-  }
+  };
 
   return (
     <header className="bg-obsidian-800/90 backdrop-blur-md border-b border-obsidian-700 sticky top-0 z-30 px-3 sm:px-4 lg:px-5 py-2">
@@ -156,15 +151,9 @@ export const Header: React.FC<HeaderProps> = ({
                   className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}
                 ></span>
                 <span
-                  className={
-                    isMarketOpen
-                      ? 'text-emerald-400 font-semibold'
-                      : 'text-slate-400'
-                  }
+                  className={isMarketOpen ? 'text-emerald-400 font-semibold' : 'text-slate-400'}
                 >
-                  {isMarketOpen
-                    ? 'NSE Live (09:15 - 15:30 IST)'
-                    : 'Market Closed (15:30 IST)'}
+                  {isMarketOpen ? 'NSE Live (09:15 - 15:30 IST)' : 'Market Closed (15:30 IST)'}
                 </span>
                 <span className="text-[10px] text-slate-500 hidden sm:inline">
                   &bull; {istTimeStr} IST
@@ -187,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ₹
                 {initialCap.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
+                  maximumFractionDigits: 2,
                 })}
               </div>
             </div>
@@ -204,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ₹
                 {availableCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
+                  maximumFractionDigits: 2,
                 })}
               </div>
             </div>
@@ -221,7 +210,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ₹
                 {deployedCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
+                  maximumFractionDigits: 2,
                 })}
               </div>
             </div>
@@ -249,11 +238,12 @@ export const Header: React.FC<HeaderProps> = ({
                   {isProfit ? '+' : ''}₹
                   {overallPnl.toLocaleString('en-IN', {
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
+                    maximumFractionDigits: 2,
                   })}
                 </span>
                 <span className="text-[10px] opacity-80">
-                  ({isProfit ? '+' : ''}{overallPnlPercent}%)
+                  ({isProfit ? '+' : ''}
+                  {overallPnlPercent}%)
                 </span>
               </div>
             </div>
@@ -320,8 +310,8 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Reset Capital Option */}
                 <button
                   onClick={() => {
-                    setShowUserMenu(false)
-                    setShowResetConfirm(true)
+                    setShowUserMenu(false);
+                    setShowResetConfirm(true);
                   }}
                   className="w-full py-2 px-3 rounded-xl bg-obsidian-700/60 hover:bg-amber-950/40 text-slate-200 hover:text-amber-300 text-xs font-bold border border-obsidian-600 hover:border-amber-500/40 transition flex items-center justify-between group active:scale-95"
                   title="Reset portfolio to ₹10,00,000"
@@ -335,8 +325,8 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Logout Option */}
                 <button
                   onClick={() => {
-                    setShowUserMenu(false)
-                    onSignOut()
+                    setShowUserMenu(false);
+                    onSignOut();
                   }}
                   className="w-full py-2 px-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold border border-rose-500/30 transition flex items-center justify-between group active:scale-95"
                 >
@@ -355,17 +345,13 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="bg-obsidian-800 border border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center gap-3 text-amber-400 mb-3">
               <ShieldCheck className="w-6 h-6" />
-              <h3 className="text-lg font-bold text-white">
-                Reset Virtual Capital?
-              </h3>
+              <h3 className="text-lg font-bold text-white">Reset Virtual Capital?</h3>
             </div>
             <p className="text-slate-300 text-sm mb-6 leading-relaxed">
               This will restore your portfolio to the default{' '}
-              <span className="text-emerald-400 font-bold font-tabular">
-                ₹10,00,000.00
-              </span>{' '}
-              virtual capital and clear all open positions, pending orders, and
-              trade history for this account.
+              <span className="text-emerald-400 font-bold font-tabular">₹10,00,000.00</span> virtual
+              capital and clear all open positions, pending orders, and trade history for this
+              account.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
@@ -394,5 +380,5 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       )}
     </header>
-  )
-}
+  );
+};

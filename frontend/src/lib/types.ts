@@ -143,7 +143,7 @@ export const INDEX_SYMBOLS = new Set([
   'MIDCPNIFTY',
   'SENSEX',
   '^NSEI',
-  '^NSEBANK'
+  '^NSEBANK',
 ]);
 
 export function isIndexSymbol(symbol?: string | null): boolean {
@@ -151,7 +151,13 @@ export function isIndexSymbol(symbol?: string | null): boolean {
   const clean = symbol.trim().toUpperCase();
   if (INDEX_SYMBOLS.has(clean)) return true;
   if (clean.startsWith('^') || clean.includes('INDEX')) return true;
-  if (clean === 'NIFTY 50' || clean === 'BANKNIFTY' || clean === 'FINNIFTY' || clean === 'MIDCPNIFTY' || clean === 'SENSEX') return true;
+  if (
+    clean === 'NIFTY 50' ||
+    clean === 'BANKNIFTY' ||
+    clean === 'FINNIFTY' ||
+    clean === 'MIDCPNIFTY' ||
+    clean === 'SENSEX'
+  )
+    return true;
   return false;
 }
-

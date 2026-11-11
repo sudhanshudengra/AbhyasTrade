@@ -1,13 +1,19 @@
+import {
+  ColorType,
+  createChart,
+  CrosshairMode,
+  IChartApi,
+  ISeriesApi,
+  LineStyle,
+} from 'lightweight-charts';
+import { BarChart2, CandlestickChart, TrendingUp } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts';
-import { StockQuote, CandleData, isIndexSymbol } from '../lib/types';
 import { getChartCandles } from '../lib/api';
-import { BarChart2, TrendingUp, TrendingDown, CandlestickChart, Sparkles } from 'lucide-react';
+import { CandleData, isIndexSymbol, StockQuote } from '../lib/types';
 
 interface TradingChartProps {
   stock: StockQuote | null;
   onOpenOrderModal: (symbol: string, side: 'BUY' | 'SELL') => void;
-  onBackToLearning?: () => void;
 }
 
 type ChartType = 'AREA' | 'CANDLE';
@@ -21,11 +27,7 @@ const TIMEFRAMES = [
   { id: 'Max', label: 'Max' },
 ];
 
-export const TradingChart: React.FC<TradingChartProps> = ({
-  stock,
-  onOpenOrderModal,
-  onBackToLearning,
-}) => {
+export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderModal }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -64,12 +66,14 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       year: 'numeric',
     });
 
-    const istTime = date.toLocaleTimeString('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    }).toLowerCase();
+    const istTime = date
+      .toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      .toLowerCase();
 
     // 1D: Full intraday time e.g., "11 Sep, 11:35 am"
     if (tf === '1D') {
@@ -78,8 +82,22 @@ export const TradingChart: React.FC<TradingChartProps> = ({
 
     // 5D: Multi-day intraday e.g., "10 Sep, 2:15 pm"
     if (tf === '5D') {
-      const hours = parseInt(date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit' }), 10);
-      const minutes = parseInt(date.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, minute: '2-digit' }), 10);
+      const hours = parseInt(
+        date.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour12: false,
+          hour: '2-digit',
+        }),
+        10
+      );
+      const minutes = parseInt(
+        date.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour12: false,
+          minute: '2-digit',
+        }),
+        10
+      );
       if (hours !== 0 || minutes !== 0) {
         return `${istDate}, ${istTime}`;
       }
@@ -117,7 +135,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       layout: {
         background: { type: ColorType.Solid, color: '#0b0e14' },
         textColor: '#94a3b8',
-        fontFamily: '"JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily:
+          '"JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontSize: 11,
       },
       localization: {
@@ -157,7 +176,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
         timeVisible: timeframe === '1D' || timeframe === '5D',
         secondsVisible: false,
         rightOffset: 8,
-        barSpacing: timeframe === '1D' ? 12 : (timeframe === '5D' ? 8 : 6),
+        barSpacing: timeframe === '1D' ? 12 : timeframe === '5D' ? 8 : 6,
         minBarSpacing: 3,
         fixLeftEdge: false,
         fixRightEdge: false,
@@ -165,12 +184,14 @@ export const TradingChart: React.FC<TradingChartProps> = ({
         tickMarkFormatter: (timestamp: number) => {
           const date = new Date(timestamp * 1000);
           if (timeframe === '1D') {
-            return date.toLocaleTimeString('en-IN', {
-              timeZone: 'Asia/Kolkata',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            }).toLowerCase();
+            return date
+              .toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              })
+              .toLowerCase();
           }
           if (timeframe === '5D' || timeframe === '1M') {
             return date.toLocaleDateString('en-IN', {
@@ -186,7 +207,11 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               month: 'short',
             });
           }
-          return date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' });
+          return date.toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            day: 'numeric',
+            month: 'short',
+          });
         },
       },
     });
@@ -265,7 +290,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       if (!price && stock) price = stock.ltp;
 
       const formattedTime = formatISTTimestamp(param.time as number, timeframe);
-      const isUp = (stock?.close ? price >= stock.close : isPositive);
+      const isUp = stock?.close ? price >= stock.close : isPositive;
 
       setTooltipState({
         visible: true,
@@ -283,7 +308,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     if (rawCandlesRef.current.length > 0) {
       const candles = rawCandlesRef.current;
       if (chartType === 'AREA' && areaSeriesRef.current) {
-        const areaData = candles.map((c) => ({ time: c.time as any, value: c.close }));
+        const areaData = candles.map((c) => ({
+          time: c.time as any,
+          value: c.close,
+        }));
         areaSeriesRef.current.setData(areaData);
       } else if (chartType === 'CANDLE' && candleSeriesRef.current) {
         candleSeriesRef.current.setData(candles as any);
@@ -300,7 +328,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       if (!entries || entries.length === 0) return;
       const { width: newWidth, height: newHeight } = entries[0].contentRect;
       if (newWidth > 10 && newHeight > 10 && chartRef.current) {
-        chartRef.current.applyOptions({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+        chartRef.current.applyOptions({
+          width: Math.floor(newWidth),
+          height: Math.floor(newHeight),
+        });
       }
     });
 
@@ -341,7 +372,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           lastCandleRef.current = candles[candles.length - 1];
 
           if (chartType === 'AREA' && areaSeriesRef.current) {
-            const areaData = candles.map((c) => ({ time: c.time as any, value: c.close }));
+            const areaData = candles.map((c) => ({
+              time: c.time as any,
+              value: c.close,
+            }));
             areaSeriesRef.current.setData(areaData);
           } else if (chartType === 'CANDLE' && candleSeriesRef.current) {
             candleSeriesRef.current.setData(candles as any);
@@ -410,37 +444,24 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     <div className="flex-1 flex flex-col h-full bg-obsidian-900 overflow-hidden select-none">
       {/* Top Header Controls Bar */}
       <div className="px-4 py-2.5 bg-obsidian-800/95 border-b border-obsidian-700/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        {/* Left: Abhyas Hub Button & Timeframe Switcher */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {onBackToLearning && (
-            <button
-              onClick={onBackToLearning}
-              className="px-2.5 py-1 text-xs font-bold rounded-xl bg-amber-950/50 hover:bg-amber-900/60 text-amber-300 hover:text-amber-200 border border-amber-500/40 hover:border-amber-400 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-              title="Return to Abhyas Learning & Growth Screen"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Abhyas Hub</span>
-            </button>
-          )}
-
-          <div className="flex items-center gap-1.5">
-            {TIMEFRAMES.map((tf) => {
-              const isActive = timeframe === tf.id;
-              return (
-                <button
-                  key={tf.id}
-                  onClick={() => setTimeframe(tf.id)}
-                  className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-white text-obsidian-950 shadow-md shadow-white/10 ring-1 ring-white/20'
-                      : 'text-slate-300 hover:text-white hover:bg-obsidian-700/70'
-                  }`}
-                >
-                  {tf.label}
-                </button>
-              );
-            })}
-          </div>
+        {/* Left: Timeframe Switcher */}
+        <div className="flex items-center gap-1.5">
+          {TIMEFRAMES.map((tf) => {
+            const isActive = timeframe === tf.id;
+            return (
+              <button
+                key={tf.id}
+                onClick={() => setTimeframe(tf.id)}
+                className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-white text-obsidian-950 shadow-md shadow-white/10 ring-1 ring-white/20'
+                    : 'text-slate-300 hover:text-white hover:bg-obsidian-700/70'
+                }`}
+              >
+                {tf.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Right: Symbol Info, Chart Type Toggle & BUY/SELL buttons */}
@@ -449,10 +470,16 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           <div className="flex items-center gap-2 mr-1">
             <span className="font-black text-sm text-white">{stock.symbol}</span>
             <span className="font-tabular font-black text-sm text-white">
-              ₹{(stock.ltp ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              ₹
+              {(stock.ltp ?? 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+              })}
             </span>
-            <span className={`text-xs font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-              ({isPositive ? '+' : ''}{(stock.pChange ?? 0).toFixed(2)}%)
+            <span
+              className={`text-xs font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}
+            >
+              ({isPositive ? '+' : ''}
+              {(stock.pChange ?? 0).toFixed(2)}%)
             </span>
           </div>
 
@@ -516,7 +543,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           <div className="absolute inset-0 bg-obsidian-900/80 backdrop-blur-xs flex items-center justify-center z-10">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-800 border border-obsidian-700 text-brand-cyan text-xs font-bold shadow-2xl">
               <BarChart2 className="w-4 h-4 animate-bounce" />
-              <span>Loading {stock.symbol} ({timeframe}) chart...</span>
+              <span>
+                Loading {stock.symbol} ({timeframe}) chart...
+              </span>
             </div>
           </div>
         )}
@@ -530,12 +559,16 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               top: `${tooltipState.y}px`,
             }}
           >
-            <div className={`font-tabular font-black text-sm ${tooltipState.isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-              ₹{tooltipState.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div
+              className={`font-tabular font-black text-sm ${tooltipState.isUp ? 'text-emerald-400' : 'text-rose-400'}`}
+            >
+              ₹
+              {tooltipState.price.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
-            <div className="text-[11px] text-slate-300 font-medium">
-              {tooltipState.time}
-            </div>
+            <div className="text-[11px] text-slate-300 font-medium">{tooltipState.time}</div>
           </div>
         )}
 
@@ -549,21 +582,33 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">Previous Close</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{(stock.close ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹
+              {(stock.close ?? 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">Open</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{(stock.open ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹
+              {(stock.open ?? 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
             <span className="text-slate-400 font-medium">High</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{(stock.high ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹
+              {(stock.high ?? 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
 
@@ -571,21 +616,37 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">Low</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{(stock.low ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹
+              {(stock.low ?? 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">52 Week High</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.high52 ? Number(stock.high52).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+              ₹
+              {stock.high52
+                ? Number(stock.high52).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                : '-'}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-slate-400 font-medium">52 Week Low</span>
             <span className="text-white font-extrabold text-xs sm:text-sm">
-              ₹{stock.low52 ? Number(stock.low52).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+              ₹
+              {stock.low52
+                ? Number(stock.low52).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                : '-'}
             </span>
           </div>
         </div>

@@ -1,9 +1,15 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Literal
-from app.core.charges import calculate_single_leg_charges, calculate_roundtrip_charges, ChargeBreakdown, RoundtripChargeEstimate
+from app.core.charges import (
+    calculate_single_leg_charges,
+    calculate_roundtrip_charges,
+    ChargeBreakdown,
+    RoundtripChargeEstimate,
+)
 
 router = APIRouter(prefix="/charges", tags=["Brokerage & Taxes"])
+
 
 class SingleLegEstimateRequest(BaseModel):
     symbol: str
@@ -12,12 +18,14 @@ class SingleLegEstimateRequest(BaseModel):
     quantity: int = Field(gt=0)
     price: float = Field(gt=0)
 
+
 class RoundtripEstimateRequest(BaseModel):
     symbol: str
     product_type: Literal["CNC", "MIS"]
     quantity: int = Field(gt=0)
     buy_price: float = Field(gt=0)
     sell_price: float = Field(gt=0)
+
 
 @router.post("/estimate-single", response_model=ChargeBreakdown)
 async def estimate_single_leg(req: SingleLegEstimateRequest):
@@ -27,8 +35,9 @@ async def estimate_single_leg(req: SingleLegEstimateRequest):
         side=req.side,
         product_type=req.product_type,
         quantity=req.quantity,
-        price=req.price
+        price=req.price,
     )
+
 
 @router.post("/estimate-roundtrip", response_model=RoundtripChargeEstimate)
 async def estimate_roundtrip(req: RoundtripEstimateRequest):
@@ -38,5 +47,5 @@ async def estimate_roundtrip(req: RoundtripEstimateRequest):
         product_type=req.product_type,
         quantity=req.quantity,
         buy_price=req.buy_price,
-        sell_price=req.sell_price
+        sell_price=req.sell_price,
     )

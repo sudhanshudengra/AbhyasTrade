@@ -37,19 +37,21 @@ DEFAULT_NSE_SYMBOLS = [
     "BANKNIFTY",
 ]
 
+
 def is_market_open_ist() -> bool:
     """Checks if Indian Equity Market (NSE) is currently in live trading hours (Mon-Fri 09:15 - 15:30 IST)"""
     now_ist = datetime.now(IST)
-    
+
     # Monday = 0, Friday = 4, Saturday = 5, Sunday = 6
     if now_ist.weekday() >= 5:
         return False
-        
+
     minutes = now_ist.hour * 60 + now_ist.minute
-    market_open_minutes = 9 * 60 + 15   # 09:15 AM IST
-    market_close_minutes = 15 * 60 + 30 # 03:30 PM IST
-    
+    market_open_minutes = 9 * 60 + 15  # 09:15 AM IST
+    market_close_minutes = 15 * 60 + 30  # 03:30 PM IST
+
     return market_open_minutes <= minutes <= market_close_minutes
+
 
 def get_yf_ticker_string(symbol: str) -> str:
     """Formats symbol into official Yahoo Finance NSE ticker symbol"""
@@ -61,6 +63,7 @@ def get_yf_ticker_string(symbol: str) -> str:
     if s.endswith(".NS") or s.endswith(".BO") or s.startswith("^"):
         return s
     return f"{s}.NS"
+
 
 class MarketDataFeed:
     def __init__(self):
@@ -78,7 +81,7 @@ class MarketDataFeed:
             payload = {
                 "type": "SNAPSHOT",
                 "data": list(self.market_cache.values()),
-                "timestamp": int(time.time())
+                "timestamp": int(time.time()),
             }
             for queue in list(self.subscribers):
                 try:
@@ -91,7 +94,7 @@ class MarketDataFeed:
         logger.info("Loading official NSE Equity Master Directory...")
         url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-        
+
         try:
             res = await asyncio.to_thread(requests.get, url, headers=headers, timeout=6)
             if res.status_code == 200 and "SYMBOL" in res.text:
@@ -105,19 +108,29 @@ class MarketDataFeed:
                         self.nse_master_directory[sym] = {
                             "symbol": sym,
                             "name": name,
-                            "series": series
+                            "series": series,
                         }
                         count += 1
-                logger.info(f"Loaded {count} active NSE listed companies into Master Directory.")
+                logger.info(
+                    f"Loaded {count} active NSE listed companies into Master Directory."
+                )
                 return
         except Exception as e:
-            logger.warning(f"Could not load live NSE directory from archives: {e}. Using fallback directory.")
+            logger.warning(
+                f"Could not load live NSE directory from archives: {e}. Using fallback directory."
+            )
 
         # Fallback directory if network times out
         for sym in DEFAULT_NSE_SYMBOLS:
-            self.nse_master_directory[sym] = {"symbol": sym, "name": f"{sym} Ltd.", "series": "EQ"}
+            self.nse_master_directory[sym] = {
+                "symbol": sym,
+                "name": f"{sym} Ltd.",
+                "series": "EQ",
+            }
 
-    async def fetch_symbol_data_dynamically(self, symbol: str, broadcast: bool = False) -> Optional[Dict[str, Any]]:
+    async def fetch_symbol_data_dynamically(
+        self, symbol: str, broadcast: bool = False
+    ) -> Optional[Dict[str, Any]]:
         """
         Fetches 100% real-time data from NSE / Yahoo Finance for ANY stock:
         - Real official LTP, Open, High, Low, Close, Volume
@@ -126,28 +139,36 @@ class MarketDataFeed:
         """
         clean_symbol = symbol.strip().upper()
         ticker_str = get_yf_ticker_string(clean_symbol)
-        
+
         try:
             ticker = yf.Ticker(ticker_str)
             hist = await asyncio.to_thread(ticker.history, period="1y", interval="1d")
             if hist.empty:
-                logger.warning(f"No market data returned from yfinance for {ticker_str}")
+                logger.warning(
+                    f"No market data returned from yfinance for {ticker_str}"
+                )
                 return None
-                
+
             close = round(float(hist["Close"].iloc[-1]), 2)
-            prev_close = round(float(hist["Close"].iloc[-2]), 2) if len(hist) > 1 else close
+            prev_close = (
+                round(float(hist["Close"].iloc[-2]), 2) if len(hist) > 1 else close
+            )
             open_p = round(float(hist["Open"].iloc[-1]), 2)
             high_p = round(float(hist["High"].iloc[-1]), 2)
             low_p = round(float(hist["Low"].iloc[-1]), 2)
-            vol = int(hist["Volume"].iloc[-1]) if "Volume" in hist and not pd.isna(hist["Volume"].iloc[-1]) else 1000000
-            
+            vol = (
+                int(hist["Volume"].iloc[-1])
+                if "Volume" in hist and not pd.isna(hist["Volume"].iloc[-1])
+                else 1000000
+            )
+
             # Genuine 52-Week Range derived from 1-year exchange extremes
             high52 = round(float(hist["High"].max()), 2)
             low52 = round(float(hist["Low"].min()), 2)
-            
+
             change = round(close - prev_close, 2)
             p_change = round((change / prev_close) * 100, 2) if prev_close > 0 else 0.0
-            
+
             # Resolve official company name from master directory (instant, no extra HTTP roundtrips)
             company_name = self.nse_master_directory.get(clean_symbol, {}).get("name")
             if not company_name:
@@ -157,7 +178,7 @@ class MarketDataFeed:
                     company_name = "NIFTY Bank Index"
                 else:
                     company_name = f"{clean_symbol} Ltd."
-                    
+
             if "INDEX" in clean_symbol or clean_symbol in ["NIFTY 50", "BANKNIFTY"]:
                 sector = "Benchmark Index"
             elif "BANK" in clean_symbol or clean_symbol in ["SBIN", "BAJFINANCE"]:
@@ -193,9 +214,9 @@ class MarketDataFeed:
                 "high52": high52,
                 "low52": low52,
                 "tick_direction": "NONE",
-                "last_updated": datetime.now(timezone.utc).isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
-            
+
             self.market_cache[clean_symbol] = quote_data
             if broadcast:
                 self.broadcast_snapshot()
@@ -206,18 +227,25 @@ class MarketDataFeed:
 
     async def fetch_real_prices_startup(self):
         """Fetch actual real-time prices for default symbols dynamically on startup"""
-        logger.info("Initializing dynamic real-time market quotes from NSE / Yahoo Finance...")
+        logger.info(
+            "Initializing dynamic real-time market quotes from NSE / Yahoo Finance..."
+        )
         # First load master directory
         await self.fetch_nse_master_directory()
-        
-        tasks = [self.fetch_symbol_data_dynamically(sym, broadcast=False) for sym in DEFAULT_NSE_SYMBOLS]
+
+        tasks = [
+            self.fetch_symbol_data_dynamically(sym, broadcast=False)
+            for sym in DEFAULT_NSE_SYMBOLS
+        ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         loaded = 0
         for sym, res in zip(DEFAULT_NSE_SYMBOLS, results):
             if isinstance(res, dict) and res.get("ltp"):
                 loaded += 1
-        logger.info(f"Successfully initialized {loaded}/{len(DEFAULT_NSE_SYMBOLS)} default symbols from exchange.")
+        logger.info(
+            f"Successfully initialized {loaded}/{len(DEFAULT_NSE_SYMBOLS)} default symbols from exchange."
+        )
         self.broadcast_snapshot()
 
     async def get_or_fetch_symbol(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -235,54 +263,63 @@ class MarketDataFeed:
         q = query.strip().upper()
         if not q:
             return []
-            
+
         matches = []
         # Priority 1: Exact symbol matches
         for sym, meta in self.nse_master_directory.items():
             if sym == q:
                 cached = self.market_cache.get(sym, {})
-                matches.append({
-                    "symbol": sym,
-                    "name": meta["name"],
-                    "sector": cached.get("sector", "NSE Equity"),
-                    "ltp": cached.get("ltp", 0.0),
-                    "change": cached.get("change", 0.0),
-                    "pChange": cached.get("pChange", 0.0),
-                    "is_cached": sym in self.market_cache
-                })
+                matches.append(
+                    {
+                        "symbol": sym,
+                        "name": meta["name"],
+                        "sector": cached.get("sector", "NSE Equity"),
+                        "ltp": cached.get("ltp", 0.0),
+                        "change": cached.get("change", 0.0),
+                        "pChange": cached.get("pChange", 0.0),
+                        "is_cached": sym in self.market_cache,
+                    }
+                )
                 break
-                
+
         # Priority 2: Symbol starts with query
         for sym, meta in self.nse_master_directory.items():
             if len(matches) >= limit:
                 break
             if sym != q and sym.startswith(q):
                 cached = self.market_cache.get(sym, {})
-                matches.append({
-                    "symbol": sym,
-                    "name": meta["name"],
-                    "sector": cached.get("sector", "NSE Equity"),
-                    "ltp": cached.get("ltp", 0.0),
-                    "change": cached.get("change", 0.0),
-                    "pChange": cached.get("pChange", 0.0),
-                    "is_cached": sym in self.market_cache
-                })
+                matches.append(
+                    {
+                        "symbol": sym,
+                        "name": meta["name"],
+                        "sector": cached.get("sector", "NSE Equity"),
+                        "ltp": cached.get("ltp", 0.0),
+                        "change": cached.get("change", 0.0),
+                        "pChange": cached.get("pChange", 0.0),
+                        "is_cached": sym in self.market_cache,
+                    }
+                )
 
         # Priority 3: Company name contains query
         for sym, meta in self.nse_master_directory.items():
             if len(matches) >= limit:
                 break
-            if not any(m["symbol"] == sym for m in matches) and q in meta["name"].upper():
+            if (
+                not any(m["symbol"] == sym for m in matches)
+                and q in meta["name"].upper()
+            ):
                 cached = self.market_cache.get(sym, {})
-                matches.append({
-                    "symbol": sym,
-                    "name": meta["name"],
-                    "sector": cached.get("sector", "NSE Equity"),
-                    "ltp": cached.get("ltp", 0.0),
-                    "change": cached.get("change", 0.0),
-                    "pChange": cached.get("pChange", 0.0),
-                    "is_cached": sym in self.market_cache
-                })
+                matches.append(
+                    {
+                        "symbol": sym,
+                        "name": meta["name"],
+                        "sector": cached.get("sector", "NSE Equity"),
+                        "ltp": cached.get("ltp", 0.0),
+                        "change": cached.get("change", 0.0),
+                        "pChange": cached.get("pChange", 0.0),
+                        "is_cached": sym in self.market_cache,
+                    }
+                )
 
         return matches
 
@@ -290,11 +327,11 @@ class MarketDataFeed:
         """Worker function running in thread pool to fetch real-time fast_info via yfinance without blocking"""
         if not symbols:
             return {}
-            
+
         ticker_map = {get_yf_ticker_string(s): s for s in symbols}
         ticker_query = " ".join(ticker_map.keys())
         results: Dict[str, Dict[str, Any]] = {}
-        
+
         try:
             tickers_obj = yf.Tickers(ticker_query)
             for yf_sym, orig_sym in ticker_map.items():
@@ -306,18 +343,28 @@ class MarketDataFeed:
                     ltp = float(info.get("lastPrice") or 0.0)
                     if ltp <= 0:
                         continue
-                    
-                    prev_close = float(info.get("previousClose") or info.get("regularMarketPreviousClose") or ltp)
+
+                    prev_close = float(
+                        info.get("previousClose")
+                        or info.get("regularMarketPreviousClose")
+                        or ltp
+                    )
                     open_p = float(info.get("open") or ltp)
                     high_p = float(info.get("dayHigh") or ltp)
                     low_p = float(info.get("dayLow") or ltp)
                     high52 = float(info.get("yearHigh") or high_p)
                     low52 = float(info.get("yearLow") or low_p)
-                    vol = int(info.get("lastVolume") or info.get("threeMonthAverageVolume") or 0)
-                    
+                    vol = int(
+                        info.get("lastVolume")
+                        or info.get("threeMonthAverageVolume")
+                        or 0
+                    )
+
                     change = round(ltp - prev_close, 2)
-                    p_change = round((change / prev_close) * 100, 2) if prev_close > 0 else 0.0
-                    
+                    p_change = (
+                        round((change / prev_close) * 100, 2) if prev_close > 0 else 0.0
+                    )
+
                     results[orig_sym] = {
                         "ltp": round(ltp, 2),
                         "open": round(open_p, 2),
@@ -328,20 +375,24 @@ class MarketDataFeed:
                         "pChange": p_change,
                         "volume": vol,
                         "high52": round(high52, 2),
-                        "low52": round(low52, 2)
+                        "low52": round(low52, 2),
                     }
                 except Exception:
                     continue
         except Exception as e:
             logger.debug(f"Batch fast_info fetch error: {e}")
-            
+
         return results
 
-    async def fetch_live_quotes_batch(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def fetch_live_quotes_batch(
+        self, symbols: List[str]
+    ) -> Dict[str, Dict[str, Any]]:
         """Asynchronously batch fetches real-time quotes without blocking the event loop (immune to cloud IP blocks)"""
         return await asyncio.to_thread(self._fetch_fast_info_sync, symbols)
 
-    async def get_historical_candles(self, symbol: str, timeframe: str = "1D") -> List[Dict[str, Any]]:
+    async def get_historical_candles(
+        self, symbol: str, timeframe: str = "1D"
+    ) -> List[Dict[str, Any]]:
         """
         Fetches genuine historical candlestick data from Yahoo Finance for TradingView charts.
         Supports: 1D (intraday), 5D, 1M, 1Y, 5Y, Max
@@ -350,85 +401,112 @@ class MarketDataFeed:
         ticker_str = get_yf_ticker_string(clean_symbol)
         tf_key = timeframe.strip().upper()
         current_ltp = self.market_cache.get(clean_symbol, {}).get("ltp")
-        
+
         try:
             ticker = yf.Ticker(ticker_str)
             if tf_key == "1D" or tf_key == "1M_INTRA" or tf_key == "5M":
                 # Fetch recent 5 days of 5m bars to guarantee we get the latest trading session's full intraday series
-                df: pd.DataFrame = await asyncio.to_thread(ticker.history, period="5d", interval="5m")
+                df: pd.DataFrame = await asyncio.to_thread(
+                    ticker.history, period="5d", interval="5m"
+                )
                 if not df.empty:
                     latest_date = df.index.normalize().max()
                     df = df[df.index.normalize() == latest_date]
             elif tf_key == "5D" or tf_key == "15M":
-                df = await asyncio.to_thread(ticker.history, period="5d", interval="15m")
+                df = await asyncio.to_thread(
+                    ticker.history, period="5d", interval="15m"
+                )
             elif tf_key == "1M" or tf_key == "1H":
-                df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
+                df = await asyncio.to_thread(
+                    ticker.history, period="1mo", interval="1d"
+                )
             elif tf_key == "1Y":
                 df = await asyncio.to_thread(ticker.history, period="1y", interval="1d")
             elif tf_key == "5Y":
-                df = await asyncio.to_thread(ticker.history, period="5y", interval="1wk")
+                df = await asyncio.to_thread(
+                    ticker.history, period="5y", interval="1wk"
+                )
             elif tf_key == "MAX":
-                df = await asyncio.to_thread(ticker.history, period="max", interval="1mo")
+                df = await asyncio.to_thread(
+                    ticker.history, period="max", interval="1mo"
+                )
             else:
-                df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
-            
+                df = await asyncio.to_thread(
+                    ticker.history, period="1mo", interval="1d"
+                )
+
             if df.empty:
-                df = await asyncio.to_thread(ticker.history, period="1mo", interval="1d")
+                df = await asyncio.to_thread(
+                    ticker.history, period="1mo", interval="1d"
+                )
                 if df.empty:
                     return []
-            
+
             candles = []
             for idx, row in df.iterrows():
                 timestamp = int(idx.timestamp())
-                candles.append({
-                    "time": timestamp,
-                    "open": round(float(row["Open"]), 2),
-                    "high": round(float(row["High"]), 2),
-                    "low": round(float(row["Low"]), 2),
-                    "close": round(float(row["Close"]), 2),
-                    "volume": int(row["Volume"]) if "Volume" in row and not pd.isna(row["Volume"]) else 0
-                })
-                
-            if candles and current_ltp and tf_key in ["1D", "5D", "5M", "15M", "1M_INTRA"]:
+                candles.append(
+                    {
+                        "time": timestamp,
+                        "open": round(float(row["Open"]), 2),
+                        "high": round(float(row["High"]), 2),
+                        "low": round(float(row["Low"]), 2),
+                        "close": round(float(row["Close"]), 2),
+                        "volume": int(row["Volume"])
+                        if "Volume" in row and not pd.isna(row["Volume"])
+                        else 0,
+                    }
+                )
+
+            if (
+                candles
+                and current_ltp
+                and tf_key in ["1D", "5D", "5M", "15M", "1M_INTRA"]
+            ):
                 candles[-1]["close"] = current_ltp
                 candles[-1]["high"] = max(candles[-1]["high"], current_ltp)
                 candles[-1]["low"] = min(candles[-1]["low"], current_ltp)
-                
+
             return candles
         except Exception as e:
-            logger.warning(f"yfinance candle fetch error for {clean_symbol} ({timeframe}): {e}")
+            logger.warning(
+                f"yfinance candle fetch error for {clean_symbol} ({timeframe}): {e}"
+            )
             return []
 
     async def update_tick_loop(self):
         """Continuous async loop updating quotes and broadcasting real ticks across cloud deployments"""
         self.is_running = True
         logger.info("Starting Cloud-Proof Real Market Data Feed Loop...")
-        
+
         await self.fetch_real_prices_startup()
-        
+
         last_resync_time = time.time()
         while self.is_running:
             try:
                 # Ensure all symbols from active pending orders are included in live tick stream
                 try:
                     from app.core.database import DatabaseService
+
                     pending_orders = await DatabaseService.get_pending_orders()
                     for o in pending_orders:
                         sym = o["symbol"].upper()
                         if sym not in self.market_cache:
-                            await self.fetch_symbol_data_dynamically(sym, broadcast=False)
+                            await self.fetch_symbol_data_dynamically(
+                                sym, broadcast=False
+                            )
                 except Exception as e:
                     logger.debug(f"Error checking pending order symbols in feed: {e}")
 
                 symbols_to_update = list(self.market_cache.keys())
                 tick_diffs = []
                 market_open = is_market_open_ist()
-                
+
                 # Periodically re-sync official real prices from Yahoo Finance every 5 minutes
                 if time.time() - last_resync_time > 300:
                     asyncio.create_task(self.fetch_real_prices_startup())
                     last_resync_time = time.time()
-                
+
                 if market_open:
                     batch_quotes = await self.fetch_live_quotes_batch(symbols_to_update)
                     for symbol, live_quote in batch_quotes.items():
@@ -436,13 +514,17 @@ class MarketDataFeed:
                         if cached:
                             prev_ltp = cached["ltp"]
                             new_ltp = live_quote["ltp"]
-                            tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
-                            
+                            tick_dir = (
+                                "UP"
+                                if new_ltp > prev_ltp
+                                else ("DOWN" if new_ltp < prev_ltp else "NONE")
+                            )
+
                             updated = {
                                 **cached,
                                 **live_quote,
                                 "tick_direction": tick_dir,
-                                "last_updated": datetime.now(timezone.utc).isoformat()
+                                "last_updated": datetime.now(timezone.utc).isoformat(),
                             }
                             self.market_cache[symbol] = updated
                             if new_ltp != prev_ltp:
@@ -455,29 +537,39 @@ class MarketDataFeed:
                             prev_ltp = cached["ltp"]
                             variance = prev_ltp * random.uniform(-0.0006, 0.0006)
                             new_ltp = round(prev_ltp + variance, 2)
-                            tick_dir = "UP" if new_ltp > prev_ltp else ("DOWN" if new_ltp < prev_ltp else "NONE")
-                            
+                            tick_dir = (
+                                "UP"
+                                if new_ltp > prev_ltp
+                                else ("DOWN" if new_ltp < prev_ltp else "NONE")
+                            )
+
                             updated = {
                                 **cached,
                                 "ltp": new_ltp,
                                 "tick_direction": tick_dir,
-                                "last_updated": datetime.now(timezone.utc).isoformat()
+                                "last_updated": datetime.now(timezone.utc).isoformat(),
                             }
                             self.market_cache[symbol] = updated
                             tick_diffs.append(updated)
-                
+
                 if tick_diffs and self.subscribers:
-                    payload = {"type": "TICK_UPDATE", "data": tick_diffs, "timestamp": int(time.time())}
+                    payload = {
+                        "type": "TICK_UPDATE",
+                        "data": tick_diffs,
+                        "timestamp": int(time.time()),
+                    }
                     for queue in list(self.subscribers):
                         try:
                             queue.put_nowait(payload)
                         except Exception:
                             pass
-                            
+
             except Exception as e:
                 logger.error(f"Error in market feed tick loop: {e}")
-                
-            await asyncio.sleep(settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 5.0)
+
+            await asyncio.sleep(
+                settings.NSE_REFRESH_INTERVAL if is_market_open_ist() else 5.0
+            )
 
     def subscribe(self) -> asyncio.Queue:
         q = asyncio.Queue(maxsize=100)
@@ -487,5 +579,6 @@ class MarketDataFeed:
     def unsubscribe(self, q: asyncio.Queue):
         if q in self.subscribers:
             self.subscribers.remove(q)
+
 
 market_feed = MarketDataFeed()

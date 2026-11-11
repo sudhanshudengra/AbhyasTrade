@@ -15,31 +15,41 @@ export function useAuth() {
 
   useEffect(() => {
     // Clean up Supabase OAuth hash fragments from URL (e.g. /#access_token=... or /#)
-    if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash === '#')) {
+    if (
+      window.location.hash &&
+      (window.location.hash.includes('access_token') || window.location.hash === '#')
+    ) {
       const cleanPath = window.location.pathname === '/login' ? '/' : window.location.pathname;
       window.history.replaceState(null, '', cleanPath || '/');
     }
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      // Clean hash after session is loaded
-      if (window.location.hash) {
-        const isPublicPage = window.location.pathname === '/privacy' || window.location.pathname === '/terms';
-        if (!isPublicPage) {
-          window.history.replaceState(null, '', session?.user ? '/' : '/login');
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        // Clean hash after session is loaded
+        if (window.location.hash) {
+          const isPublicPage =
+            window.location.pathname === '/privacy' || window.location.pathname === '/terms';
+          if (!isPublicPage) {
+            window.history.replaceState(null, '', session?.user ? '/' : '/login');
+          }
         }
-      }
-    }).catch(() => {
-      setLoading(false);
-    });
+      })
+      .catch(() => {
+        setLoading(false);
+      });
 
     // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-      const isPublicPage = window.location.pathname === '/privacy' || window.location.pathname === '/terms';
+      const isPublicPage =
+        window.location.pathname === '/privacy' || window.location.pathname === '/terms';
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         if (!isPublicPage && (window.location.pathname === '/login' || window.location.hash)) {
           window.history.replaceState(null, '', '/');

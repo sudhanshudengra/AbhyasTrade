@@ -10,29 +10,29 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
-  X
-} from 'lucide-react'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { WatchlistGroup } from '../hooks/useMarketData'
-import { searchSymbols } from '../lib/api'
-import { StockQuote, isIndexSymbol } from '../lib/types'
+  X,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { WatchlistGroup } from '../hooks/useMarketData';
+import { searchSymbols } from '../lib/api';
+import { StockQuote, isIndexSymbol } from '../lib/types';
 
 interface WatchlistProps {
-  watchlists: WatchlistGroup[]
-  activeWatchlistId: string
-  onSelectWatchlist: (id: string) => void
-  onRenameWatchlist: (id: string, newName: string) => void
-  onAddWatchlist?: () => void
-  onDeleteWatchlist?: (id: string) => void
-  stocks: StockQuote[]
-  selectedSymbol: string
-  onSelectSymbol: (symbol: string) => void
-  onOpenOrderModal: (symbol: string, side: 'BUY' | 'SELL') => void
-  flashMap: Record<string, 'UP' | 'DOWN'>
-  onAddSymbol?: (symbol: string) => Promise<any>
-  onRemoveSymbol?: (symbol: string) => void
-  onToggleCollapse?: () => void
-  isCollapsed?: boolean
+  watchlists: WatchlistGroup[];
+  activeWatchlistId: string;
+  onSelectWatchlist: (id: string) => void;
+  onRenameWatchlist: (id: string, newName: string) => void;
+  onAddWatchlist?: () => void;
+  onDeleteWatchlist?: (id: string) => void;
+  stocks: StockQuote[];
+  selectedSymbol: string;
+  onSelectSymbol: (symbol: string) => void;
+  onOpenOrderModal: (symbol: string, side: 'BUY' | 'SELL') => void;
+  flashMap: Record<string, 'UP' | 'DOWN'>;
+  onAddSymbol?: (symbol: string) => Promise<any>;
+  onRemoveSymbol?: (symbol: string) => void;
+  onToggleCollapse?: () => void;
+  isCollapsed?: boolean;
 }
 
 export const Watchlist: React.FC<WatchlistProps> = ({
@@ -49,115 +49,111 @@ export const Watchlist: React.FC<WatchlistProps> = ({
   flashMap,
   onAddSymbol,
   onRemoveSymbol,
-  onToggleCollapse
+  onToggleCollapse,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isAdding, setIsAdding] = useState(false)
-  const [addingSymbol, setAddingSymbol] = useState<string | null>(null)
-  const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([])
-  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false)
-  const [addError, setAddError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [addingSymbol, setAddingSymbol] = useState<string | null>(null);
+  const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   // Watchlist Renaming State
-  const [isEditingName, setIsEditingName] = useState(false)
-  const [editNameValue, setEditNameValue] = useState('')
-  const renameInputRef = useRef<HTMLInputElement>(null)
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   const activeWatchlist = useMemo(() => {
-    return watchlists.find(w => w.id === activeWatchlistId) || watchlists[0]
-  }, [watchlists, activeWatchlistId])
+    return watchlists.find((w) => w.id === activeWatchlistId) || watchlists[0];
+  }, [watchlists, activeWatchlistId]);
 
   // Handle renaming start
   const handleStartRename = () => {
-    if (!activeWatchlist) return
-    setEditNameValue(activeWatchlist.name)
-    setIsEditingName(true)
+    if (!activeWatchlist) return;
+    setEditNameValue(activeWatchlist.name);
+    setIsEditingName(true);
     setTimeout(() => {
-      renameInputRef.current?.focus()
-      renameInputRef.current?.select()
-    }, 50)
-  }
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }, 50);
+  };
 
   const handleSaveRename = () => {
     if (activeWatchlist && editNameValue.trim()) {
-      onRenameWatchlist(activeWatchlist.id, editNameValue.trim())
+      onRenameWatchlist(activeWatchlist.id, editNameValue.trim());
     }
-    setIsEditingName(false)
-  }
+    setIsEditingName(false);
+  };
 
   // Debounced search across the 2,570+ NSE Directory
   useEffect(() => {
-    const q = searchQuery.trim()
+    const q = searchQuery.trim();
     if (q.length < 2) {
-      setGlobalSearchResults([])
-      setIsSearchingGlobal(false)
-      return
+      setGlobalSearchResults([]);
+      setIsSearchingGlobal(false);
+      return;
     }
 
-    let unmounted = false
-    setIsSearchingGlobal(true)
+    let unmounted = false;
+    setIsSearchingGlobal(true);
     const timeout = setTimeout(() => {
       searchSymbols(q)
-        .then(results => {
+        .then((results) => {
           if (!unmounted) {
             // Exclude already loaded stocks from global additions
-            const currentSymbols = new Set(
-              stocks.map(s => s.symbol.toUpperCase())
-            )
-            const newResults = results.filter(
-              r => !currentSymbols.has(r.symbol.toUpperCase())
-            )
-            setGlobalSearchResults(newResults)
+            const currentSymbols = new Set(stocks.map((s) => s.symbol.toUpperCase()));
+            const newResults = results.filter((r) => !currentSymbols.has(r.symbol.toUpperCase()));
+            setGlobalSearchResults(newResults);
           }
         })
-        .catch(err => console.warn('Global search error:', err))
+        .catch((err) => console.warn('Global search error:', err))
         .finally(() => {
-          if (!unmounted) setIsSearchingGlobal(false)
-        })
-    }, 250)
+          if (!unmounted) setIsSearchingGlobal(false);
+        });
+    }, 250);
 
     return () => {
-      unmounted = true
-      clearTimeout(timeout)
-    }
-  }, [searchQuery, stocks])
+      unmounted = true;
+      clearTimeout(timeout);
+    };
+  }, [searchQuery, stocks]);
 
   const filteredStocks = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim()
-    if (!q) return stocks
-    return stocks.filter(stock => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return stocks;
+    return stocks.filter((stock) => {
       return (
         stock.symbol.toLowerCase().includes(q) ||
         stock.name.toLowerCase().includes(q) ||
         (stock.sector && stock.sector.toLowerCase().includes(q))
-      )
-    })
-  }, [stocks, searchQuery])
+      );
+    });
+  }, [stocks, searchQuery]);
 
   const handleAddSymbol = async (symbolToAdd: string) => {
-    const q = symbolToAdd.trim().toUpperCase()
-    if (!q || !onAddSymbol) return
-    setIsAdding(true)
-    setAddingSymbol(q)
-    setAddError(null)
+    const q = symbolToAdd.trim().toUpperCase();
+    if (!q || !onAddSymbol) return;
+    setIsAdding(true);
+    setAddingSymbol(q);
+    setAddError(null);
     try {
-      await onAddSymbol(q)
-      setSearchQuery('')
-      setGlobalSearchResults([])
+      await onAddSymbol(q);
+      setSearchQuery('');
+      setGlobalSearchResults([]);
     } catch (err: any) {
-      setAddError(err.message || `Could not fetch ${q} from NSE`)
+      setAddError(err.message || `Could not fetch ${q} from NSE`);
     } finally {
-      setIsAdding(false)
-      setAddingSymbol(null)
+      setIsAdding(false);
+      setAddingSymbol(null);
     }
-  }
+  };
 
   const handleRemoveStock = (e: React.MouseEvent, symbol: string) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (onRemoveSymbol) {
-      onRemoveSymbol(symbol)
+      onRemoveSymbol(symbol);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full bg-obsidian-800 border-r border-obsidian-700/80 select-none">
@@ -172,10 +168,10 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   ref={renameInputRef}
                   type="text"
                   value={editNameValue}
-                  onChange={e => setEditNameValue(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleSaveRename()
-                    if (e.key === 'Escape') setIsEditingName(false)
+                  onChange={(e) => setEditNameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRename();
+                    if (e.key === 'Escape') setIsEditingName(false);
                   }}
                   maxLength={20}
                   className="w-full px-2 py-0.5 text-xs font-extrabold bg-obsidian-950 border border-brand-blue rounded text-white focus:outline-none"
@@ -241,16 +237,16 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           <input
             type="text"
             value={searchQuery}
-            onChange={e => {
-              setSearchQuery(e.target.value)
-              setAddError(null)
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setAddError(null);
             }}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
                 if (globalSearchResults.length > 0) {
-                  handleAddSymbol(globalSearchResults[0].symbol)
+                  handleAddSymbol(globalSearchResults[0].symbol);
                 } else if (filteredStocks.length === 0) {
-                  handleAddSymbol(searchQuery.trim())
+                  handleAddSymbol(searchQuery.trim());
                 }
               }
             }}
@@ -260,9 +256,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           {searchQuery && (
             <button
               onClick={() => {
-                setSearchQuery('')
-                setGlobalSearchResults([])
-                setAddError(null)
+                setSearchQuery('');
+                setGlobalSearchResults([]);
+                setAddError(null);
               }}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5"
             >
@@ -284,10 +280,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 {isAdding ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>
-                      Fetching &quot;{searchQuery.trim().toUpperCase()}&quot;
-                      from NSE...
-                    </span>
+                    <span>Fetching &quot;{searchQuery.trim().toUpperCase()}&quot; from NSE...</span>
                   </>
                 ) : (
                   <>
@@ -310,14 +303,14 @@ export const Watchlist: React.FC<WatchlistProps> = ({
         {/* Dynamic Watchlist Tabs with + Add Button (Max 5) */}
         <div className="flex items-center gap-1.5 pt-0.5">
           {watchlists.map((wl, index) => {
-            const isActive = wl.id === activeWatchlistId
+            const isActive = wl.id === activeWatchlistId;
             return (
               <button
                 key={wl.id}
                 onClick={() => {
-                  onSelectWatchlist(wl.id)
-                  setSearchQuery('')
-                  setGlobalSearchResults([])
+                  onSelectWatchlist(wl.id);
+                  setSearchQuery('');
+                  setGlobalSearchResults([]);
                 }}
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border ${
                   isActive
@@ -331,7 +324,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   {wl.symbols.length > 0 ? `(${wl.symbols.length})` : ''}
                 </span>
               </button>
-            )
+            );
           })}
 
           {watchlists.length < 5 && onAddWatchlist && (
@@ -348,22 +341,19 @@ export const Watchlist: React.FC<WatchlistProps> = ({
 
       {/* Stock List & Global Search Results */}
       <div className="flex-1 overflow-y-auto divide-y divide-obsidian-700/40">
-        {filteredStocks.map(stock => {
-          const isSelected = stock.symbol === selectedSymbol
-          const isIndex = isIndexSymbol(stock.symbol)
-          const flash = flashMap[stock.symbol]
-          const isPositive = stock.change >= 0
+        {filteredStocks.map((stock) => {
+          const isSelected = stock.symbol === selectedSymbol;
+          const isIndex = isIndexSymbol(stock.symbol);
+          const flash = flashMap[stock.symbol];
+          const isPositive = stock.change >= 0;
           const rangeSpan = Math.max(
             1,
             (stock.high52 || stock.ltp * 1.2) - (stock.low52 || stock.ltp * 0.8)
-          )
+          );
           const rangePos = Math.min(
             100,
-            Math.max(
-              0,
-              ((stock.ltp - (stock.low52 || stock.ltp * 0.8)) / rangeSpan) * 100
-            )
-          )
+            Math.max(0, ((stock.ltp - (stock.low52 || stock.ltp * 0.8)) / rangeSpan) * 100)
+          );
 
           return (
             <div
@@ -411,7 +401,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                     ₹
                     {(stock.ltp ?? 0).toLocaleString('en-IN', {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
+                      maximumFractionDigits: 2,
                     })}
                   </div>
                   <div className="flex items-center justify-end gap-1 mt-0.5">
@@ -454,9 +444,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 {!isIndex ? (
                   <>
                     <button
-                      onClick={e => {
-                        e.stopPropagation()
-                        onOpenOrderModal(stock.symbol, 'BUY')
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenOrderModal(stock.symbol, 'BUY');
                       }}
                       className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
                       title="Buy"
@@ -464,9 +454,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                       B
                     </button>
                     <button
-                      onClick={e => {
-                        e.stopPropagation()
-                        onOpenOrderModal(stock.symbol, 'SELL')
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenOrderModal(stock.symbol, 'SELL');
                       }}
                       className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
                       title="Sell"
@@ -481,7 +471,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 )}
                 {onRemoveSymbol && (
                   <button
-                    onClick={e => handleRemoveStock(e, stock.symbol)}
+                    onClick={(e) => handleRemoveStock(e, stock.symbol)}
                     className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition active:scale-95"
                     title="Remove from Watchlist"
                   >
@@ -490,7 +480,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 )}
               </div>
             </div>
-          )
+          );
         })}
 
         {/* Global NSE Directory Search Results Section */}
@@ -498,22 +488,18 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           <div className="bg-obsidian-900/60 p-2 border-t border-obsidian-700">
             <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-brand-cyan uppercase tracking-wider">
               <Globe className="w-3 h-3" />
-              <span>
-                Available on NSE ({globalSearchResults.length} matches)
-              </span>
+              <span>Available on NSE ({globalSearchResults.length} matches)</span>
             </div>
 
             <div className="divide-y divide-obsidian-800/80">
-              {globalSearchResults.map(result => (
+              {globalSearchResults.map((result) => (
                 <div
                   key={result.symbol}
                   className="p-2.5 hover:bg-obsidian-800/80 rounded-xl transition flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-xs text-white">
-                        {result.symbol}
-                      </span>
+                      <span className="font-extrabold text-xs text-white">{result.symbol}</span>
                       <span className="text-[9px] uppercase px-1 py-0.2 rounded bg-obsidian-950 border border-obsidian-800 text-slate-400">
                         NSE EQ
                       </span>
@@ -542,31 +528,27 @@ export const Watchlist: React.FC<WatchlistProps> = ({
         )}
 
         {/* Empty Watchlist State */}
-        {filteredStocks.length === 0 &&
-          globalSearchResults.length === 0 &&
-          !isSearchingGlobal && (
-            <div className="p-8 text-center text-slate-500 text-xs">
-              {stocks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-8">
-                  <div className="w-12 h-12 rounded-2xl bg-obsidian-900 border border-obsidian-700 flex items-center justify-center text-slate-400 shadow-inner">
-                    <FolderPlus className="w-6 h-6 text-brand-cyan/70" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-200 text-sm">
-                      Watchlist is empty
-                    </h4>
-                    <p className="text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
-                      Search above across 2,500+ NSE scrips to add stocks to{' '}
-                      {activeWatchlist?.name || 'this watchlist'}.
-                    </p>
-                  </div>
+        {filteredStocks.length === 0 && globalSearchResults.length === 0 && !isSearchingGlobal && (
+          <div className="p-8 text-center text-slate-500 text-xs">
+            {stocks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-8">
+                <div className="w-12 h-12 rounded-2xl bg-obsidian-900 border border-obsidian-700 flex items-center justify-center text-slate-400 shadow-inner">
+                  <FolderPlus className="w-6 h-6 text-brand-cyan/70" />
                 </div>
-              ) : (
-                <span>No scrips matching &quot;{searchQuery}&quot;</span>
-              )}
-            </div>
-          )}
+                <div>
+                  <h4 className="font-bold text-slate-200 text-sm">Watchlist is empty</h4>
+                  <p className="text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
+                    Search above across 2,500+ NSE scrips to add stocks to{' '}
+                    {activeWatchlist?.name || 'this watchlist'}.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <span>No scrips matching &quot;{searchQuery}&quot;</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};

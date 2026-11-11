@@ -7,12 +7,16 @@ import {
   Trade,
   PlaceOrderPayload,
   ChargeBreakdown,
-  RoundtripEstimate
+  RoundtripEstimate,
 } from './types';
 
 // Support dynamic backend URL in production (e.g. Render/Railway) with local fallback
 const rawApiBase = import.meta.env.VITE_API_URL || '/api';
-const API_BASE = rawApiBase.endsWith('/api') ? rawApiBase : (rawApiBase === '' || rawApiBase === '/' ? '/api' : `${rawApiBase.replace(/\/$/, '')}/api`);
+const API_BASE = rawApiBase.endsWith('/api')
+  ? rawApiBase
+  : rawApiBase === '' || rawApiBase === '/'
+    ? '/api'
+    : `${rawApiBase.replace(/\/$/, '')}/api`;
 let currentUserId = '00000000-0000-0000-0000-000000000001';
 
 export function setApiUserId(userId: string) {
@@ -40,8 +44,13 @@ export async function getQuote(symbol: string): Promise<StockQuote> {
   return res.json();
 }
 
-export async function getChartCandles(symbol: string, timeframe: string = '5m'): Promise<CandleData[]> {
-  const res = await fetch(`${API_BASE}/market/chart/${encodeURIComponent(symbol)}?timeframe=${timeframe}`);
+export async function getChartCandles(
+  symbol: string,
+  timeframe: string = '5m'
+): Promise<CandleData[]> {
+  const res = await fetch(
+    `${API_BASE}/market/chart/${encodeURIComponent(symbol)}?timeframe=${timeframe}`
+  );
   if (!res.ok) throw new Error(`Failed to fetch chart candles for ${symbol}`);
   return res.json();
 }
@@ -72,7 +81,11 @@ export async function getPortfolioSummary(): Promise<PortfolioSummary> {
   return res.json();
 }
 
-export async function resetPortfolio(): Promise<{ status: string; message: string; portfolio: any }> {
+export async function resetPortfolio(): Promise<{
+  status: string;
+  message: string;
+  portfolio: any;
+}> {
   const res = await fetch(`${API_BASE}/portfolio/reset`, {
     method: 'POST',
     headers: getAuthHeaders(),
@@ -157,7 +170,7 @@ export async function estimateSingleLeg(payload: {
   const res = await fetch(`${API_BASE}/charges/estimate-single`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Failed to estimate charges');
   return res.json();
@@ -173,7 +186,7 @@ export async function estimateRoundtrip(payload: {
   const res = await fetch(`${API_BASE}/charges/estimate-roundtrip`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Failed to estimate roundtrip charges');
   return res.json();

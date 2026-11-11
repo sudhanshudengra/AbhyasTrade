@@ -58,7 +58,9 @@ export function calculateSingleLegCharges(
   const gst = 0.18 * (brokerage + exchangeCharges + sebiCharges);
 
   // 7. Total Charges
-  const totalCharges = Number((brokerage + stt + exchangeCharges + sebiCharges + stampDuty + gst).toFixed(2));
+  const totalCharges = Number(
+    (brokerage + stt + exchangeCharges + sebiCharges + stampDuty + gst).toFixed(2)
+  );
   const breakevenPnl = safeQty > 0 ? Number((totalCharges / safeQty).toFixed(2)) : 0.0;
 
   return {

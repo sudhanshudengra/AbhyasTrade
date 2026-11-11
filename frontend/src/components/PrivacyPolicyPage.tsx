@@ -25,7 +25,12 @@ export const PrivacyPolicyPage: React.FC = () => {
               Privacy Policy for AbhyasTrade
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-2">
-              Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              Last updated:{' '}
+              {new Date().toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
             </p>
           </div>
 
@@ -36,7 +41,11 @@ export const PrivacyPolicyPage: React.FC = () => {
               1. Overview & Purpose
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              AbhyasTrade (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is an educational, virtual paper trading platform simulating Indian Equity Markets (NSE). We take your privacy seriously and are committed to protecting any information you share with us. This Privacy Policy outlines what information we collect, how it is used, and how it is protected.
+              AbhyasTrade (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is an educational,
+              virtual paper trading platform simulating Indian Equity Markets (NSE). We take your
+              privacy seriously and are committed to protecting any information you share with us.
+              This Privacy Policy outlines what information we collect, how it is used, and how it
+              is protected.
             </p>
           </div>
 
@@ -47,15 +56,26 @@ export const PrivacyPolicyPage: React.FC = () => {
               2. Information We Collect
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              When you sign in using Google OAuth, we only collect the standard, basic profile information provided by Google:
+              When you sign in using Google OAuth, we only collect the standard, basic profile
+              information provided by Google:
             </p>
             <ul className="list-disc list-inside text-sm text-slate-300 space-y-1.5 pl-2">
-              <li><strong>Your Email Address:</strong> Used exclusively to uniquely identify your trading account and portfolio.</li>
-              <li><strong>Your Full Name & Avatar URL:</strong> Used solely to personalize your profile header inside the application.</li>
-              <li><strong>Your Google User ID:</strong> Used to associate your simulated positions, orders, and virtual balance with your account.</li>
+              <li>
+                <strong>Your Email Address:</strong> Used exclusively to uniquely identify your
+                trading account and portfolio.
+              </li>
+              <li>
+                <strong>Your Full Name & Avatar URL:</strong> Used solely to personalize your
+                profile header inside the application.
+              </li>
+              <li>
+                <strong>Your Google User ID:</strong> Used to associate your simulated positions,
+                orders, and virtual balance with your account.
+              </li>
             </ul>
             <p className="text-xs text-slate-400 bg-obsidian-950 p-3 rounded-xl border border-obsidian-800">
-              We do not request, access, or store your Google password, contacts, Google Drive files, or any sensitive private data.
+              We do not request, access, or store your Google password, contacts, Google Drive
+              files, or any sensitive private data.
             </p>
           </div>
 
@@ -74,7 +94,8 @@ export const PrivacyPolicyPage: React.FC = () => {
               <li>To authenticate your session securely across devices.</li>
             </ul>
             <p className="text-sm text-slate-300 leading-relaxed mt-2">
-              We <strong>never sell, rent, monetize, or disclose</strong> your personal information or email address to any third parties or advertisers.
+              We <strong>never sell, rent, monetize, or disclose</strong> your personal information
+              or email address to any third parties or advertisers.
             </p>
           </div>
 
@@ -82,7 +103,9 @@ export const PrivacyPolicyPage: React.FC = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-white">4. Data Storage & Security</h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Your data is stored securely using Supabase PostgreSQL databases with industry-standard encryption in transit (HTTPS/TLS) and encryption at rest. Authentication tokens are managed with secure cryptographic standards.
+              Your data is stored securely using Supabase PostgreSQL databases with
+              industry-standard encryption in transit (HTTPS/TLS) and encryption at rest.
+              Authentication tokens are managed with secure cryptographic standards.
             </p>
           </div>
 
@@ -90,7 +113,9 @@ export const PrivacyPolicyPage: React.FC = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-white">5. Your Rights & Data Deletion</h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              You have full rights over your data. You may request complete deletion of your account, email address, portfolio, and trade history at any time by contacting our developer support team.
+              You have full rights over your data. You may request complete deletion of your
+              account, email address, portfolio, and trade history at any time by contacting our
+              developer support team.
             </p>
           </div>
 
@@ -101,7 +126,8 @@ export const PrivacyPolicyPage: React.FC = () => {
               6. Contact Support
             </h2>
             <p className="text-sm text-slate-300">
-              For any questions, concerns, or data deletion requests regarding this Privacy Policy, please email:
+              For any questions, concerns, or data deletion requests regarding this Privacy Policy,
+              please email:
             </p>
             <a
               href="mailto:sudhanshudengra.tdc@gmail.com"

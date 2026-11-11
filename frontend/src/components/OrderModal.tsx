@@ -7,10 +7,17 @@ import {
   CheckCircle2,
   Sparkles,
   Zap,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { StockQuote, ProductType, OrderType, OrderSide, Position, isIndexSymbol } from '../lib/types';
+import {
+  StockQuote,
+  ProductType,
+  OrderType,
+  OrderSide,
+  Position,
+  isIndexSymbol,
+} from '../lib/types';
 import { calculateSingleLegCharges } from '../lib/charges';
 
 interface OrderModalProps {
@@ -67,7 +74,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     const defaultLtp = stock?.ltp || 100;
     return parseFloat((defaultLtp * 0.99).toFixed(2));
   });
-  
+
   const [showTaxBreakdown, setShowTaxBreakdown] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -106,25 +113,22 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   // Determine effective price
   const ltp = stock?.ltp || 100;
   const effectivePrice = orderType === 'LIMIT' && limitPrice > 0 ? limitPrice : ltp;
-  
+
   // Calculate Required Margin & Turnover
   const totalTurnover = (quantity > 0 ? quantity : 0) * effectivePrice;
   const requiredMargin = productType === 'MIS' ? totalTurnover / 5.0 : totalTurnover;
   const hasInsufficientMargin = requiredMargin > availableMargin;
 
   // CNC Sell holding validation state
-  const isCncSellExceeded = side === 'SELL' && productType === 'CNC' && (availableHoldingQty === 0 || quantity > availableHoldingQty);
+  const isCncSellExceeded =
+    side === 'SELL' &&
+    productType === 'CNC' &&
+    (availableHoldingQty === 0 || quantity > availableHoldingQty);
 
   // Live itemized charges calculation (0ms instant)
   const taxBreakdown = useMemo(() => {
     if (!stock || quantity <= 0) return null;
-    return calculateSingleLegCharges(
-      stock.symbol,
-      side,
-      productType,
-      quantity,
-      effectivePrice
-    );
+    return calculateSingleLegCharges(stock.symbol, side, productType, quantity, effectivePrice);
   }, [stock?.symbol, side, productType, quantity, effectivePrice]);
 
   // Determine if Indian Equity Market (NSE) is currently open (Mon-Fri 09:15 - 15:30 IST)
@@ -133,12 +137,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     const istHoursStr = now.toLocaleTimeString('en-IN', {
       timeZone: 'Asia/Kolkata',
       hour12: false,
-      hour: '2-digit'
+      hour: '2-digit',
     });
     const istMinutesStr = now.toLocaleTimeString('en-IN', {
       timeZone: 'Asia/Kolkata',
       hour12: false,
-      minute: '2-digit'
+      minute: '2-digit',
     });
     const day = now.getDay();
     const totalMinutes = parseInt(istHoursStr, 10) * 60 + parseInt(istMinutesStr, 10);
@@ -156,7 +160,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     setSuccessMessage(null);
 
     if (isIndexSymbol(stock.symbol)) {
-      setErrorMessage(`Indices (${stock.symbol}) are benchmark indicators and cannot be bought/sold directly in equity spot.`);
+      setErrorMessage(
+        `Indices (${stock.symbol}) are benchmark indicators and cannot be bought/sold directly in equity spot.`
+      );
       return;
     }
 
@@ -167,11 +173,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
     if (side === 'SELL' && productType === 'CNC') {
       if (availableHoldingQty <= 0) {
-        setErrorMessage(`No CNC holdings available to sell for ${stock.symbol}. Delivery short selling is not permitted on NSE.`);
+        setErrorMessage(
+          `No CNC holdings available to sell for ${stock.symbol}. Delivery short selling is not permitted on NSE.`
+        );
         return;
       }
       if (quantity > availableHoldingQty) {
-        setErrorMessage(`Sell quantity (${quantity}) exceeds available holdings (${availableHoldingQty} shares). Sell amount cannot be greater than what you have.`);
+        setErrorMessage(
+          `Sell quantity (${quantity}) exceeds available holdings (${availableHoldingQty} shares). Sell amount cannot be greater than what you have.`
+        );
         return;
       }
     }
@@ -187,7 +197,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     }
 
     if (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) {
-      setErrorMessage(`Insufficient margin. Required ₹${requiredMargin.toFixed(2)}, Available: ₹${availableMargin.toFixed(2)}`);
+      setErrorMessage(
+        `Insufficient margin. Required ₹${requiredMargin.toFixed(2)}, Available: ₹${availableMargin.toFixed(2)}`
+      );
       return;
     }
 
@@ -216,12 +228,18 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
         if (orderType === 'SL_M') {
           if (isBuy && triggerPrice < stock.ltp) {
-            setSuccessMessage(`Order ${res.status}: BUY ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice} • Protective Stoploss placed @ ₹${triggerPrice.toFixed(2)}`);
+            setSuccessMessage(
+              `Order ${res.status}: BUY ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice} • Protective Stoploss placed @ ₹${triggerPrice.toFixed(2)}`
+            );
           } else {
-            setSuccessMessage(`Stoploss Order Placed: ${side} ${quantity} ${stock.symbol} @ Trigger ₹${triggerPrice.toFixed(2)}`);
+            setSuccessMessage(
+              `Stoploss Order Placed: ${side} ${quantity} ${stock.symbol} @ Trigger ₹${triggerPrice.toFixed(2)}`
+            );
           }
         } else {
-          setSuccessMessage(`Order ${res.status}: ${side} ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice}`);
+          setSuccessMessage(
+            `Order ${res.status}: ${side} ${quantity} ${stock.symbol} @ ₹${res.execution_price || effectivePrice}`
+          );
         }
 
         setTimeout(() => {
@@ -255,7 +273,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold text-white tracking-tight leading-tight">{stock.symbol}</span>
+                <span className="text-base font-extrabold text-white tracking-tight leading-tight">
+                  {stock.symbol}
+                </span>
                 <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-obsidian-700 text-slate-300 border border-obsidian-600">
                   NSE
                 </span>
@@ -267,7 +287,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     (stock.change ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  {(stock.change ?? 0) >= 0 ? '+' : ''}{(stock.change ?? 0).toFixed(2)} ({(stock.pChange ?? 0) >= 0 ? '+' : ''}{(stock.pChange ?? 0).toFixed(2)}%)
+                  {(stock.change ?? 0) >= 0 ? '+' : ''}
+                  {(stock.change ?? 0).toFixed(2)} ({(stock.pChange ?? 0) >= 0 ? '+' : ''}
+                  {(stock.pChange ?? 0).toFixed(2)}%)
                 </span>
               </div>
             </div>
@@ -311,7 +333,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         </div>
 
         {/* Compact Form Body */}
-        <form ref={formRef} onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1 overscroll-contain">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="p-4 space-y-3 overflow-y-auto flex-1 overscroll-contain"
+        >
           {/* Off-Market Hours Notice (Compact 1-line tag) */}
           {!isMarketOpen && (
             <div className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-200 text-[11px] flex items-center gap-2">
@@ -364,7 +390,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   Delivery CNC
                 </span>
                 <span className="text-indigo-300 font-bold font-tabular">
-                  100% Upfront (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
+                  100% Upfront (₹
+                  {requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
                 </span>
               </div>
             ) : (
@@ -374,7 +401,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   Trade: ₹{totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
                 <span className="text-emerald-400 font-bold font-tabular">
-                  You pay 1/5th (₹{requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
+                  You pay 1/5th (₹
+                  {requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
                 </span>
               </div>
             )}
@@ -432,7 +460,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-obsidian-900/90 border border-obsidian-700/80">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 text-[11px]">Available to Sell:</span>
-                  <span className={`font-bold font-tabular text-[11px] ${availableHoldingQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span
+                    className={`font-bold font-tabular text-[11px] ${availableHoldingQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
                     {availableHoldingQty} Shares ({productType})
                   </span>
                 </div>
@@ -545,7 +575,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <button
                     key={pct}
                     type="button"
-                    onClick={() => setTriggerPrice(parseFloat((stock.ltp * (1 - pct / 100)).toFixed(2)))}
+                    onClick={() =>
+                      setTriggerPrice(parseFloat((stock.ltp * (1 - pct / 100)).toFixed(2)))
+                    }
                     className="flex-1 py-0.5 text-[10px] font-bold rounded bg-obsidian-950 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-obsidian-700 hover:border-rose-500/40 transition font-tabular"
                   >
                     -{pct}%
@@ -565,8 +597,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     {isBuy && triggerPrice < stock.ltp
                       ? `Buy @ Market ₹${stock.ltp.toFixed(2)} & auto-sell if price drops to ₹${triggerPrice.toFixed(2)}`
                       : isBuy
-                      ? `Breakout Buy when price rises to ₹${triggerPrice.toFixed(2)}`
-                      : `Auto-sell holdings if price falls to ₹${triggerPrice.toFixed(2)}`}
+                        ? `Breakout Buy when price rises to ₹${triggerPrice.toFixed(2)}`
+                        : `Auto-sell holdings if price falls to ₹${triggerPrice.toFixed(2)}`}
                   </span>
                 </div>
               </div>
@@ -578,14 +610,24 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5">
                 <span className="text-slate-400 text-[11px]">Required:</span>
-                <span className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-400' : 'text-white'}`}>
-                  ₹{requiredMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <span
+                  className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-400' : 'text-white'}`}
+                >
+                  ₹
+                  {requiredMargin.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-slate-400 text-[11px]">Available:</span>
                 <span className="font-tabular font-bold text-emerald-400">
-                  ₹{availableMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₹
+                  {availableMargin.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -608,11 +650,19 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <div className="flex items-center gap-1.5 text-[11px]">
                 <Sparkles className="w-3 h-3 text-brand-cyan" />
                 <span>Taxes & Charges:</span>
-                <strong className="text-white font-tabular font-bold">₹{taxBreakdown?.total_charges?.toFixed(2) || '0.00'}</strong>
+                <strong className="text-white font-tabular font-bold">
+                  ₹{taxBreakdown?.total_charges?.toFixed(2) || '0.00'}
+                </strong>
               </div>
               <div className="flex items-center gap-1.5 text-slate-400 text-[10px]">
-                <span className="text-emerald-400 font-tabular font-medium">+₹{taxBreakdown?.breakeven_pnl?.toFixed(2) || '0.00'}/sh</span>
-                {showTaxBreakdown ? <ChevronUp className="w-3.5 h-3.5 text-brand-cyan" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                <span className="text-emerald-400 font-tabular font-medium">
+                  +₹{taxBreakdown?.breakeven_pnl?.toFixed(2) || '0.00'}/sh
+                </span>
+                {showTaxBreakdown ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-brand-cyan" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
               </div>
             </button>
 
@@ -628,7 +678,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Exchange Turnover Charges:</span>
-                  <span className="text-slate-200">₹{taxBreakdown.exchange_charges.toFixed(2)}</span>
+                  <span className="text-slate-200">
+                    ₹{taxBreakdown.exchange_charges.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>SEBI Charges:</span>
@@ -668,7 +720,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {/* Action CTA Button */}
           <button
             type="submit"
-            disabled={isSubmitting || isIndexSymbol(stock?.symbol) || (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) || isCncSellExceeded}
+            disabled={
+              isSubmitting ||
+              isIndexSymbol(stock?.symbol) ||
+              (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) ||
+              isCncSellExceeded
+            }
             className={`w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               isBuy
                 ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-950/60'
@@ -692,6 +749,3 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     </div>
   );
 };
-
-
-

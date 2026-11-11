@@ -20,19 +20,19 @@ export default defineConfig({
           {
             src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
+            type: 'image/png',
+          },
+        ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
-      }
-    })
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+      },
+    }),
   ],
   server: {
     port: 5173,
@@ -43,12 +43,16 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err: any) => {
-            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED' || err?.code === 'ECONNREFUSED') {
+            if (
+              err?.code === 'ECONNRESET' ||
+              err?.code === 'ECONNABORTED' ||
+              err?.code === 'ECONNREFUSED'
+            ) {
               return;
             }
             console.warn('[vite proxy error]:', err?.message || err);
           });
-        }
+        },
       },
       '/ws': {
         target: 'ws://127.0.0.1:8000',
@@ -56,7 +60,11 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err: any) => {
-            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED' || err?.code === 'EPIPE') {
+            if (
+              err?.code === 'ECONNRESET' ||
+              err?.code === 'ECONNABORTED' ||
+              err?.code === 'EPIPE'
+            ) {
               return;
             }
             console.warn('[vite ws proxy error]:', err?.message || err);
@@ -68,8 +76,8 @@ export default defineConfig({
               }
             });
           });
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });

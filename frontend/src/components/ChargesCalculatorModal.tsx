@@ -8,7 +8,7 @@ import {
   TrendingDown,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
 import { ProductType } from '../lib/types';
 import { calculateRoundtripCharges } from '../lib/charges';
@@ -120,7 +120,9 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
             >
               <Zap className="w-3.5 h-3.5" />
               <span>Intraday (MIS)</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${productType === 'MIS' ? 'bg-obsidian-900/60 text-sky-200' : 'bg-obsidian-900 text-slate-500'}`}>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${productType === 'MIS' ? 'bg-obsidian-900/60 text-sky-200' : 'bg-obsidian-900 text-slate-500'}`}
+              >
                 5x Margin
               </span>
             </button>
@@ -136,7 +138,9 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Delivery (CNC)</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${productType === 'CNC' ? 'bg-indigo-950/80 text-indigo-200' : 'bg-obsidian-900 text-slate-500'}`}>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${productType === 'CNC' ? 'bg-indigo-950/80 text-indigo-200' : 'bg-obsidian-900 text-slate-500'}`}
+              >
                 ₹0 Brokerage
               </span>
             </button>
@@ -318,29 +322,47 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                     isNetProfit ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  {isNetProfit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                  {isNetProfit ? (
+                    <TrendingUp className="w-5 h-5" />
+                  ) : (
+                    <TrendingDown className="w-5 h-5" />
+                  )}
                   <span>
-                    {isNetProfit ? '+' : ''}₹{estimate.net_pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {isNetProfit ? '+' : ''}₹
+                    {estimate.net_pnl.toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-tabular sm:border-l border-obsidian-700/60 sm:pl-4">
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">Gross P&L</div>
-                  <div className={`font-bold mt-0.5 ${estimate.gross_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">
+                    Gross P&L
+                  </div>
+                  <div
+                    className={`font-bold mt-0.5 ${estimate.gross_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
                     {estimate.gross_pnl >= 0 ? '+' : ''}₹{estimate.gross_pnl.toFixed(2)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">Total Taxes</div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">
+                    Total Taxes
+                  </div>
                   <div className="font-bold text-amber-300 mt-0.5">
                     ₹{estimate.total_charges.toFixed(2)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">Return (ROI)</div>
-                  <div className={`font-bold mt-0.5 ${isNetProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-sans font-semibold">
+                    Return (ROI)
+                  </div>
+                  <div
+                    className={`font-bold mt-0.5 ${isNetProfit ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
                     {((estimate.net_pnl / (quantity * buyPrice)) * 100).toFixed(2)}%
                   </div>
                 </div>
@@ -358,12 +380,23 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
               >
                 <div className="flex items-center gap-2 text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-                  <span className="font-semibold text-slate-300">Fee Breakdown ({productType}):</span>
-                  <strong className="text-amber-300 font-tabular font-bold">₹{estimate.total_charges.toFixed(2)}</strong>
+                  <span className="font-semibold text-slate-300">
+                    Fee Breakdown ({productType}):
+                  </span>
+                  <strong className="text-amber-300 font-tabular font-bold">
+                    ₹{estimate.total_charges.toFixed(2)}
+                  </strong>
                 </div>
                 <div className="flex items-center gap-2 text-slate-400 text-xs">
-                  <span className="text-[10px] text-slate-400 font-tabular">Turnover: ₹{estimate.total_turnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                  {showBreakdown ? <ChevronUp className="w-4 h-4 text-brand-cyan" /> : <ChevronDown className="w-4 h-4" />}
+                  <span className="text-[10px] text-slate-400 font-tabular">
+                    Turnover: ₹
+                    {estimate.total_turnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </span>
+                  {showBreakdown ? (
+                    <ChevronUp className="w-4 h-4 text-brand-cyan" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
                 </div>
               </button>
 
@@ -377,7 +410,10 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
                     <span className="text-slate-400">Total Turnover (Buy + Sell):</span>
                     <span className="font-bold text-white">
-                      ₹{estimate.total_turnover.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹
+                      {estimate.total_turnover.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
 
@@ -388,7 +424,9 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                         {productType === 'CNC' ? 'Zero Delivery' : '₹20/Order'}
                       </span>
                     </div>
-                    <span className="font-semibold text-slate-200">₹{estimate.brokerage.toFixed(2)}</span>
+                    <span className="font-semibold text-slate-200">
+                      ₹{estimate.brokerage.toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
@@ -397,18 +435,26 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
-                    <span className="text-slate-400">Exchange Turnover Charges (NSE 0.00297%):</span>
-                    <span className="font-semibold text-slate-200">₹{estimate.exchange_charges.toFixed(2)}</span>
+                    <span className="text-slate-400">
+                      Exchange Turnover Charges (NSE 0.00297%):
+                    </span>
+                    <span className="font-semibold text-slate-200">
+                      ₹{estimate.exchange_charges.toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
                     <span className="text-slate-400">SEBI Regulatory Charges (₹10/Crore):</span>
-                    <span className="font-semibold text-slate-200">₹{estimate.sebi_charges.toFixed(2)}</span>
+                    <span className="font-semibold text-slate-200">
+                      ₹{estimate.sebi_charges.toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
                     <span className="text-slate-400">Stamp Duty (State):</span>
-                    <span className="font-semibold text-slate-200">₹{estimate.stamp_duty.toFixed(2)}</span>
+                    <span className="font-semibold text-slate-200">
+                      ₹{estimate.stamp_duty.toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-slate-300 hover:text-white transition-colors py-0.5">
@@ -421,7 +467,9 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
                       <Sparkles className="w-4 h-4 text-amber-400" />
                       <span>Total Friction &amp; Taxes:</span>
                     </div>
-                    <span className="text-base text-amber-400">₹{estimate.total_charges.toFixed(2)}</span>
+                    <span className="text-base text-amber-400">
+                      ₹{estimate.total_charges.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               )}
@@ -432,4 +480,3 @@ export const ChargesCalculatorModal: React.FC<ChargesCalculatorModalProps> = ({
     </div>
   );
 };
-
