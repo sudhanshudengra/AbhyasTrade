@@ -133,3 +133,25 @@ export interface PlaceOrderPayload {
   price?: number | null;
   trigger_price?: number | null;
 }
+
+export const INDEX_SYMBOLS = new Set([
+  'NIFTY 50',
+  'NIFTY',
+  'BANKNIFTY',
+  'BANK NIFTY',
+  'FINNIFTY',
+  'MIDCPNIFTY',
+  'SENSEX',
+  '^NSEI',
+  '^NSEBANK'
+]);
+
+export function isIndexSymbol(symbol?: string | null): boolean {
+  if (!symbol) return false;
+  const clean = symbol.trim().toUpperCase();
+  if (INDEX_SYMBOLS.has(clean)) return true;
+  if (clean.startsWith('^') || clean.includes('INDEX')) return true;
+  if (clean === 'NIFTY 50' || clean === 'BANKNIFTY' || clean === 'FINNIFTY' || clean === 'MIDCPNIFTY' || clean === 'SENSEX') return true;
+  return false;
+}
+
