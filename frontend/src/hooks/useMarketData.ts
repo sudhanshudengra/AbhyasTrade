@@ -55,7 +55,8 @@ export function useMarketData(extraSymbols: string[] = []) {
   const [activeWatchlistId, setActiveWatchlistIdState] =
     useState<string>(loadSavedActiveWlId)
   const [quotesMap, setQuotesMap] = useState<Record<string, StockQuote>>({})
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('RELIANCE')
+  // Start with empty string so the AbhyasLearningScreen shows on first load
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('')
   const [flashMap, setFlashMap] = useState<Record<string, 'UP' | 'DOWN'>>({})
   const [isConnected, setIsConnected] = useState<boolean>(false)
   const [lastTickTime, setLastTickTime] = useState<number>(Date.now())
@@ -415,19 +416,10 @@ export function useMarketData(extraSymbols: string[] = []) {
     })
   }, [activeWatchlist, quotesMap])
 
-  // Initialize selected symbol on first load if not set
-  useEffect(() => {
-    if (!selectedSymbol && stocks.length > 0) {
-      setSelectedSymbol(stocks[0].symbol)
-    }
-  }, [stocks, selectedSymbol])
-
-  // Resolve selected stock object from quote cache regardless of active watchlist tab
-  const selectedStock =
-    quotesMap[selectedSymbol] ||
-    stocks.find(s => s.symbol === selectedSymbol) ||
-    stocks[0] ||
-    null
+  // Resolve selected stock: null when no symbol selected (shows AbhyasLearningScreen)
+  const selectedStock = selectedSymbol
+    ? quotesMap[selectedSymbol] || stocks.find(s => s.symbol === selectedSymbol) || null
+    : null
 
   return {
     watchlists,

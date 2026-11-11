@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { TrendingUp, ShieldCheck, Zap, BarChart3, Calculator, ArrowRight, CheckCircle2 } from 'lucide-react';
+import {
+  TrendingUp,
+  ShieldCheck,
+  Zap,
+  Sparkles,
+  Compass,
+  CheckCircle2,
+} from 'lucide-react';
 
 interface LoginPageProps {
   onSignInWithGoogle: () => Promise<any>;
@@ -24,8 +31,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
   return (
     <div className="min-h-screen w-full bg-obsidian-950 text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans select-none">
       {/* Background Decorative Ambient Gradients */}
-      <div className="absolute top-[-15%] left-[20%] w-[550px] h-[550px] bg-brand-blue/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[20%] w-[550px] h-[550px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[15%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[10%] w-[400px] h-[400px] bg-brand-blue/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#1e2638_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       {/* Top Navbar */}
@@ -53,15 +61,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       </header>
 
       {/* Hero & Login Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10 max-w-4xl mx-auto text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-obsidian-900/90 border border-brand-blue/30 text-brand-cyan text-xs font-bold mb-6 shadow-xl shadow-brand-blue/5">
-          <Zap className="w-3.5 h-3.5 text-amber-400" />
-          <span>India&apos;s Zero-Cost Virtual Trading Platform</span>
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-8 relative z-10 max-w-4xl mx-auto text-center">
+        
+        {/* Sacred Sanskrit Shloka Banner */}
+        <div className="w-full max-w-3xl bg-gradient-to-b from-obsidian-800/90 via-obsidian-900/90 to-obsidian-950/95 border border-amber-500/25 rounded-3xl p-5 sm:p-7 pt-7 sm:pt-8 shadow-2xl backdrop-blur-xl relative overflow-hidden mb-8 group">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+
+          <h2 className="text-xl sm:text-2xl md:text-[28px] font-bold text-amber-300 py-2 px-2 leading-[1.8] sm:leading-[1.9] tracking-normal drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]">
+            अभ्यासेन तु कौन्तेय वैराग्येण च गृह्यते ।
+          </h2>
+          <p className="text-[11px] sm:text-xs font-semibold text-amber-300/80 tracking-widest uppercase mt-1 font-mono">
+            &ldquo;Abhyāsena tu kaunteya vairāgyeṇa ca gṛhyate&rdquo;
+          </p>
+
+          <p className="text-xs sm:text-sm text-slate-300 mt-3 max-w-xl mx-auto font-medium leading-relaxed">
+            &ldquo;Through continuous, disciplined practice (<span className="text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (<span className="text-emerald-400 font-bold">वैराग्य</span>), market mastery is attained.&rdquo;
+          </p>
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white max-w-3xl leading-[1.15] mb-5">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white max-w-3xl leading-[1.15] mb-4">
           Master NSE Trading with{' '}
           <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-brand-cyan bg-clip-text text-transparent">
             ₹10,00,000
@@ -70,9 +89,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-sm sm:text-base text-slate-400 max-w-2xl mb-8 leading-relaxed">
-          Test intraday (5x MIS) and delivery (CNC) strategies in a high-fidelity virtual trading terminal
-          anchored to real market prices and exact regulatory charge breakdowns.
+        <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mb-8 leading-relaxed">
+          Cultivate emotional discipline and test intraday (5x MIS) &amp; delivery (CNC) strategies in a high-fidelity virtual terminal with real-time NSE prices and exact SEBI regulatory charge calculations.
         </p>
 
         {/* Primary Auth Action Card */}
@@ -121,55 +139,58 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
           <div className="mt-6 pt-6 border-t border-obsidian-800/80 flex items-center justify-around text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>1-Click Google OAuth</span>
+              <span>1-Click OAuth</span>
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Instant Setup</span>
+              <span>Zero Financial Risk</span>
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>₹10,00,000 Capital</span>
+              <span>₹10L Virtual Capital</span>
             </span>
           </div>
         </div>
 
-        {/* Features Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 w-full max-w-4xl text-left">
-          <div className="p-4 rounded-2xl bg-obsidian-900/50 border border-obsidian-800/70 flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-brand-blue/10 text-brand-cyan shrink-0 mt-0.5">
-              <BarChart3 className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-200">Real Market Quotes</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Exact NSE closing and live prices with full Line & Candlestick charts.
+        {/* 3 Pillars of Abhyasa in Trading Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10 w-full max-w-4xl text-left">
+          {/* Pillar 1 */}
+          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-emerald-500/30 transition-colors">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1.5 rounded-lg bg-emerald-950 text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
               </div>
+              <span className="text-xs font-extrabold text-white">१. अनुशासन (Discipline)</span>
             </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Define your Stop-Loss on every trade. Enforce strict capital protection and 1-2% position sizing.
+            </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-obsidian-900/50 border border-obsidian-800/70 flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0 mt-0.5">
-              <Calculator className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-200">SEBI Charges Engine</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Exact mathematical calculation of STT, GST, Exchange & Breakeven prices.
+          {/* Pillar 2 */}
+          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-amber-500/30 transition-colors">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1.5 rounded-lg bg-amber-950 text-amber-400">
+                <Compass className="w-4 h-4" />
               </div>
+              <span className="text-xs font-extrabold text-white">२. धैर्य (Patience)</span>
             </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Conquer emotional impulses and FOMO. Wait patiently for high-probability setups at key levels.
+            </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-obsidian-900/50 border border-obsidian-800/70 flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 shrink-0 mt-0.5">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-200">Multi-User Supabase</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Each Google account gets a private, persistent virtual trading portfolio.
+          {/* Pillar 3 */}
+          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-brand-blue/30 transition-colors">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1.5 rounded-lg bg-brand-blue/20 text-brand-cyan">
+                <TrendingUp className="w-4 h-4" />
               </div>
+              <span className="text-xs font-extrabold text-white">३. अभ्यास (Practice)</span>
             </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Hone strategies risk-free on real-time NSE ticks with ₹10,00,000 virtual balance and exact charges.
+            </p>
           </div>
         </div>
 
