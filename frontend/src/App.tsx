@@ -259,6 +259,10 @@ export const App: React.FC = () => {
         userProfile={userProfile}
         onSignInWithGoogle={signInWithGoogle}
         onSignOut={handleSignOut}
+        onGoHome={() => {
+          setSelectedSymbol('');
+          setMobileTab('WATCHLIST');
+        }}
       />
 
       {/* Main Content Area */}

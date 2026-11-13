@@ -388,9 +388,7 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                   ? 'Google Gemini'
                   : analysisMeta.provider === 'groq'
                     ? 'Groq LPU'
-                    : analysisMeta.provider === 'openrouter'
-                      ? 'OpenRouter (Fallback)'
-                      : 'Dhanraj Core'}
+                    : 'Dhanraj Core'}
               </span>
             )}
           </div>

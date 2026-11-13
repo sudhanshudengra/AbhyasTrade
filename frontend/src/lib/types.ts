@@ -80,6 +80,14 @@ export interface Trade {
   executed_at: string;
 }
 
+export interface TraderRank {
+  level: number;
+  title: string;
+  current_xp: number;
+  next_level_xp: number;
+  progress_percent: number;
+}
+
 export interface PortfolioSummary {
   user_id: string;
   initial_capital: number;
@@ -94,6 +102,9 @@ export interface PortfolioSummary {
   day_pnl_percent: number;
   open_positions_count: number;
   total_trades_count: number;
+  trader_xp?: number;
+  trader_level?: number;
+  trader_rank?: TraderRank;
 }
 
 export interface ChargeBreakdown {
@@ -241,6 +252,7 @@ export interface QuizQuestion {
 }
 
 export interface EducationData {
+  quizId?: string;
   topic: string;
   difficulty: string;
   title: string;
@@ -276,6 +288,12 @@ export interface AIUsageSummary {
   stocksLimit?: number;
   stocksUsedToday?: number;
   analyzedStocksToday?: string[];
+  quizzesRemaining?: number;
+  quizzesLimit?: number;
+  quizzesUsedToday?: number;
+  traderXp?: number;
+  traderLevel?: number;
+  traderRank?: TraderRank;
   heavyRemaining: number;
   heavyLimit: number;
   heavyUsedToday: number;
@@ -283,4 +301,19 @@ export interface AIUsageSummary {
   lightLimit: number;
   lightUsedToday: number;
   resetInfo: string;
+}
+
+export interface QuizCompletionResponse {
+  quiz_id: string;
+  topic: string;
+  difficulty: string;
+  score: number;
+  total_questions: number;
+  xp_awarded: number;
+  total_xp: number;
+  level: number;
+  title: string;
+  next_level_xp: number;
+  progress_percent: number;
+  level_up: boolean;
 }

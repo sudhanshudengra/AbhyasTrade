@@ -1,11 +1,13 @@
 import {
   Activity,
+  Award,
   Calculator,
   ChevronDown,
   LogOut,
   PieChart,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
   TrendingDown,
   TrendingUp,
   User,
@@ -23,6 +25,7 @@ interface HeaderProps {
   userProfile: UserProfile | null;
   onSignInWithGoogle: () => Promise<any>;
   onSignOut: () => Promise<any>;
+  onGoHome?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   userProfile,
   onSignInWithGoogle,
   onSignOut,
+  onGoHome,
 }) => {
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -133,13 +137,17 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Market Hours Status */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20">
+          <button
+            onClick={onGoHome}
+            className="flex items-center gap-2.5 text-left group transition-all hover:opacity-90 active:scale-95 cursor-pointer focus:outline-none"
+            title="Go to AbhyasTrade Home"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20 group-hover:scale-105 transition-transform">
               <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight text-white">
+                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-brand-cyan transition-colors">
                   Abhyas<span className="text-emerald-400">Trade</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
@@ -160,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Financial Metrics Strip */}
@@ -306,6 +314,55 @@ export const Header: React.FC<HeaderProps> = ({
                     {userProfile?.email || ''}
                   </div>
                 </div>
+
+                {/* Trader Rank & XP Progression Card */}
+                {(() => {
+                  const rank = portfolio?.trader_rank || {
+                    level: portfolio?.trader_level || 1,
+                    title: 'Jigyasu',
+                    current_xp: portfolio?.trader_xp || 0,
+                    next_level_xp: 250,
+                    progress_percent: 0,
+                  };
+
+                  return (
+                    <div className="p-2.5 rounded-xl bg-obsidian-900/90 border border-brand-cyan/25 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-extrabold text-white flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Level {rank.level} • {rank.title}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-brand-cyan font-bold">
+                          {rank.current_xp} XP
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-obsidian-950 rounded-full h-1.5 overflow-hidden border border-obsidian-700">
+                        <div
+                          className="bg-gradient-to-r from-brand-cyan to-brand-blue h-full rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, Math.max(5, rank.progress_percent))}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Target: {rank.next_level_xp} XP</span>
+                        <span>{rank.progress_percent}%</span>
+                      </div>
+
+                      {/* Take Daily Quiz Button */}
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          onGoHome?.();
+                        }}
+                        className="w-full py-1.5 px-2 rounded-lg bg-brand-blue/20 hover:bg-brand-blue/30 border border-brand-blue/40 text-brand-cyan text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3 text-brand-cyan" />
+                        <span>Take Daily Quiz (+50 XP)</span>
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 {/* Reset Capital Option */}
                 <button

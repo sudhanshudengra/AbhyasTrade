@@ -5,62 +5,231 @@ import {
   Compass,
   Lightbulb,
   RefreshCw,
+  RotateCcw,
   ShieldCheck,
   Sparkles,
   Target,
   TrendingUp,
   XCircle,
+  Zap,
 } from 'lucide-react';
-import React, { useState } from 'react';
-import { getAIEducation } from '../lib/api';
-import { AIResponseMeta, EducationData } from '../lib/types';
+import React, { useEffect, useState } from 'react';
+import { getAIEducation, getAIUsage, submitQuizCompletion } from '../lib/api';
+import { AIResponseMeta, EducationData, QuizCompletionResponse } from '../lib/types';
 
 interface AbhyasLearningScreenProps {
   onSelectSymbol?: (symbol: string) => void;
   onOpenChargesCalc?: () => void;
 }
 
-const CURATED_TOPICS = [
-  'Risk-to-Reward & 1% Rule',
-  'RSI & Momentum Trading',
-  'Intraday VWAP Strategy',
-  'Vairagya: Conquering FOMO',
-  'Stop-Loss Mechanics',
-  'Support & Resistance',
+interface CategoryWorkspace {
+  selectedTopic: string;
+  customTopic: string;
+  lesson: (EducationData & { quizId?: string }) | null;
+  meta: AIResponseMeta | null;
+  quizAnswers: Record<number, number>;
+  quizResult: QuizCompletionResponse | null;
+}
+
+const LEVEL_TOPICS: Record<'beginner' | 'intermediate' | 'advanced', string[]> = {
+  beginner: [
+    'Market vs Limit vs SL-M Orders',
+    'The 1% Account Risk Defense Rule',
+    'Candlestick Anatomy: Body vs Wicks',
+    'Risk-to-Reward Ratio (1:2 & 1:3)',
+  ],
+  intermediate: [
+    'RSI Bullish & Bearish Divergence',
+    'Intraday VWAP Pullback Strategy',
+    'Multi-Timeframe Trend Confirmation',
+    'Breakout vs False Breakdown (Fakeout)',
+  ],
+  advanced: [
+    'Institutional Liquidity Sweeps',
+    'Option Greeks: Intraday Theta Decay',
+    'Fair Value Gaps (FVG) & Order Blocks',
+    'Hedging Delivery Portfolios with Futures',
+  ],
+};
+
+const PRACTICE_DILEMMAS = [
+  {
+    icon: '🎯',
+    title: 'Stop Exiting Winners Too Early',
+    desc: 'Master trailing stop-loss to ride trending multi-baggers',
+    topic: 'Trailing Stop-Loss & Riding Trend Moves',
+  },
+  {
+    icon: '🛡️',
+    title: 'Conquering Fear of Stop-Loss',
+    desc: 'Honor risk cuts mechanically without emotional pain',
+    topic: 'Stop-Loss Mechanics & Psychological Acceptance',
+  },
+  {
+    icon: '📊',
+    title: 'Spotting Nifty & BankNifty Fakeouts',
+    desc: 'Detect institutional trap candles and volume absorption',
+    topic: 'False Breakouts & Bull/Bear Traps',
+  },
+  {
+    icon: '⚡',
+    title: 'Intraday 5x MIS Leverage Defense',
+    desc: 'Prevent sudden margin calls and capital destruction',
+    topic: 'Intraday MIS Leverage & Margin Call Management',
+  },
 ];
 
 export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
-  const [selectedTopic, setSelectedTopic] = useState<string>(CURATED_TOPICS[0]);
-  const [customTopic, setCustomTopic] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>(
-    'beginner'
-  );
-  const [lesson, setLesson] = useState<EducationData | null>(null);
-  const [meta, setMeta] = useState<AIResponseMeta | null>(null);
+  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [categoryStates, setCategoryStates] = useState<Record<'beginner' | 'intermediate' | 'advanced', CategoryWorkspace>>({
+    beginner: {
+      selectedTopic: LEVEL_TOPICS.beginner[0],
+      customTopic: '',
+      lesson: null,
+      meta: null,
+      quizAnswers: {},
+      quizResult: null,
+    },
+    intermediate: {
+      selectedTopic: LEVEL_TOPICS.intermediate[0],
+      customTopic: '',
+      lesson: null,
+      meta: null,
+      quizAnswers: {},
+      quizResult: null,
+    },
+    advanced: {
+      selectedTopic: LEVEL_TOPICS.advanced[0],
+      customTopic: '',
+      lesson: null,
+      meta: null,
+      quizAnswers: {},
+      quizResult: null,
+    },
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState<boolean>(false);
+  const [quizzesRemaining, setQuizzesRemaining] = useState<number | null>(null);
+  const [quizzesLimit, setQuizzesLimit] = useState<number>(5);
+
+  const current = categoryStates[difficulty];
+  const { selectedTopic, customTopic, lesson, meta, quizAnswers, quizResult } = current;
+
+  // Active quiz lockout: if lesson has questions and hasn't been submitted, user must complete it before generating another
+  const hasIncompleteQuiz = Boolean(
+    lesson && lesson.quizzes && lesson.quizzes.length > 0 && !quizResult
+  );
+  const isDailyLimitReached = quizzesRemaining !== null && quizzesRemaining <= 0;
+
+  const updateCategoryWorkspace = (
+    cat: 'beginner' | 'intermediate' | 'advanced',
+    updates: Partial<CategoryWorkspace>
+  ) => {
+    setCategoryStates((prev) => ({
+      ...prev,
+      [cat]: {
+        ...prev[cat],
+        ...updates,
+      },
+    }));
+  };
+
+  const refreshQuota = async () => {
+    try {
+      const usage = await getAIUsage();
+      if (usage?.data) {
+        if (typeof usage.data.quizzesRemaining === 'number') {
+          setQuizzesRemaining(usage.data.quizzesRemaining);
+        }
+        if (typeof usage.data.quizzesLimit === 'number') {
+          setQuizzesLimit(usage.data.quizzesLimit);
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  useEffect(() => {
+    refreshQuota();
+  }, []);
 
   const handleFetchLesson = async (topicToFetch: string) => {
+    if (hasIncompleteQuiz) {
+      setError(`Please complete the active quiz for "${lesson?.title || selectedTopic}" in ${difficulty.toUpperCase()} first!`);
+      return;
+    }
+    if (isDailyLimitReached) {
+      setError(`Daily quiz limit reached (${quizzesLimit} quizzes/day). Quota resets at 05:30 AM IST.`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    setQuizAnswers({});
+    // Optimistic decrement for instant UI feedback
+    setQuizzesRemaining((prev) => (prev !== null ? Math.max(0, prev - 1) : null));
+
     try {
       const res = await getAIEducation(topicToFetch, difficulty);
-      setLesson(res.data);
-      setMeta(res.meta);
+      updateCategoryWorkspace(difficulty, {
+        lesson: res.data,
+        meta: res.meta,
+        quizAnswers: {},
+        quizResult: null,
+      });
+      await refreshQuota();
     } catch (err: any) {
+      await refreshQuota();
       setError(err?.message || 'Failed to load lesson. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
-    setQuizAnswers((prev) => ({
-      ...prev,
+  const handleDifficultyChange = (newDiff: 'beginner' | 'intermediate' | 'advanced') => {
+    setDifficulty(newDiff);
+    setError(null);
+  };
+
+  const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
+    const updated = {
+      ...quizAnswers,
       [questionIndex]: optionIndex,
-    }));
+    };
+    updateCategoryWorkspace(difficulty, {
+      quizAnswers: updated,
+    });
+
+    // If all questions answered and not yet submitted, auto-submit for XP award!
+    if (lesson?.quizzes && Object.keys(updated).length === lesson.quizzes.length && !quizResult && !isSubmittingQuiz) {
+      setIsSubmittingQuiz(true);
+      try {
+        let correctCount = 0;
+        lesson.quizzes.forEach((q, idx) => {
+          if (updated[idx] === q.correctIndex) {
+            correctCount += 1;
+          }
+        });
+
+        const res = await submitQuizCompletion(
+          lesson.title || selectedTopic,
+          difficulty,
+          correctCount,
+          lesson.quizzes.length,
+          lesson.quizId
+        );
+        updateCategoryWorkspace(difficulty, {
+          quizResult: res.data,
+        });
+        await refreshQuota();
+      } catch (err) {
+        console.error('Failed to submit quiz score:', err);
+      } finally {
+        setIsSubmittingQuiz(false);
+      }
+    }
   };
 
   return (
@@ -216,7 +385,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                     Sovereign Market Intelligence
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
-                    15 Analyses / Day Included
+                    10 Analyses / Day Included
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
@@ -251,50 +420,82 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                  Abhyas AI Trading Guru &amp; Interactive Quiz
-                </h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Abhyas AI Trading Guru &amp; Interactive Quiz
+                  </h3>
+                  {quizzesRemaining !== null && (
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-brand-blue/20 text-brand-cyan border border-brand-blue/40">
+                      🎯 {quizzesRemaining}/{quizzesLimit} Quizzes Left Today
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-400">
-                  Free trading education, real Indian stock examples, and self-testing quizzes
+                  Earn Trader XP, climb Hinglish ranks, and master market psychology
                 </p>
               </div>
             </div>
 
             {/* Difficulty Selector */}
             <div className="flex items-center bg-obsidian-900 p-1 rounded-xl border border-obsidian-700 text-xs">
-              {(['beginner', 'intermediate', 'advanced'] as const).map((diff) => (
-                <button
-                  key={diff}
-                  onClick={() => setDifficulty(diff)}
-                  className={`px-2.5 py-1 rounded-lg capitalize font-medium transition ${
-                    difficulty === diff
-                      ? 'bg-brand-cyan text-obsidian-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {diff}
-                </button>
-              ))}
+              {(['beginner', 'intermediate', 'advanced'] as const).map((diff) => {
+                const diffLabels: Record<string, { label: string; badge: string }> = {
+                  beginner: { label: 'Beginner', badge: 'Jigyasu' },
+                  intermediate: { label: 'Intermediate', badge: 'Abhyasi' },
+                  advanced: { label: 'Advanced', badge: 'Sadhak' },
+                };
+                return (
+                  <button
+                    key={diff}
+                    onClick={() => handleDifficultyChange(diff)}
+                    className={`px-2.5 py-1 rounded-lg capitalize font-medium transition flex items-center gap-1.5 ${
+                      difficulty === diff
+                        ? 'bg-brand-cyan text-obsidian-950 font-bold shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>{diffLabels[diff].label}</span>
+                    <span
+                      className={`text-[9px] px-1 py-0.2 rounded font-extrabold uppercase ${
+                        difficulty === diff
+                          ? 'bg-obsidian-950/25 text-obsidian-950'
+                          : 'bg-obsidian-800 text-slate-400 border border-obsidian-700'
+                      }`}
+                    >
+                      {diffLabels[diff].badge}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Curated Topic Chips */}
+          {/* Curated Topic Chips (Tier-Specific) */}
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Select or Explore a Concept:
-            </span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                1. Select a {difficulty.toUpperCase()} Topic:
+              </span>
+              <span className="text-[11px] text-brand-cyan font-medium hidden sm:inline truncate max-w-xs">
+                Selected: <strong className="text-white">{customTopic.trim() || selectedTopic}</strong>
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {CURATED_TOPICS.map((topic) => (
+              {LEVEL_TOPICS[difficulty].map((topic) => (
                 <button
                   key={topic}
+                  type="button"
                   onClick={() => {
-                    setSelectedTopic(topic);
-                    handleFetchLesson(topic);
+                    updateCategoryWorkspace(difficulty, {
+                      selectedTopic: topic,
+                      customTopic: '',
+                    });
+                    setError(null);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
-                    selectedTopic === topic
-                      ? 'bg-brand-cyan/20 text-brand-cyan border-brand-cyan/50 shadow-sm'
-                      : 'bg-obsidian-800/80 text-slate-300 border-obsidian-700 hover:border-slate-500'
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition border cursor-pointer active:scale-95 ${
+                    selectedTopic === topic && !customTopic.trim()
+                      ? 'bg-brand-cyan text-obsidian-950 font-bold border-brand-cyan shadow-md'
+                      : 'bg-obsidian-800/80 text-slate-300 border-obsidian-700 hover:border-slate-500 hover:text-white'
                   }`}
                 >
                   {topic}
@@ -308,32 +509,46 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
             <input
               type="text"
               value={customTopic}
-              onChange={(e) => setCustomTopic(e.target.value)}
+              onChange={(e) =>
+                updateCategoryWorkspace(difficulty, {
+                  customTopic: e.target.value,
+                })
+              }
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && customTopic.trim()) {
-                  setSelectedTopic(customTopic.trim());
-                  handleFetchLesson(customTopic.trim());
+                if (e.key === 'Enter') {
+                  const targetTopic = customTopic.trim() || selectedTopic;
+                  if (targetTopic) {
+                    handleFetchLesson(targetTopic);
+                  }
                 }
               }}
-              placeholder="Or type any trading concept (e.g. Bollinger Bands, MACD Crossover)..."
-              className="flex-1 px-4 py-2 rounded-xl bg-obsidian-900 border border-obsidian-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-cyan"
+              placeholder={`Or type any custom concept (e.g. Bollinger Bands, MACD)... Current: "${selectedTopic}"`}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-obsidian-900 border border-obsidian-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-cyan"
             />
             <button
               onClick={() => {
-                if (customTopic.trim()) {
-                  setSelectedTopic(customTopic.trim());
-                  handleFetchLesson(customTopic.trim());
-                } else {
-                  handleFetchLesson(selectedTopic);
+                const targetTopic = customTopic.trim() || selectedTopic;
+                if (targetTopic) {
+                  handleFetchLesson(targetTopic);
                 }
               }}
-              disabled={loading}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-blue hover:from-cyan-400 hover:to-blue-500 text-obsidian-950 font-bold text-xs shadow-md transition disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+              disabled={loading || hasIncompleteQuiz || isDailyLimitReached || (!customTopic.trim() && !selectedTopic)}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-blue hover:from-cyan-400 hover:to-blue-500 text-obsidian-950 font-bold text-xs shadow-md transition disabled:opacity-50 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
             >
               {loading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Generating...</span>
+                  <span>Generating Lesson &amp; Quiz...</span>
+                </>
+              ) : hasIncompleteQuiz ? (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5 text-obsidian-950" />
+                  <span>Complete Active Quiz First</span>
+                </>
+              ) : isDailyLimitReached ? (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-obsidian-950" />
+                  <span>Daily Limit Reached</span>
                 </>
               ) : (
                 <>
@@ -343,6 +558,69 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
               )}
             </button>
           </div>
+
+          {/* Incomplete Quiz Lockout Notice Banner */}
+          {hasIncompleteQuiz && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-200 animate-in fade-in">
+              <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold text-amber-300">
+                  Active {difficulty.toUpperCase()} Quiz in Progress
+                </p>
+                <p className="text-slate-300 leading-relaxed text-[11px]">
+                  You have an active quiz for <span className="text-white font-semibold">&ldquo;{lesson?.title || selectedTopic}&rdquo;</span>. Please answer all questions below to earn your Trader XP before generating another topic in this level.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 1-Click Interactive Practice Dilemmas (When user hasn't selected a lesson) */}
+          {!lesson && !loading && (
+            <div className="pt-2 border-t border-obsidian-800/80 space-y-3 animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Or Pick a Real-World Trading Dilemma to Solve:
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {PRACTICE_DILEMMAS.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      if (hasIncompleteQuiz) {
+                        setError(`Please complete the active quiz for "${selectedTopic}" in ${difficulty.toUpperCase()} first!`);
+                        return;
+                      }
+                      updateCategoryWorkspace(difficulty, {
+                        selectedTopic: item.topic,
+                        customTopic: '',
+                      });
+                      setError(null);
+                    }}
+                    className={`p-3 rounded-2xl border transition text-left group flex items-start gap-3 active:scale-98 shadow-sm cursor-pointer ${
+                      selectedTopic === item.topic && !customTopic.trim()
+                        ? 'bg-brand-cyan/15 border-brand-cyan text-white shadow-md'
+                        : 'bg-obsidian-850/80 hover:bg-obsidian-800 border-obsidian-750 hover:border-brand-cyan/40 text-slate-300'
+                    }`}
+                  >
+                    <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
+                      {item.icon}
+                    </span>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-slate-200 group-hover:text-brand-cyan transition-colors">
+                        {item.title}
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-snug">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Error Alert */}
           {error && (
@@ -487,6 +765,70 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                       );
                     })}
                   </div>
+
+                  {/* Quiz Submission Loading & Victory XP Reward Card */}
+                  {isSubmittingQuiz && (
+                    <div className="p-4 rounded-2xl bg-obsidian-900 border border-brand-cyan/30 flex items-center justify-center gap-2.5 text-xs text-brand-cyan animate-pulse">
+                      <RefreshCw className="w-4 h-4 animate-spin text-brand-cyan" />
+                      <span className="font-semibold">Calculating Score & Awarding Trader XP...</span>
+                    </div>
+                  )}
+
+                  {quizResult && (
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-obsidian-900 to-obsidian-950 border border-emerald-500/40 shadow-2xl animate-in zoom-in-95 space-y-3 text-left">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-obsidian-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-md">
+                            <Award className="w-5 h-5 text-amber-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                              <span>Quiz Complete!</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                                +{quizResult.xp_awarded} XP Awarded
+                              </span>
+                            </h4>
+                            <p className="text-xs text-slate-300">
+                              Score: <strong className="text-emerald-400 font-extrabold">{quizResult.score} / {quizResult.total_questions}</strong> ({Math.round((quizResult.score / quizResult.total_questions) * 100)}%)
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="px-3 py-1 rounded-xl bg-obsidian-900 border border-amber-500/30 text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                            <Zap className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Level {quizResult.level} • {quizResult.title}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {quizResult.level_up && (
+                        <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs font-bold text-center animate-pulse">
+                          🎉 LEVEL UP! You have advanced to Level {quizResult.level}: {quizResult.title}!
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs pt-1">
+                        <span className="text-slate-400">
+                          Total XP: <strong className="text-white font-mono">{quizResult.total_xp}</strong> • Target for Next Rank: <strong className="text-brand-cyan font-mono">{quizResult.next_level_xp} XP</strong>
+                        </span>
+                        <button
+                          onClick={() => {
+                            updateCategoryWorkspace(difficulty, {
+                              quizAnswers: {},
+                              quizResult: null,
+                              lesson: null,
+                              customTopic: '',
+                            });
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-brand-blue/30 hover:bg-brand-blue/40 border border-brand-cyan/40 text-brand-cyan text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Practice Another Concept</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

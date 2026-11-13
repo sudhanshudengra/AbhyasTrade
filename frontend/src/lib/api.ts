@@ -9,6 +9,7 @@ import {
   PlaceOrderPayload,
   PortfolioSummary,
   Position,
+  QuizCompletionResponse,
   RoundtripEstimate,
   SentimentData,
   StockAnalysisData,
@@ -275,4 +276,23 @@ export async function getAIUsage(): Promise<{ success: boolean; data: AIUsageSum
   });
   if (!res.ok) throw new Error('Failed to retrieve AI usage quota');
   return res.json();
+}
+
+export async function submitQuizCompletion(
+  topic: string,
+  difficulty: string,
+  score: number,
+  totalQuestions: number = 3,
+  quizId?: string
+): Promise<{ success: boolean; data: QuizCompletionResponse }> {
+  const res = await fetch(`${API_BASE}/ai/quiz/complete`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ topic, difficulty, score, totalQuestions, quizId }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error?.message || 'Failed to submit quiz results');
+  }
+  return data;
 }
