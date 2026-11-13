@@ -43,8 +43,13 @@ export default {
         'tick-green': 'tickGreen 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
         'tick-red': 'tickRed 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
         'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-subtle': 'bounceSubtle 0.75s ease-in-out infinite',
       },
       keyframes: {
+        bounceSubtle: {
+          '0%, 100%': { transform: 'translateY(0) scale(1)' },
+          '50%': { transform: 'translateY(-3px) scale(1.18)' },
+        },
         tickGreen: {
           '0%': { backgroundColor: 'rgba(16, 185, 129, 0.35)', color: '#34d399' },
           '100%': { backgroundColor: 'transparent' },

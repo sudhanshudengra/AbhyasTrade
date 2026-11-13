@@ -1,13 +1,19 @@
 import {
-  StockQuote,
+  AIStandardResponse,
+  AIUsageSummary,
   CandleData,
+  ChargeBreakdown,
+  EducationData,
+  Order,
+  PeerComparisonData,
+  PlaceOrderPayload,
   PortfolioSummary,
   Position,
-  Order,
-  Trade,
-  PlaceOrderPayload,
-  ChargeBreakdown,
   RoundtripEstimate,
+  SentimentData,
+  StockAnalysisData,
+  StockQuote,
+  Trade,
 } from './types';
 
 // Support dynamic backend URL in production (e.g. Render/Railway) with local fallback
@@ -189,5 +195,84 @@ export async function estimateRoundtrip(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Failed to estimate roundtrip charges');
+  return res.json();
+}
+
+// ==============================================================================
+// AI API Endpoints
+// ==============================================================================
+
+export async function getAIStockAnalysis(
+  symbol: string,
+  exchange: string = 'NSE',
+  forceRefresh: boolean = false
+): Promise<AIStandardResponse<StockAnalysisData>> {
+  const res = await fetch(`${API_BASE}/ai/stock-analysis`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ symbol, exchange, force_refresh: forceRefresh }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error?.message || `Failed to analyze ${symbol}`);
+  }
+  return data;
+}
+
+export async function getAIPeerComparison(
+  symbols: string[],
+  exchange: string = 'NSE',
+  forceRefresh: boolean = false
+): Promise<AIStandardResponse<PeerComparisonData>> {
+  const res = await fetch(`${API_BASE}/ai/peer-comparison`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ symbols, exchange, force_refresh: forceRefresh }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error?.message || 'Failed to compare peer companies');
+  }
+  return data;
+}
+
+export async function getAINewsSentiment(
+  symbol: string,
+  headline?: string,
+  forceRefresh: boolean = false
+): Promise<AIStandardResponse<SentimentData>> {
+  const res = await fetch(`${API_BASE}/ai/sentiment`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ symbol, headline, force_refresh: forceRefresh }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error?.message || `Failed to evaluate sentiment for ${symbol}`);
+  }
+  return data;
+}
+
+export async function getAIEducation(
+  topic: string,
+  difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner'
+): Promise<AIStandardResponse<EducationData>> {
+  const res = await fetch(`${API_BASE}/ai/education`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ topic, difficulty }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error?.message || `Failed to generate lesson on ${topic}`);
+  }
+  return data;
+}
+
+export async function getAIUsage(): Promise<{ success: boolean; data: AIUsageSummary }> {
+  const res = await fetch(`${API_BASE}/ai/usage`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to retrieve AI usage quota');
   return res.json();
 }
