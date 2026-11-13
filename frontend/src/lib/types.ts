@@ -80,6 +80,14 @@ export interface Trade {
   executed_at: string;
 }
 
+export interface TraderRank {
+  level: number;
+  title: string;
+  current_xp: number;
+  next_level_xp: number;
+  progress_percent: number;
+}
+
 export interface PortfolioSummary {
   user_id: string;
   initial_capital: number;
@@ -94,6 +102,9 @@ export interface PortfolioSummary {
   day_pnl_percent: number;
   open_positions_count: number;
   total_trades_count: number;
+  trader_xp?: number;
+  trader_level?: number;
+  trader_rank?: TraderRank;
 }
 
 export interface ChargeBreakdown {
@@ -160,4 +171,149 @@ export function isIndexSymbol(symbol?: string | null): boolean {
   )
     return true;
   return false;
+}
+
+// ==============================================================================
+// AI Integration Types
+// ==============================================================================
+
+export interface FinancialPerformance {
+  revenue: string;
+  profitability: string;
+  debt: string;
+  cashFlow: string;
+}
+
+export interface StockAnalysisData {
+  symbol: string;
+  companyName: string;
+  overview: string;
+  financialPerformance: FinancialPerformance;
+  strengths: string[];
+  risks: string[];
+  valuation?: string | null;
+  technicalSummary?: string | null;
+  conclusion: string;
+  limitations: string[];
+  verifiedMetrics: Record<string, any>;
+}
+
+export interface PeerMetricRow {
+  symbol: string;
+  companyName: string;
+  marketCap?: string | null;
+  pe?: number | null;
+  pb?: number | null;
+  debtToEquity?: number | null;
+  roe?: string | null;
+  profitMargin?: string | null;
+  strengths: string[];
+  risks: string[];
+}
+
+export interface PeerComparisonData {
+  symbols: string[];
+  peers: PeerMetricRow[];
+  businessComparison: string;
+  financialPerformanceComparison: string;
+  valuationComparison: string;
+  relativeStrengths: string[];
+  relativeWeaknesses: string[];
+  keyDifferences: string[];
+  conclusion: string;
+  limitations: string[];
+}
+
+export interface NewsSentimentItem {
+  headline: string;
+  sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+  score: number;
+  reasoning: string;
+  companyRelevance: string;
+  uncertainties: string[];
+  publisher?: string | null;
+  publishedAt?: string | null;
+}
+
+export interface SentimentData {
+  symbol: string;
+  companyName: string;
+  overallSentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+  overallScore: number;
+  summary: string;
+  articles: NewsSentimentItem[];
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface EducationData {
+  quizId?: string;
+  topic: string;
+  difficulty: string;
+  title: string;
+  summary: string;
+  detailedExplanation: string;
+  keyTakeaways: string[];
+  realWorldExample: string;
+  riskManagementRule: string;
+  quizzes: QuizQuestion[];
+}
+
+export interface AIResponseMeta {
+  cached: boolean;
+  provider: string;
+  model: string;
+  generatedAt: string;
+  dataTimestamp?: string | null;
+  disclaimer: string;
+}
+
+export interface AIStandardResponse<T> {
+  success: boolean;
+  data: T;
+  meta: AIResponseMeta;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface AIUsageSummary {
+  stocksRemaining?: number;
+  stocksLimit?: number;
+  stocksUsedToday?: number;
+  analyzedStocksToday?: string[];
+  quizzesRemaining?: number;
+  quizzesLimit?: number;
+  quizzesUsedToday?: number;
+  traderXp?: number;
+  traderLevel?: number;
+  traderRank?: TraderRank;
+  heavyRemaining: number;
+  heavyLimit: number;
+  heavyUsedToday: number;
+  lightRemaining: number;
+  lightLimit: number;
+  lightUsedToday: number;
+  resetInfo: string;
+}
+
+export interface QuizCompletionResponse {
+  quiz_id: string;
+  topic: string;
+  difficulty: string;
+  score: number;
+  total_questions: number;
+  xp_awarded: number;
+  total_xp: number;
+  level: number;
+  title: string;
+  next_level_xp: number;
+  progress_percent: number;
+  level_up: boolean;
 }

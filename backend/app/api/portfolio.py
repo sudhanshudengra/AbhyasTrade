@@ -79,6 +79,9 @@ async def get_portfolio_summary(
         "day_pnl_percent": day_pnl_percent,
         "open_positions_count": len([p for p in positions if p["quantity"] != 0]),
         "total_trades_count": len(trades),
+        "trader_xp": int(portfolio.get("trader_xp", 0) or 0),
+        "trader_level": int(portfolio.get("trader_level", 1) or 1),
+        "trader_rank": portfolio.get("trader_rank"),
     }
 
 

@@ -6,10 +6,11 @@ import {
   ISeriesApi,
   LineStyle,
 } from 'lightweight-charts';
-import { BarChart2, CandlestickChart, TrendingUp } from 'lucide-react';
+import { BarChart2, CandlestickChart, TrendingUp, Sparkles } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { getChartCandles } from '../lib/api';
 import { CandleData, isIndexSymbol, StockQuote } from '../lib/types';
+import { AIInsightsModal } from './AIInsightsModal';
 
 interface TradingChartProps {
   stock: StockQuote | null;
@@ -40,6 +41,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
   const [chartType, setChartType] = useState<ChartType>('AREA');
   const [timeframe, setTimeframe] = useState<string>('1D');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [tooltipState, setTooltipState] = useState<{
     visible: boolean;
     x: number;
@@ -511,6 +513,16 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </button>
           </div>
 
+          {/* Dhanraj AI Button */}
+          <button
+            onClick={() => setIsAIModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/15 to-blue-500/20 hover:from-cyan-500/25 hover:to-blue-500/30 text-brand-cyan border border-brand-cyan/40 text-xs font-bold transition shadow-sm active:scale-95 group"
+            title="Dhanraj AI • Fundamental, Peer & News Intelligence"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-brand-cyan shrink-0 group-hover:animate-bounce-subtle transition-all" />
+            <span className="hidden sm:inline">Dhanraj AI</span>
+          </button>
+
           {/* Buy & Sell Actions - Stocks only, disabled for Benchmark Indices */}
           <div className="flex items-center gap-1.5">
             {!isIndexSymbol(stock?.symbol) ? (
@@ -651,6 +663,11 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           </div>
         </div>
       </div>
+
+      {/* AI Insights Modal */}
+      {isAIModalOpen && stock && (
+        <AIInsightsModal stock={stock} onClose={() => setIsAIModalOpen(false)} />
+      )}
     </div>
   );
 };

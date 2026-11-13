@@ -1,7 +1,8 @@
 import json
 import logging
+import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import aiosqlite
 from app.core.config import settings
@@ -10,7 +11,7 @@ logger = logging.getLogger("abhyastrade.database")
 
 # Check if Supabase credentials are provided
 supabase_client = None
-if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+if not os.environ.get("TESTING") and settings.SUPABASE_URL and settings.SUPABASE_KEY:
     try:
         from supabase import create_client, Client
 
@@ -25,6 +26,40 @@ if settings.SUPABASE_URL and settings.SUPABASE_KEY:
         supabase_client = None
 
 SQLITE_DB_PATH = "backend/abhyastrade.db"
+
+# Trader Progression Ranks (Level 1 to 5)
+TRADER_RANKS = [
+    {"level": 1, "title": "Jigyasu", "min_xp": 0, "max_xp": 250},
+    {"level": 2, "title": "Abhyasi", "min_xp": 251, "max_xp": 750},
+    {"level": 3, "title": "Sadhak", "min_xp": 751, "max_xp": 1800},
+    {"level": 4, "title": "Vivekavan", "min_xp": 1801, "max_xp": 3500},
+    {"level": 5, "title": "Maharathi", "min_xp": 3501, "max_xp": 999999},
+]
+
+
+def calculate_trader_level(xp: int) -> Dict[str, Any]:
+    level = 1
+    title = "Jigyasu"
+    current_tier_min = 0
+    next_level_xp = 250
+
+    for r in TRADER_RANKS:
+        if xp >= r["min_xp"]:
+            level = r["level"]
+            title = r["title"]
+            current_tier_min = r["min_xp"]
+            next_level_xp = r["max_xp"]
+
+    tier_range = max(1, next_level_xp - current_tier_min)
+    progress_pct = min(100, max(0, int(((xp - current_tier_min) / tier_range) * 100)))
+
+    return {
+        "level": level,
+        "title": title,
+        "current_xp": xp,
+        "next_level_xp": next_level_xp,
+        "progress_percent": progress_pct,
+    }
 
 
 async def init_db():
@@ -51,7 +86,8 @@ async def init_db():
                 logger.info("Initialized default portfolio in Supabase PostgreSQL.")
         except Exception as e:
             logger.warning(f"Supabase init check: {e}")
-        return
+
+    # Always ensure local SQLite fallback tables are initialized
 
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
         await db.execute("""
@@ -114,6 +150,100 @@ async def init_db():
             )
         """)
 
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_analysis_cache (
+                id TEXT PRIMARY KEY,
+                cache_key TEXT UNIQUE NOT NULL,
+                analysis_type TEXT NOT NULL,
+                symbol TEXT,
+                exchange TEXT DEFAULT 'NSE',
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                result TEXT NOT NULL,
+                input_data_hash TEXT NOT NULL,
+                data_timestamp TEXT,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            )
+        """)
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_key ON ai_analysis_cache(cache_key)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_lookup ON ai_analysis_cache(symbol, analysis_type)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_expires_at ON ai_analysis_cache(expires_at)"
+        )
+
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_usage_logs (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                symbol TEXT,
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                status TEXT NOT NULL,
+                tokens_input INTEGER,
+                tokens_output INTEGER,
+                cached INTEGER NOT NULL DEFAULT 0,
+                error_code TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        # Safe migration for existing SQLite databases
+        try:
+            await db.execute("ALTER TABLE ai_usage_logs ADD COLUMN symbol TEXT")
+            await db.commit()
+        except Exception:
+            pass
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN custom_ai_limit INTEGER")
+            await db.commit()
+        except Exception:
+            pass
+
+        # Quiz logs & gamification tracking
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_quiz_logs (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                topic TEXT NOT NULL,
+                difficulty TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                total_questions INTEGER NOT NULL DEFAULT 3,
+                xp_awarded INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL
+            )
+        """)
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_quiz_logs_user_time ON ai_quiz_logs(user_id, created_at DESC)"
+        )
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN trader_xp INTEGER DEFAULT 0")
+            await db.commit()
+        except Exception:
+            pass
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN trader_level INTEGER DEFAULT 1")
+            await db.commit()
+        except Exception:
+            pass
+
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_user_time ON ai_usage_logs(user_id, created_at DESC)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage_logs(feature)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_symbol ON ai_usage_logs(user_id, symbol, created_at DESC)"
+        )
+
         # Seed default portfolio
         now = datetime.now(timezone.utc).isoformat()
         await db.execute(
@@ -146,15 +276,23 @@ class DatabaseService:
                     .execute()
                 )
                 if res.data:
-                    return res.data[0]
+                    p = dict(res.data[0])
+                    p["trader_xp"] = int(p.get("trader_xp") or 0)
+                    p["trader_level"] = int(p.get("trader_level") or 1)
+                    p["trader_rank"] = calculate_trader_level(p["trader_xp"])
+                    return p
                 # Insert initial portfolio
                 new_p = {
                     "user_id": user_id,
                     "virtual_cash": settings.VIRTUAL_INITIAL_CASH,
                     "used_margin": 0.0,
+                    "trader_xp": 0,
+                    "trader_level": 1,
                 }
                 insert_res = supabase_client.table("portfolios").insert(new_p).execute()
-                return insert_res.data[0]
+                res_p = dict(insert_res.data[0])
+                res_p["trader_rank"] = calculate_trader_level(0)
+                return res_p
             except Exception as e:
                 logger.error(f"Supabase error get_portfolio: {e}")
 
@@ -166,13 +304,17 @@ class DatabaseService:
             )
             row = await cursor.fetchone()
             if row:
-                return dict(row)
+                p = dict(row)
+                p["trader_xp"] = int(p.get("trader_xp") or 0)
+                p["trader_level"] = int(p.get("trader_level") or 1)
+                p["trader_rank"] = calculate_trader_level(p["trader_xp"])
+                return p
 
             now = datetime.now(timezone.utc).isoformat()
             new_id = str(uuid.uuid4())
             await db.execute(
-                "INSERT INTO portfolios (id, user_id, virtual_cash, used_margin, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (new_id, user_id, settings.VIRTUAL_INITIAL_CASH, 0.0, now, now),
+                "INSERT INTO portfolios (id, user_id, virtual_cash, used_margin, trader_xp, trader_level, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (new_id, user_id, settings.VIRTUAL_INITIAL_CASH, 0.0, 0, 1, now, now),
             )
             await db.commit()
             return {
@@ -180,6 +322,9 @@ class DatabaseService:
                 "user_id": user_id,
                 "virtual_cash": settings.VIRTUAL_INITIAL_CASH,
                 "used_margin": 0.0,
+                "trader_xp": 0,
+                "trader_level": 1,
+                "trader_rank": calculate_trader_level(0),
                 "created_at": now,
                 "updated_at": now,
             }
@@ -615,3 +760,541 @@ class DatabaseService:
             )
             rows = await cursor.fetchall()
             return [dict(r) for r in rows]
+
+    @staticmethod
+    async def get_ai_cache(cache_key: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a cached AI result if not expired"""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_analysis_cache")
+                    .select("*")
+                    .eq("cache_key", cache_key)
+                    .gt("expires_at", now_iso)
+                    .execute()
+                )
+                if res.data and len(res.data) > 0:
+                    entry = dict(res.data[0])
+                    if isinstance(entry.get("result"), str):
+                        entry["result"] = json.loads(entry["result"])
+                    return entry
+                return None
+            except Exception as e:
+                logger.error(f"Supabase error get_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                "SELECT * FROM ai_analysis_cache WHERE cache_key = ? AND expires_at > ?",
+                (cache_key, now_iso),
+            )
+            row = await cursor.fetchone()
+            if not row:
+                return None
+            entry = dict(row)
+            if isinstance(entry.get("result"), str):
+                try:
+                    entry["result"] = json.loads(entry["result"])
+                except Exception:
+                    pass
+            return entry
+
+    @staticmethod
+    async def set_ai_cache(
+        cache_key: str,
+        analysis_type: str,
+        provider: str,
+        model: str,
+        result: Dict[str, Any],
+        input_data_hash: str,
+        expires_at: str,
+        symbol: Optional[str] = None,
+        exchange: str = "NSE",
+        data_timestamp: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Stores or updates a reusable AI analysis in the database cache"""
+        entry_id = str(uuid.uuid4())
+        now_iso = datetime.now(timezone.utc).isoformat()
+        result_str = json.dumps(result) if not isinstance(result, str) else result
+
+        payload = {
+            "id": entry_id,
+            "cache_key": cache_key,
+            "analysis_type": analysis_type,
+            "symbol": symbol,
+            "exchange": exchange,
+            "provider": provider,
+            "model": model,
+            "result": result if supabase_client else result_str,
+            "input_data_hash": input_data_hash,
+            "data_timestamp": data_timestamp or now_iso,
+            "created_at": now_iso,
+            "expires_at": expires_at,
+        }
+
+        if supabase_client:
+            try:
+                supabase_client.table("ai_analysis_cache").upsert(
+                    payload, on_conflict="cache_key"
+                ).execute()
+                return payload
+            except Exception as e:
+                logger.error(f"Supabase error set_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_analysis_cache 
+                (id, cache_key, analysis_type, symbol, exchange, provider, model, result, input_data_hash, data_timestamp, created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(cache_key) DO UPDATE SET
+                    provider = excluded.provider,
+                    model = excluded.model,
+                    result = excluded.result,
+                    input_data_hash = excluded.input_data_hash,
+                    data_timestamp = excluded.data_timestamp,
+                    created_at = excluded.created_at,
+                    expires_at = excluded.expires_at
+                """,
+                (
+                    entry_id,
+                    cache_key,
+                    analysis_type,
+                    symbol,
+                    exchange,
+                    provider,
+                    model,
+                    result_str,
+                    input_data_hash,
+                    data_timestamp or now_iso,
+                    now_iso,
+                    expires_at,
+                ),
+            )
+            await db.commit()
+        return payload
+
+    @staticmethod
+    async def cleanup_expired_ai_cache() -> int:
+        """Deletes expired entries from ai_analysis_cache"""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        deleted = 0
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_analysis_cache")
+                    .delete()
+                    .lt("expires_at", now_iso)
+                    .execute()
+                )
+                deleted = len(res.data) if res.data else 0
+            except Exception as e:
+                logger.error(f"Supabase error cleanup_expired_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            cursor = await db.execute(
+                "DELETE FROM ai_analysis_cache WHERE expires_at < ?", (now_iso,)
+            )
+            await db.commit()
+            deleted += cursor.rowcount
+        return deleted
+
+    @staticmethod
+    async def log_ai_usage(
+        user_id: str,
+        feature: str,
+        provider: str,
+        model: str,
+        status: str,
+        symbol: Optional[str] = None,
+        tokens_input: Optional[int] = None,
+        tokens_output: Optional[int] = None,
+        cached: bool = False,
+        error_code: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Logs an AI execution or cache hit to ai_usage_logs"""
+        entry_id = str(uuid.uuid4())
+        now_iso = datetime.now(timezone.utc).isoformat()
+        clean_symbol = symbol.strip().upper() if symbol else None
+        payload = {
+            "id": entry_id,
+            "user_id": user_id,
+            "feature": feature,
+            "symbol": clean_symbol,
+            "provider": provider,
+            "model": model,
+            "status": status,
+            "tokens_input": tokens_input,
+            "tokens_output": tokens_output,
+            "cached": 1 if cached else 0,
+            "error_code": error_code,
+            "created_at": now_iso,
+        }
+
+        if supabase_client:
+            try:
+                supa_payload = dict(payload)
+                supa_payload["cached"] = cached
+                supabase_client.table("ai_usage_logs").insert(supa_payload).execute()
+                return payload
+            except Exception as e:
+                logger.error(f"Supabase error log_ai_usage: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_usage_logs 
+                (id, user_id, feature, symbol, provider, model, status, tokens_input, tokens_output, cached, error_code, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    entry_id,
+                    user_id,
+                    feature,
+                    clean_symbol,
+                    provider,
+                    model,
+                    status,
+                    tokens_input,
+                    tokens_output,
+                    1 if cached else 0,
+                    error_code,
+                    now_iso,
+                ),
+            )
+            await db.commit()
+        return payload
+
+    @staticmethod
+    async def get_user_daily_ai_usage(
+        user_id: str = settings.DEFAULT_USER_ID,
+    ) -> Dict[str, Any]:
+        """Computes current user's usage counts today (UTC) for quota enforcement"""
+        now = datetime.now(timezone.utc)
+        today_midnight = datetime(
+            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
+        ).isoformat()
+
+        heavy_features = {"stock-analysis", "peer-comparison", "financial-analysis"}
+        light_features = {"sentiment", "education", "technical-indicator"}
+
+        analyzed_stocks = set()
+        heavy_count = 0
+        light_count = 0
+        recent_minute_count = 0
+        one_min_ago = (now - timedelta(minutes=1)).isoformat()
+        custom_limit = None
+
+        if supabase_client:
+            try:
+                # Check for custom per-user quota override in portfolios table
+                p_res = (
+                    supabase_client.table("portfolios")
+                    .select("custom_ai_limit")
+                    .eq("user_id", user_id)
+                    .limit(1)
+                    .execute()
+                )
+                if p_res.data and p_res.data[0].get("custom_ai_limit") is not None:
+                    custom_limit = int(p_res.data[0]["custom_ai_limit"])
+            except Exception:
+                pass
+
+            try:
+                res = (
+                    supabase_client.table("ai_usage_logs")
+                    .select("feature, symbol, cached, status, created_at")
+                    .eq("user_id", user_id)
+                    .gte("created_at", today_midnight)
+                    .execute()
+                )
+                if res.data:
+                    for row in res.data:
+                        is_cached = bool(row.get("cached", False))
+                        status = row.get("status")
+                        feat = row.get("feature", "")
+                        sym = row.get("symbol")
+                        created_at = row.get("created_at", "")
+
+                        if created_at >= one_min_ago:
+                            recent_minute_count += 1
+
+                        if status == "SUCCESS":
+                            if feat in heavy_features:
+                                if sym:
+                                    analyzed_stocks.add(sym.strip().upper())
+                                if not is_cached:
+                                    heavy_count += 1
+                            elif feat in light_features and not is_cached:
+                                light_count += 1
+
+                    stocks_limit = custom_limit if custom_limit is not None else settings.AI_STOCKS_DAILY_LIMIT
+                    stocks_used_count = (
+                        len(analyzed_stocks) if analyzed_stocks else heavy_count
+                    )
+                    stocks_remaining = max(0, stocks_limit - stocks_used_count)
+
+                    return {
+                        "stocks_remaining": stocks_remaining,
+                        "stocks_limit": stocks_limit,
+                        "stocks_used_count": stocks_used_count,
+                        "analyzed_stocks": sorted(list(analyzed_stocks)),
+                        "heavy_count": heavy_count,
+                        "light_count": light_count,
+                        "recent_minute_count": recent_minute_count,
+                        "heavy_limit": stocks_limit,
+                        "light_limit": settings.AI_USER_DAILY_LIMIT,
+                        "remaining_heavy": stocks_remaining,
+                        "remaining_light": max(
+                            0, settings.AI_USER_DAILY_LIMIT - light_count
+                        ),
+                    }
+            except Exception as e:
+                logger.error(f"Supabase error get_user_daily_ai_usage: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            if custom_limit is None:
+                try:
+                    p_cursor = await db.execute("SELECT custom_ai_limit FROM portfolios WHERE user_id = ?", (user_id,))
+                    p_row = await p_cursor.fetchone()
+                    if p_row and p_row["custom_ai_limit"] is not None:
+                        custom_limit = int(p_row["custom_ai_limit"])
+                except Exception:
+                    pass
+
+            cursor = await db.execute(
+                """
+                SELECT feature, symbol, cached, status, created_at 
+                FROM ai_usage_logs 
+                WHERE user_id = ? AND created_at >= ?
+                """,
+                (user_id, today_midnight),
+            )
+            rows = await cursor.fetchall()
+            for r in rows:
+                is_cached = bool(r["cached"])
+                status = r["status"]
+                feat = r["feature"]
+                sym = r["symbol"] if "symbol" in r.keys() else None
+                created_at = r["created_at"]
+
+                if created_at >= one_min_ago:
+                    recent_minute_count += 1
+
+                if status == "SUCCESS":
+                    if feat in heavy_features:
+                        if sym:
+                            analyzed_stocks.add(sym.strip().upper())
+                        if not is_cached:
+                            heavy_count += 1
+                    elif feat in light_features and not is_cached:
+                        light_count += 1
+
+            stocks_limit = custom_limit if custom_limit is not None else settings.AI_STOCKS_DAILY_LIMIT
+            stocks_used_count = (
+                len(analyzed_stocks) if analyzed_stocks else heavy_count
+            )
+            stocks_remaining = max(0, stocks_limit - stocks_used_count)
+
+            return {
+                "stocks_remaining": stocks_remaining,
+                "stocks_limit": stocks_limit,
+                "stocks_used_count": stocks_used_count,
+                "analyzed_stocks": sorted(list(analyzed_stocks)),
+                "heavy_count": heavy_count,
+                "light_count": light_count,
+                "recent_minute_count": recent_minute_count,
+                "heavy_limit": stocks_limit,
+                "light_limit": settings.AI_USER_DAILY_LIMIT,
+                "remaining_heavy": stocks_remaining,
+                "remaining_light": max(0, settings.AI_USER_DAILY_LIMIT - light_count),
+            }
+
+    @staticmethod
+    async def get_user_quiz_usage(user_id: str) -> Dict[str, Any]:
+        """Calculates completed quizzes today (IST) to enforce daily quiz limits"""
+        ist = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist)
+        today_midnight = (
+            now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+            .astimezone(timezone.utc)
+            .isoformat()
+        )
+
+        quizzes_used_count = 0
+        quizzes_limit = settings.AI_QUIZ_DAILY_LIMIT
+
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_quiz_logs")
+                    .select("id")
+                    .eq("user_id", user_id)
+                    .gte("created_at", today_midnight)
+                    .execute()
+                )
+                if res.data:
+                    quizzes_used_count = len(res.data)
+
+                quizzes_remaining = max(0, quizzes_limit - quizzes_used_count)
+                return {
+                    "quizzes_limit": quizzes_limit,
+                    "quizzes_used_count": quizzes_used_count,
+                    "quizzes_remaining": quizzes_remaining,
+                }
+            except Exception as e:
+                logger.error(f"Supabase error get_user_quiz_usage: {e}")
+
+        # SQLite fallback
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            cursor = await db.execute(
+                "SELECT COUNT(*) FROM ai_quiz_logs WHERE user_id = ? AND created_at >= ?",
+                (user_id, today_midnight),
+            )
+            row = await cursor.fetchone()
+            if row:
+                quizzes_used_count = row[0]
+
+        quizzes_remaining = max(0, quizzes_limit - quizzes_used_count)
+        return {
+            "quizzes_limit": quizzes_limit,
+            "quizzes_used_count": quizzes_used_count,
+            "quizzes_remaining": quizzes_remaining,
+        }
+
+    @staticmethod
+    async def record_quiz_generation(
+        quiz_id: str,
+        user_id: str,
+        topic: str,
+        difficulty: str,
+        total_questions: int = 3,
+    ) -> None:
+        """Records initial quiz generation into ai_quiz_logs immediately decrementing daily limit"""
+        now_utc = datetime.now(timezone.utc).isoformat()
+        if supabase_client:
+            try:
+                supabase_client.table("ai_quiz_logs").insert(
+                    {
+                        "id": quiz_id,
+                        "user_id": user_id,
+                        "topic": topic,
+                        "difficulty": difficulty,
+                        "score": 0,
+                        "total_questions": total_questions,
+                        "xp_awarded": 0,
+                        "created_at": now_utc,
+                    }
+                ).execute()
+            except Exception as e:
+                logger.error(f"Supabase error record_quiz_generation: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT OR IGNORE INTO ai_quiz_logs (id, user_id, topic, difficulty, score, total_questions, xp_awarded, created_at)
+                VALUES (?, ?, ?, ?, 0, ?, 0, ?)
+                """,
+                (quiz_id, user_id, topic, difficulty, total_questions, now_utc),
+            )
+            await db.commit()
+
+    @staticmethod
+    async def award_quiz_xp(
+        user_id: str,
+        topic: str,
+        difficulty: str,
+        score: int,
+        total_questions: int = 3,
+        quiz_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Awards XP based on quiz performance and updates trader level in DB"""
+        safe_score = max(0, min(score, total_questions if total_questions > 0 else 3))
+        xp_awarded = safe_score * 10 + 20
+        if total_questions > 0 and safe_score == total_questions:
+            xp_awarded += 20  # Perfect score bonus
+
+        now_utc = datetime.now(timezone.utc).isoformat()
+        actual_quiz_id = quiz_id or str(uuid.uuid4())
+
+        # 1. Fetch current portfolio to read existing XP & Level
+        portfolio = await DatabaseService.get_portfolio(user_id)
+        current_xp = int(portfolio.get("trader_xp", 0) or 0)
+        current_level = int(portfolio.get("trader_level", 1) or 1)
+
+        new_xp = current_xp + xp_awarded
+        rank_info = calculate_trader_level(new_xp)
+        new_level = rank_info["level"]
+        level_up = new_level > current_level
+
+        # 2. Update quiz attempt in Supabase or SQLite
+        if supabase_client:
+            try:
+                supabase_client.table("ai_quiz_logs").upsert(
+                    {
+                        "id": actual_quiz_id,
+                        "user_id": user_id,
+                        "topic": topic,
+                        "difficulty": difficulty,
+                        "score": safe_score,
+                        "total_questions": total_questions,
+                        "xp_awarded": xp_awarded,
+                        "created_at": now_utc,
+                    }
+                ).execute()
+
+                supabase_client.table("portfolios").update(
+                    {
+                        "trader_xp": new_xp,
+                        "trader_level": new_level,
+                        "updated_at": now_utc,
+                    }
+                ).eq("user_id", user_id).execute()
+            except Exception as e:
+                logger.error(f"Supabase error award_quiz_xp: {e}")
+
+        # SQLite fallback/sync
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_quiz_logs (id, user_id, topic, difficulty, score, total_questions, xp_awarded, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET score = excluded.score, xp_awarded = excluded.xp_awarded
+                """,
+                (
+                    actual_quiz_id,
+                    user_id,
+                    topic,
+                    difficulty,
+                    safe_score,
+                    total_questions,
+                    xp_awarded,
+                    now_utc,
+                ),
+            )
+            await db.execute(
+                """
+                UPDATE portfolios 
+                SET trader_xp = ?, trader_level = ?, updated_at = ?
+                WHERE user_id = ?
+                """,
+                (new_xp, new_level, now_utc, user_id),
+            )
+            await db.commit()
+
+        return {
+            "quiz_id": actual_quiz_id,
+            "topic": topic,
+            "difficulty": difficulty,
+            "score": safe_score,
+            "total_questions": total_questions,
+            "xp_awarded": xp_awarded,
+            "total_xp": new_xp,
+            "level": new_level,
+            "title": rank_info["title"],
+            "next_level_xp": rank_info["next_level_xp"],
+            "progress_percent": rank_info["progress_percent"],
+            "level_up": level_up,
+        }

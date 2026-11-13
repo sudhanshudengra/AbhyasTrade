@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.services.nse_feed import market_feed
 from app.services.squareoff import auto_squareoff_service
-from app.api import market, orders, portfolio, charges, ws
+from app.api import market, orders, portfolio, charges, ws, ai
 
 # Configure logging
 logging.basicConfig(
@@ -66,6 +66,7 @@ app.include_router(market.router, prefix=settings.API_V1_STR)
 app.include_router(orders.router, prefix=settings.API_V1_STR)
 app.include_router(portfolio.router, prefix=settings.API_V1_STR)
 app.include_router(charges.router, prefix=settings.API_V1_STR)
+app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 

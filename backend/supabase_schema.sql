@@ -12,9 +12,13 @@ CREATE TABLE IF NOT EXISTS portfolios (
     user_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000001'::uuid,
     virtual_cash NUMERIC(15, 2) NOT NULL DEFAULT 1000000.00,
     used_margin NUMERIC(15, 2) NOT NULL DEFAULT 0.00,
+    custom_ai_limit INT DEFAULT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration for existing portfolios table
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS custom_ai_limit INT DEFAULT NULL;
 
 -- 2. Positions Table
 CREATE TABLE IF NOT EXISTS positions (
@@ -112,4 +116,88 @@ CREATE TRIGGER on_auth_user_created
 INSERT INTO portfolios (user_id, virtual_cash, used_margin)
 VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 1000000.00, 0.00)
 ON CONFLICT (user_id) DO NOTHING;
+
+-- ==============================================================================
+-- 6. AI Integration: Shared Analysis Cache & Usage Tracking
+-- ==============================================================================
+
+-- 6.1 Shared AI Analysis Cache Table
+CREATE TABLE IF NOT EXISTS ai_analysis_cache (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cache_key VARCHAR(255) UNIQUE NOT NULL,
+    analysis_type VARCHAR(50) NOT NULL,
+    symbol VARCHAR(50),
+    exchange VARCHAR(20) DEFAULT 'NSE',
+    provider VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    result JSONB NOT NULL,
+    input_data_hash VARCHAR(64) NOT NULL,
+    data_timestamp TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_cache_key ON ai_analysis_cache(cache_key);
+CREATE INDEX IF NOT EXISTS idx_ai_cache_lookup ON ai_analysis_cache(symbol, analysis_type);
+CREATE INDEX IF NOT EXISTS idx_ai_cache_expires_at ON ai_analysis_cache(expires_at);
+
+-- 6.2 AI Usage Logs Table
+CREATE TABLE IF NOT EXISTS ai_usage_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    feature VARCHAR(50) NOT NULL,
+    symbol VARCHAR(50),
+    provider VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    tokens_input INT,
+    tokens_output INT,
+    cached BOOLEAN NOT NULL DEFAULT FALSE,
+    error_code VARCHAR(100),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_usage_user_time ON ai_usage_logs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage_logs(feature);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_symbol ON ai_usage_logs(user_id, symbol, created_at DESC);
+
+-- RLS Policies for AI Tables
+ALTER TABLE ai_analysis_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_usage_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all access to ai_analysis_cache" ON ai_analysis_cache;
+CREATE POLICY "Allow all access to ai_analysis_cache" ON ai_analysis_cache FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all access to ai_usage_logs" ON ai_usage_logs;
+CREATE POLICY "Allow all access to ai_usage_logs" ON ai_usage_logs FOR ALL USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 7. Gamification & Quiz Tracking (XP, Level, Quiz Logs)
+-- ==============================================================================
+
+-- 7.1 Trader XP & Level Progression in portfolios
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS trader_xp INT DEFAULT 0;
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS trader_level INT DEFAULT 1;
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS custom_ai_limit INT DEFAULT NULL;
+
+-- 7.2 AI Quiz Usage & Score Logs
+CREATE TABLE IF NOT EXISTS ai_quiz_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    topic VARCHAR(255) NOT NULL,
+    difficulty VARCHAR(30) NOT NULL,
+    score INT NOT NULL,
+    total_questions INT NOT NULL DEFAULT 3,
+    xp_awarded INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_quiz_logs_user_time ON ai_quiz_logs(user_id, created_at DESC);
+
+-- RLS for ai_quiz_logs
+ALTER TABLE ai_quiz_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all access to ai_quiz_logs" ON ai_quiz_logs;
+CREATE POLICY "Allow all access to ai_quiz_logs" ON ai_quiz_logs FOR ALL USING (true) WITH CHECK (true);
+
+
 

@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   Check,
   Edit2,
   FolderPlus,
@@ -62,6 +63,32 @@ export const Watchlist: React.FC<WatchlistProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // Watchlist Deletion Confirmation Popover State
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const deletePopoverRef = useRef<HTMLDivElement>(null);
+
+  // Close delete confirmation popover on click outside or Escape
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (deletePopoverRef.current && !deletePopoverRef.current.contains(event.target as Node)) {
+        setShowDeleteConfirm(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setShowDeleteConfirm(false);
+      }
+    }
+    if (showDeleteConfirm) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showDeleteConfirm]);
 
   const activeWatchlist = useMemo(() => {
     return watchlists.find((w) => w.id === activeWatchlistId) || watchlists[0];
@@ -199,18 +226,63 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   <Edit2 className="w-3 h-3" />
                 </button>
                 {watchlists.length > 1 && onDeleteWatchlist && activeWatchlist && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Delete "${activeWatchlist.name}"?`)) {
-                        onDeleteWatchlist(activeWatchlist.id);
-                      }
-                    }}
-                    className="p-0.5 text-slate-500 hover:text-rose-400 opacity-60 group-hover:opacity-100 transition"
-                    title={`Delete ${activeWatchlist.name}`}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteConfirm((prev) => !prev);
+                      }}
+                      className={`p-0.5 transition rounded ${
+                        showDeleteConfirm
+                          ? 'text-rose-400 opacity-100 bg-rose-500/10'
+                          : 'text-slate-500 hover:text-rose-400 opacity-60 group-hover:opacity-100'
+                      }`}
+                      title={`Delete ${activeWatchlist.name}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+
+                    {/* Sleek Delete Watchlist Confirmation Popover */}
+                    {showDeleteConfirm && (
+                      <div
+                        ref={deletePopoverRef}
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 top-full mt-2 z-50 w-60 p-3 rounded-2xl bg-obsidian-900/95 border border-rose-500/30 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 space-y-2.5"
+                      >
+                        <div className="flex items-start gap-2.5 text-rose-400">
+                          <div className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 shrink-0">
+                            <AlertTriangle className="w-4 h-4 text-rose-400" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white">Delete Watchlist?</p>
+                            <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
+                              &ldquo;{activeWatchlist.name}&rdquo; and all {stocks.length} scrips in it will be permanently removed.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-obsidian-800">
+                          <button
+                            type="button"
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="px-2.5 py-1 text-xs rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-800 transition cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowDeleteConfirm(false);
+                              onDeleteWatchlist(activeWatchlist.id);
+                            }}
+                            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm active:scale-95 cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
