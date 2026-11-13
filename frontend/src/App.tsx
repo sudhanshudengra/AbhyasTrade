@@ -412,11 +412,8 @@ export const App: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Desk Size & Collapse / Expand Controls */}
+                {/* Desk Collapse / Expand Controls */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 font-mono hidden xl:inline">
-                    {Math.round(deskHeight)}px
-                  </span>
                   <button
                     onClick={() => setIsDeskCollapsed(!isDeskCollapsed)}
                     className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-700/80 transition flex items-center gap-1 text-xs font-semibold"
