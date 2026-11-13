@@ -3,13 +3,55 @@
 @tailwind utilities;
 
 :root {
+  /* Light Theme (Default by System if light preference) */
+  --color-obsidian-950: 241 245 249; /* #f1f5f9 - light secondary background / inputs */
+  --color-obsidian-900: 248 250 252; /* #f8fafc - light canvas background */
+  --color-obsidian-850: 255 255 255; /* #ffffff - light cards / surfaces */
+  --color-obsidian-800: 255 255 255; /* #ffffff - light elevated surface / panels */
+  --color-obsidian-750: 241 245 249; /* #f1f5f9 */
+  --color-obsidian-700: 226 232 240; /* #e2e8f0 - light border / separator */
+  --color-obsidian-600: 203 213 225; /* #cbd5e1 - light secondary border */
+  --color-obsidian-500: 148 163 184; /* #94a3b8 - light muted text/border */
+
+  --color-scrollbar-track: #f1f5f9;
+  --color-scrollbar-thumb: #cbd5e1;
+  --color-scrollbar-thumb-hover: #94a3b8;
+
+  --glass-panel-bg: rgba(255, 255, 255, 0.88);
+  --glass-panel-border: rgba(226, 232, 240, 0.9);
+  --glass-panel-subtle-bg: rgba(248, 250, 252, 0.85);
+  --glass-panel-subtle-border: rgba(226, 232, 240, 0.7);
+
+  color-scheme: light;
+}
+
+html.dark {
+  /* Dark Theme */
+  --color-obsidian-950: 7 9 14;     /* #07090e */
+  --color-obsidian-900: 11 14 20;   /* #0b0e14 */
+  --color-obsidian-850: 15 19 28;   /* #0f131c */
+  --color-obsidian-800: 19 24 34;   /* #131822 */
+  --color-obsidian-750: 24 31 44;
+  --color-obsidian-700: 30 38 56;   /* #1e2638 */
+  --color-obsidian-600: 43 53 77;   /* #2b354d */
+  --color-obsidian-500: 71 85 105;  /* #475569 */
+
+  --color-scrollbar-track: #0b0e14;
+  --color-scrollbar-thumb: #1e2638;
+  --color-scrollbar-thumb-hover: #2b354d;
+
+  --glass-panel-bg: rgba(19, 24, 34, 0.85);
+  --glass-panel-border: #1e2638;
+  --glass-panel-subtle-bg: rgba(14, 18, 26, 0.7);
+  --glass-panel-subtle-border: rgba(30, 38, 56, 0.6);
+
   color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background-color: #0b0e14;
-  color: #f1f5f9;
+  background-color: rgb(var(--color-obsidian-900));
+  color: #0f172a;
   font-family:
     'Plus Jakarta Sans',
     -apple-system,
@@ -20,25 +62,30 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom Obsidian Scrollbar */
+html.dark body {
+  color: #f1f5f9;
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0e14;
+  background: var(--color-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e2638;
+  background: var(--color-scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2b354d;
+  background: var(--color-scrollbar-thumb-hover);
 }
 
 /* Tabular Numerals for Financial Data Density */
@@ -49,15 +96,15 @@ body {
 
 /* Custom Glassmorphic Elevation */
 .glass-panel {
-  background: rgba(19, 24, 34, 0.85);
+  background: var(--glass-panel-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid #1e2638;
+  border: 1px solid var(--glass-panel-border);
 }
 
 .glass-panel-subtle {
-  background: rgba(14, 18, 26, 0.7);
+  background: var(--glass-panel-subtle-bg);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(30, 38, 56, 0.6);
+  border: 1px solid var(--glass-panel-subtle-border);
 }
 
 /* Subtle Shimmer & Glows */
@@ -99,5 +146,70 @@ body {
   }
   100% {
     background-color: transparent;
+  }
+}
+
+/* Light Mode Typography & Surface Refinements */
+html:not(.dark) {
+  .text-slate-100 {
+    color: #0f172a;
+  }
+  .text-slate-200 {
+    color: #1e293b;
+  }
+  .text-slate-300 {
+    color: #334155;
+  }
+  .text-slate-400 {
+    color: #475569;
+  }
+  .text-slate-500 {
+    color: #64748b;
+  }
+
+  .hover\:text-white:hover {
+    color: #0f172a;
+  }
+  .hover\:text-slate-200:hover {
+    color: #0f172a;
+  }
+  .hover\:text-slate-100:hover {
+    color: #020617;
+  }
+
+  /* Preserve crisp white text on colored buttons and badges */
+  .bg-emerald-600,
+  .bg-emerald-500,
+  .bg-rose-600,
+  .bg-rose-500,
+  .bg-brand-blue,
+  .bg-blue-600,
+  .bg-indigo-600,
+  .bg-amber-500,
+  [class*="from-brand-blue"],
+  [class*="from-emerald-"],
+  [class*="from-rose-"] {
+    color: #ffffff !important;
+  }
+
+  .bg-emerald-600 *,
+  .bg-rose-600 *,
+  .bg-brand-blue *,
+  .bg-blue-600 *,
+  .bg-indigo-600 *,
+  [class*="from-brand-blue"] * {
+    color: #ffffff;
+  }
+
+  .bg-brand-blue.text-white {
+    color: #ffffff !important;
+  }
+
+  /* Subtle card elevation in light mode */
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
   }
 }

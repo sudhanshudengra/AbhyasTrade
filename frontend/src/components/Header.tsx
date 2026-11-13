@@ -6,6 +6,7 @@ import {
   LogOut,
   PieChart,
   RotateCcw,
+  Settings,
   ShieldCheck,
   Sparkles,
   TrendingDown,
@@ -16,11 +17,13 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import { UserProfile } from '../hooks/useAuth';
 import { PortfolioSummary } from '../lib/types';
+import { ThemeSwitch } from './ThemeSwitch';
 
 interface HeaderProps {
   portfolio: PortfolioSummary | null;
-  onResetPortfolio: () => Promise<any>;
+  onResetPortfolio?: () => Promise<any>;
   onOpenChargesCalc: () => void;
+  onOpenSettings?: () => void;
   isConnected: boolean;
   userProfile: UserProfile | null;
   onSignInWithGoogle: () => Promise<any>;
@@ -30,16 +33,14 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   portfolio,
-  onResetPortfolio,
   onOpenChargesCalc,
+  onOpenSettings,
   isConnected,
   userProfile,
   onSignInWithGoogle,
   onSignOut,
   onGoHome,
 }) => {
-  const [isResetting, setIsResetting] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(false);
@@ -122,16 +123,6 @@ export const Header: React.FC<HeaderProps> = ({
   const overallPnlPercent = ((overallPnl / initialCap) * 100).toFixed(2);
   const isProfit = overallPnl >= 0;
 
-  const handleReset = async () => {
-    setIsResetting(true);
-    try {
-      await onResetPortfolio();
-      setShowResetConfirm(false);
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
   return (
     <header className="bg-obsidian-800/90 backdrop-blur-md border-b border-obsidian-700 sticky top-0 z-30 px-3 sm:px-4 lg:px-5 py-2">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,7 +138,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-brand-cyan transition-colors">
+                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white group-hover:text-brand-cyan transition-colors">
                   Abhyas<span className="text-emerald-400">Trade</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
@@ -156,14 +147,14 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex items-center gap-1.5 text-[11px] font-tabular">
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}
+                  className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}
                 ></span>
                 <span
-                  className={isMarketOpen ? 'text-emerald-400 font-semibold' : 'text-slate-400'}
+                  className={isMarketOpen ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 font-medium'}
                 >
                   {isMarketOpen ? 'NSE Live (09:15 - 15:30 IST)' : 'Market Closed (15:30 IST)'}
                 </span>
-                <span className="text-[10px] text-slate-500 hidden sm:inline">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:inline">
                   &bull; {istTimeStr} IST
                 </span>
               </div>
@@ -174,13 +165,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Financial Metrics Strip */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 overflow-x-auto py-0.5">
           {/* Total Capital */}
-          <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-brand-cyan hidden sm:block" />
+          <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
+            <Wallet className="w-4 h-4 text-brand-blue dark:text-brand-cyan hidden sm:block" />
             <div>
-              <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+              <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Total Capital
               </div>
-              <div className="font-tabular text-xs sm:text-sm font-bold text-slate-100">
+              <div className="font-tabular text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                 ₹
                 {initialCap.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -191,13 +182,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Available Capital */}
-          <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-emerald-400 hidden sm:block" />
+          <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
+            <PieChart className="w-4 h-4 text-emerald-600 dark:text-emerald-400 hidden sm:block" />
             <div>
-              <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+              <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Available Capital
               </div>
-              <div className="font-tabular text-xs sm:text-sm font-bold text-emerald-400">
+              <div className="font-tabular text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">
                 ₹
                 {availableCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -208,13 +199,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Deployed Capital */}
-          <div className="bg-obsidian-900/80 border border-obsidian-700/80 rounded-lg px-3 py-1.5 hidden md:flex items-center gap-2">
-            <Activity className="w-4 h-4 text-amber-400" />
+          <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 hidden md:flex items-center gap-2 shadow-sm">
+            <Activity className="w-4 h-4 text-amber-500 dark:text-amber-400" />
             <div>
-              <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+              <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Deployed Capital
               </div>
-              <div className="font-tabular text-xs sm:text-sm font-semibold text-slate-300">
+              <div className="font-tabular text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
                 ₹
                 {deployedCapital.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -226,19 +217,19 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Overall Total PnL (Unrealized + Realized) */}
           <div
-            className={`border rounded-lg px-3 py-1.5 flex items-center gap-2 transition-all ${
+            className={`border rounded-lg px-3 py-1.5 flex items-center gap-2 transition-all shadow-sm ${
               isProfit
-                ? 'bg-emerald-950/30 border-emerald-500/30 glow-emerald text-emerald-400'
-                : 'bg-rose-950/30 border-rose-500/30 glow-crimson text-rose-400'
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 dark:glow-emerald'
+                : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-400 dark:glow-crimson'
             }`}
           >
             {isProfit ? (
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.2]" />
             ) : (
-              <TrendingDown className="w-4 h-4 text-rose-400" />
+              <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400 stroke-[2.2]" />
             )}
             <div>
-              <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+              <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Overall P&L
               </div>
               <div className="font-tabular text-xs sm:text-sm font-extrabold flex items-center gap-1.5">
@@ -249,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({
                     maximumFractionDigits: 2,
                   })}
                 </span>
-                <span className="text-[10px] opacity-80">
+                <span className="text-[10px] opacity-90 font-bold">
                   ({isProfit ? '+' : ''}
                   {overallPnlPercent}%)
                 </span>
@@ -263,18 +254,28 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Charges Calculator Button */}
           <button
             onClick={onOpenChargesCalc}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-obsidian-700/60 hover:bg-obsidian-700 text-slate-300 hover:text-white text-xs font-medium border border-obsidian-600 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-obsidian-700/60 hover:bg-slate-200 dark:hover:bg-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-obsidian-600 transition-colors shadow-sm cursor-pointer"
             title="Brokerage & Regulatory Charges Calculator"
           >
-            <Calculator className="w-3.5 h-3.5 text-brand-cyan" />
+            <Calculator className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
             <span className="hidden sm:inline">Calculator</span>
+          </button>
+
+          {/* Terminal Settings Button */}
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-obsidian-700/60 hover:bg-slate-200 dark:hover:bg-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-obsidian-600 transition-colors shadow-sm cursor-pointer"
+            title="Terminal Settings & Theme"
+          >
+            <Settings className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
+            <span className="hidden sm:inline">Settings</span>
           </button>
 
           {/* User Profile Avatar & Dropdown Menu */}
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-obsidian-900 border border-obsidian-700 hover:border-brand-blue/60 transition shadow-md"
+              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200/90 dark:border-obsidian-700 hover:border-brand-blue/60 transition shadow-sm cursor-pointer"
               title="Account Menu"
             >
               {userProfile?.avatarUrl && !avatarFailed ? (
@@ -284,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
                   onError={() => setAvatarFailed(true)}
-                  className="w-7 h-7 rounded-lg object-cover border border-obsidian-700 shadow-sm"
+                  className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-obsidian-700 shadow-sm"
                 />
               ) : (
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-blue to-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow-inner">
@@ -295,24 +296,32 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </div>
               )}
-              <span className="text-xs font-bold text-slate-200 hidden md:inline">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline">
                 {truncateName(userProfile?.name || 'Trader')}
               </span>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180 text-white' : ''}`}
+                className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180 text-brand-blue dark:text-white' : ''}`}
               />
             </button>
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-60 bg-obsidian-800/95 backdrop-blur-xl border border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 space-y-2">
-                <div className="pb-2.5 border-b border-obsidian-700">
-                  <div className="font-extrabold text-sm text-white truncate">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-obsidian-850 backdrop-blur-xl border border-slate-200 dark:border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 space-y-2.5">
+                <div className="pb-2.5 border-b border-slate-200 dark:border-obsidian-700">
+                  <div className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
                     {userProfile?.name || 'Trader'}
                   </div>
-                  <div className="text-xs text-slate-400 truncate mt-0.5">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                     {userProfile?.email || ''}
                   </div>
+                </div>
+
+                {/* Appearance / Theme Switcher Single-liner */}
+                <div className="space-y-1.5 pb-1 border-b border-slate-200 dark:border-obsidian-700/70">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500 dark:text-slate-400 px-0.5">
+                    <span>Appearance</span>
+                  </div>
+                  <ThemeSwitch compact className="w-full justify-between" />
                 </div>
 
                 {/* Trader Rank & XP Progression Card */}
@@ -326,25 +335,25 @@ export const Header: React.FC<HeaderProps> = ({
                   };
 
                   return (
-                    <div className="p-2.5 rounded-xl bg-obsidian-900/90 border border-brand-cyan/25 space-y-2">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-brand-cyan/25 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-extrabold text-white flex items-center gap-1.5">
-                          <Award className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           <span>Level {rank.level} • {rank.title}</span>
                         </span>
-                        <span className="text-[10px] font-mono text-brand-cyan font-bold">
+                        <span className="text-[10px] font-mono text-brand-blue dark:text-brand-cyan font-bold">
                           {rank.current_xp} XP
                         </span>
                       </div>
 
                       {/* Progress Bar */}
-                      <div className="w-full bg-obsidian-950 rounded-full h-1.5 overflow-hidden border border-obsidian-700">
+                      <div className="w-full bg-slate-200 dark:bg-obsidian-950 rounded-full h-1.5 overflow-hidden border border-slate-300 dark:border-obsidian-700">
                         <div
                           className="bg-gradient-to-r from-brand-cyan to-brand-blue h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.max(5, rank.progress_percent))}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
                         <span>Target: {rank.next_level_xp} XP</span>
                         <span>{rank.progress_percent}%</span>
                       </div>
@@ -355,27 +364,26 @@ export const Header: React.FC<HeaderProps> = ({
                           setShowUserMenu(false);
                           onGoHome?.();
                         }}
-                        className="w-full py-1.5 px-2 rounded-lg bg-brand-blue/20 hover:bg-brand-blue/30 border border-brand-blue/40 text-brand-cyan text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                        className="w-full py-1.5 px-2 rounded-lg bg-brand-blue/15 hover:bg-brand-blue/25 border border-brand-blue/30 text-brand-blue dark:text-brand-cyan text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
                       >
-                        <Sparkles className="w-3 h-3 text-brand-cyan" />
+                        <Sparkles className="w-3 h-3 text-brand-blue dark:text-brand-cyan" />
                         <span>Take Daily Quiz (+50 XP)</span>
                       </button>
                     </div>
                   );
                 })()}
 
-                {/* Reset Capital Option */}
+                {/* Settings Modal Button */}
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
-                    setShowResetConfirm(true);
+                    onOpenSettings?.();
                   }}
-                  className="w-full py-2 px-3 rounded-xl bg-obsidian-700/60 hover:bg-amber-950/40 text-slate-200 hover:text-amber-300 text-xs font-bold border border-obsidian-600 hover:border-amber-500/40 transition flex items-center justify-between group active:scale-95"
-                  title="Reset portfolio to ₹10,00,000"
+                  className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold border border-slate-200 dark:bg-obsidian-700/60 dark:hover:bg-obsidian-700 dark:text-slate-200 dark:hover:text-white dark:border-obsidian-600 transition flex items-center justify-between group active:scale-95 cursor-pointer"
                 >
                   <span className="flex items-center gap-2">
-                    <RotateCcw className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-[-45deg] transition-transform" />
-                    <span>Reset Capital (₹10L)</span>
+                    <Settings className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan group-hover:rotate-45 transition-transform" />
+                    <span>Terminal Settings</span>
                   </span>
                 </button>
 
@@ -385,7 +393,7 @@ export const Header: React.FC<HeaderProps> = ({
                     setShowUserMenu(false);
                     onSignOut();
                   }}
-                  className="w-full py-2 px-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold border border-rose-500/30 transition flex items-center justify-between group active:scale-95"
+                  className="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-500/30 transition flex items-center justify-between group active:scale-95 cursor-pointer"
                 >
                   <span>Log Out</span>
                   <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -395,47 +403,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Reset Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-obsidian-800 border border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-amber-400 mb-3">
-              <ShieldCheck className="w-6 h-6" />
-              <h3 className="text-lg font-bold text-white">Reset Virtual Capital?</h3>
-            </div>
-            <p className="text-slate-300 text-sm mb-6 leading-relaxed">
-              This will restore your portfolio to the default{' '}
-              <span className="text-emerald-400 font-bold font-tabular">₹10,00,000.00</span> virtual
-              capital and clear all open positions, pending orders, and trade history for this
-              account.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowResetConfirm(false)}
-                disabled={isResetting}
-                className="px-4 py-2 rounded-lg bg-obsidian-700 hover:bg-obsidian-600 text-slate-200 text-sm font-semibold transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReset}
-                disabled={isResetting}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition flex items-center gap-2"
-              >
-                {isResetting ? (
-                  <>
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                    Resetting...
-                  </>
-                ) : (
-                  'Confirm Reset'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
