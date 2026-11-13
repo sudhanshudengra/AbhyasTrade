@@ -25,7 +25,40 @@ if not os.environ.get("TESTING") and settings.SUPABASE_URL and settings.SUPABASE
         )
         supabase_client = None
 
-SQLITE_DB_PATH = "backend/abhyastrade.db"
+def _resolve_sqlite_db_path() -> str:
+    # 1. Custom path from env or config if explicitly set
+    env_path = os.environ.get("SQLITE_DB_PATH") or getattr(settings, "SQLITE_DB_PATH", None)
+    if env_path:
+        db_path = env_path
+    else:
+        # Default: locate abhyastrade.db in backend root directory
+        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        db_path = os.path.join(backend_dir, "abhyastrade.db")
+
+    # Ensure parent directory exists and is writable
+    try:
+        dir_name = os.path.dirname(os.path.abspath(db_path))
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        # Verify write permission
+        test_file = os.path.join(dir_name, ".db_write_test")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+    except Exception as e:
+        logger.warning(
+            f"Database path '{db_path}' directory not writable ({e}), falling back to /tmp/abhyastrade.db"
+        )
+        db_path = "/tmp/abhyastrade.db"
+        try:
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        except Exception:
+            pass
+
+    return db_path
+
+
+SQLITE_DB_PATH = _resolve_sqlite_db_path()
 
 # Trader Progression Ranks (Level 1 to 5)
 TRADER_RANKS = [
@@ -88,7 +121,14 @@ async def init_db():
             logger.warning(f"Supabase init check: {e}")
 
     # Always ensure local SQLite fallback tables are initialized
+    db_dir = os.path.dirname(os.path.abspath(SQLITE_DB_PATH))
+    if db_dir:
+        try:
+            os.makedirs(db_dir, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Could not verify database directory {db_dir}: {e}")
 
+    logger.info(f"Connecting local SQLite database at: {SQLITE_DB_PATH}")
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
         await db.execute("""
             CREATE TABLE IF NOT EXISTS portfolios (
