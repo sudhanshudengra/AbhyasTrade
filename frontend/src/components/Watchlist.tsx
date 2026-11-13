@@ -201,7 +201,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                     if (e.key === 'Escape') setIsEditingName(false);
                   }}
                   maxLength={20}
-                  className="w-full px-2 py-0.5 text-xs font-extrabold bg-obsidian-950 border border-brand-blue rounded text-white focus:outline-none"
+                  className="w-full px-2 py-0.5 text-xs font-extrabold bg-white dark:bg-obsidian-950 border border-brand-blue rounded text-slate-900 dark:text-white focus:outline-none"
                 />
                 <button
                   onClick={handleSaveRename}
@@ -216,11 +216,11 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 className="flex items-center gap-1.5 group cursor-pointer"
                 onClick={handleStartRename}
               >
-                <span className="font-extrabold text-sm text-slate-100 truncate tracking-tight hover:text-brand-cyan transition">
+                <span className="font-extrabold text-sm text-slate-900 dark:text-slate-100 truncate tracking-tight hover:text-brand-blue dark:hover:text-brand-cyan transition">
                   {activeWatchlist?.name || 'Watchlist'}
                 </span>
                 <button
-                  className="p-0.5 text-slate-500 hover:text-brand-cyan opacity-60 group-hover:opacity-100 transition"
+                  className="p-0.5 text-slate-400 hover:text-brand-blue dark:hover:text-brand-cyan opacity-70 group-hover:opacity-100 transition"
                   title="Rename Watchlist"
                 >
                   <Edit2 className="w-3 h-3" />
@@ -247,25 +247,25 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                       <div
                         ref={deletePopoverRef}
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute left-0 top-full mt-2 z-50 w-60 p-3 rounded-2xl bg-obsidian-900/95 border border-rose-500/30 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 space-y-2.5"
+                        className="absolute left-0 top-full mt-2 z-50 w-64 p-3.5 rounded-2xl bg-white dark:bg-obsidian-900/95 border border-rose-200 dark:border-rose-500/30 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 space-y-2.5"
                       >
-                        <div className="flex items-start gap-2.5 text-rose-400">
-                          <div className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 shrink-0">
-                            <AlertTriangle className="w-4 h-4 text-rose-400" />
+                        <div className="flex items-start gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 shrink-0">
+                            <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-white">Delete Watchlist?</p>
-                            <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white">Delete Watchlist?</p>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
                               &ldquo;{activeWatchlist.name}&rdquo; and all {stocks.length} scrips in it will be permanently removed.
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-obsidian-800">
+                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200 dark:border-obsidian-800">
                           <button
                             type="button"
                             onClick={() => setShowDeleteConfirm(false)}
-                            className="px-2.5 py-1 text-xs rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-800 transition cursor-pointer"
+                            className="px-2.5 py-1 text-xs rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-800 transition cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -286,7 +286,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 )}
               </div>
             )}
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-obsidian-900 border border-obsidian-700 text-slate-400">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 text-slate-600 dark:text-slate-400">
               {stocks.length}
             </span>
           </div>
@@ -295,7 +295,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-700/80 transition"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-700/80 transition cursor-pointer"
               title="Collapse Watchlist Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -323,7 +323,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
               }
             }}
             placeholder="Search & add NSE stocks (e.g. Tata, Adani, Reliance)..."
-            className="w-full pl-9 pr-8 py-2 text-xs bg-obsidian-900 border border-obsidian-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors"
+            className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 rounded-lg text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors"
           />
           {searchQuery && (
             <button
@@ -332,7 +332,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 setGlobalSearchResults([]);
                 setAddError(null);
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -384,10 +384,10 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   setSearchQuery('');
                   setGlobalSearchResults([]);
                 }}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border ${
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border cursor-pointer ${
                   isActive
-                    ? 'bg-brand-blue/20 border-brand-blue/60 text-brand-cyan shadow-sm shadow-brand-blue/10'
-                    : 'bg-obsidian-900/60 border-obsidian-700/60 text-slate-400 hover:text-slate-200 hover:bg-obsidian-700/40'
+                    ? 'bg-brand-blue/15 border-brand-blue/60 text-brand-blue dark:text-brand-cyan shadow-sm shadow-brand-blue/10'
+                    : 'bg-slate-100 dark:bg-obsidian-900/60 border-slate-200 dark:border-obsidian-700/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-obsidian-700/40'
                 }`}
                 title={`${wl.name} (${wl.symbols.length} stocks)`}
               >
@@ -402,7 +402,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           {watchlists.length < 5 && onAddWatchlist && (
             <button
               onClick={onAddWatchlist}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-dashed border-obsidian-600 bg-obsidian-900/40 hover:bg-brand-blue/20 hover:border-brand-blue text-slate-400 hover:text-brand-cyan transition flex items-center justify-center gap-1 shrink-0"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-dashed border-slate-300 dark:border-obsidian-600 bg-slate-50 dark:bg-obsidian-900/40 hover:bg-brand-blue/15 hover:border-brand-blue text-slate-500 dark:text-slate-400 hover:text-brand-blue dark:hover:text-brand-cyan transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
               title={`Add Watchlist ${watchlists.length + 1} (Max 5)`}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -433,27 +433,27 @@ export const Watchlist: React.FC<WatchlistProps> = ({
               onClick={() => onSelectSymbol(stock.symbol)}
               className={`group relative px-3.5 py-3 cursor-pointer transition-all duration-150 ${
                 isSelected
-                  ? 'bg-obsidian-700/40 border-l-2 border-brand-blue'
-                  : 'hover:bg-obsidian-700/20'
+                  ? 'bg-brand-blue/10 dark:bg-obsidian-700/40 border-l-2 border-brand-blue'
+                  : 'hover:bg-slate-100/70 dark:hover:bg-obsidian-700/20'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm text-slate-100 tracking-tight">
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight">
                       {stock.symbol}
                     </span>
                     {isIndex ? (
-                      <span className="text-[9px] uppercase font-bold text-amber-400 px-1 py-0.5 rounded bg-amber-950/70 border border-amber-500/40">
+                      <span className="text-[9px] uppercase font-bold text-amber-500 dark:text-amber-400 px-1 py-0.5 rounded bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-500/40">
                         INDEX
                       </span>
                     ) : (
-                      <span className="text-[9px] uppercase font-semibold text-slate-400 px-1 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
+                      <span className="text-[9px] uppercase font-semibold text-slate-600 dark:text-slate-400 px-1 py-0.5 rounded bg-slate-100 dark:bg-obsidian-950 border border-slate-200 dark:border-obsidian-700">
                         NSE
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-400 truncate max-w-[130px] sm:max-w-[160px]">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[130px] sm:max-w-[160px]">
                     {stock.name}
                   </div>
                 </div>
@@ -466,8 +466,8 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                         : flash === 'DOWN'
                           ? 'flash-down'
                           : isPositive
-                            ? 'text-emerald-400'
-                            : 'text-rose-400'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-rose-600 dark:text-rose-400'
                     }`}
                   >
                     ₹
@@ -478,13 +478,13 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   </div>
                   <div className="flex items-center justify-end gap-1 mt-0.5">
                     {isPositive ? (
-                      <TrendingUp className="w-3 h-3 text-emerald-400" />
+                      <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     ) : (
-                      <TrendingDown className="w-3 h-3 text-rose-400" />
+                      <TrendingDown className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                     )}
                     <span
                       className={`text-[11px] font-tabular font-medium ${
-                        isPositive ? 'text-emerald-400' : 'text-rose-400'
+                        isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
                       {isPositive ? '+' : ''}
@@ -496,13 +496,13 @@ export const Watchlist: React.FC<WatchlistProps> = ({
               </div>
 
               {/* 52-Week Range Mini Bar */}
-              <div className="mt-2 flex items-center justify-between gap-1 text-[10px] text-slate-500">
+              <div className="mt-2 flex items-center justify-between gap-1 text-[10px] text-slate-400 dark:text-slate-500">
                 <span className="font-tabular">
                   L: ₹{stock.low52 ? Number(stock.low52).toFixed(0) : '-'}
                 </span>
-                <div className="flex-1 h-1 bg-obsidian-900 rounded-full mx-1.5 overflow-hidden">
+                <div className="flex-1 h-1 bg-slate-200 dark:bg-obsidian-900 rounded-full mx-1.5 overflow-hidden">
                   <div
-                    className="h-full bg-slate-600 rounded-full"
+                    className="h-full bg-slate-400 dark:bg-slate-600 rounded-full"
                     style={{ width: `${rangePos}%` }}
                   />
                 </div>
@@ -512,7 +512,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
               </div>
 
               {/* Quick Action Hover Buttons (Buy, Sell, Remove - Buy/Sell disabled for indices) */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-1 bg-obsidian-800/95 p-1 rounded-lg border border-obsidian-600 shadow-xl z-10">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-1 bg-white/95 dark:bg-obsidian-800/95 p-1 rounded-lg border border-slate-200 dark:border-obsidian-600 shadow-xl z-10">
                 {!isIndex ? (
                   <>
                     <button
@@ -520,7 +520,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                         e.stopPropagation();
                         onOpenOrderModal(stock.symbol, 'BUY');
                       }}
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow transition active:scale-95 cursor-pointer"
                       title="Buy"
                     >
                       B
@@ -530,21 +530,21 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                         e.stopPropagation();
                         onOpenOrderModal(stock.symbol, 'SELL');
                       }}
-                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded shadow transition active:scale-95"
+                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded shadow transition active:scale-95 cursor-pointer"
                       title="Sell"
                     >
                       S
                     </button>
                   </>
                 ) : (
-                  <span className="px-2 py-0.5 text-[10px] font-bold text-amber-400 bg-amber-950/80 rounded border border-amber-500/30">
+                  <span className="px-2 py-0.5 text-[10px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 rounded border border-amber-300 dark:border-amber-500/30">
                     Index Spot
                   </span>
                 )}
                 {onRemoveSymbol && (
                   <button
                     onClick={(e) => handleRemoveStock(e, stock.symbol)}
-                    className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition active:scale-95"
+                    className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition active:scale-95 cursor-pointer"
                     title="Remove from Watchlist"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -557,26 +557,26 @@ export const Watchlist: React.FC<WatchlistProps> = ({
 
         {/* Global NSE Directory Search Results Section */}
         {globalSearchResults.length > 0 && (
-          <div className="bg-obsidian-900/60 p-2 border-t border-obsidian-700">
-            <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-brand-cyan uppercase tracking-wider">
+          <div className="bg-slate-50 dark:bg-obsidian-900/60 p-2 border-t border-slate-200 dark:border-obsidian-700">
+            <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-brand-blue dark:text-brand-cyan uppercase tracking-wider">
               <Globe className="w-3 h-3" />
               <span>Available on NSE ({globalSearchResults.length} matches)</span>
             </div>
 
-            <div className="divide-y divide-obsidian-800/80">
+            <div className="divide-y divide-slate-200 dark:divide-obsidian-800/80">
               {globalSearchResults.map((result) => (
                 <div
                   key={result.symbol}
-                  className="p-2.5 hover:bg-obsidian-800/80 rounded-xl transition flex items-center justify-between gap-3"
+                  className="p-2.5 hover:bg-white dark:hover:bg-obsidian-800/80 rounded-xl transition flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-xs text-white">{result.symbol}</span>
-                      <span className="text-[9px] uppercase px-1 py-0.2 rounded bg-obsidian-950 border border-obsidian-800 text-slate-400">
+                      <span className="font-extrabold text-xs text-slate-900 dark:text-white">{result.symbol}</span>
+                      <span className="text-[9px] uppercase px-1 py-0.2 rounded bg-slate-100 dark:bg-obsidian-950 border border-slate-200 dark:border-obsidian-800 text-slate-600 dark:text-slate-400">
                         NSE EQ
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 truncate max-w-[170px] sm:max-w-[210px]">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[170px] sm:max-w-[210px]">
                       {result.name}
                     </div>
                   </div>
@@ -584,7 +584,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                   <button
                     onClick={() => handleAddSymbol(result.symbol)}
                     disabled={isAdding && addingSymbol === result.symbol}
-                    className="px-2.5 py-1 rounded-lg bg-brand-blue hover:bg-brand-blue/80 text-white text-xs font-bold transition flex items-center gap-1 shrink-0 active:scale-95 disabled:opacity-50"
+                    className="px-2.5 py-1 rounded-lg bg-brand-blue hover:bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1 shrink-0 active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {isAdding && addingSymbol === result.symbol ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -604,12 +604,12 @@ export const Watchlist: React.FC<WatchlistProps> = ({
           <div className="p-8 text-center text-slate-500 text-xs">
             {stocks.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-8">
-                <div className="w-12 h-12 rounded-2xl bg-obsidian-900 border border-obsidian-700 flex items-center justify-center text-slate-400 shadow-inner">
-                  <FolderPlus className="w-6 h-6 text-brand-cyan/70" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-inner">
+                  <FolderPlus className="w-6 h-6 text-brand-blue dark:text-brand-cyan/70" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-200 text-sm">Watchlist is empty</h4>
-                  <p className="text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
+                  <h4 className="font-bold text-slate-900 dark:text-slate-200 text-sm">Watchlist is empty</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
                     Search above across 2,500+ NSE scrips to add stocks to{' '}
                     {activeWatchlist?.name || 'this watchlist'}.
                   </p>

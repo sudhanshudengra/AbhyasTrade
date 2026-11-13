@@ -263,28 +263,28 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
     >
       <div
-        className={`w-full sm:max-w-md max-h-[92vh] sm:max-h-[85vh] flex flex-col bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
+        className={`w-full sm:max-w-md max-h-[92vh] sm:max-h-[85vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
           isBuy ? 'border-emerald-500/40 glow-emerald' : 'border-rose-500/40 glow-crimson'
         } shadow-2xl overflow-hidden transition-all duration-150`}
       >
         {/* Compact Integrated Header Bar */}
-        <div className="px-4 py-3 border-b border-obsidian-700/60 bg-gradient-to-b from-obsidian-800 to-obsidian-900/90 shrink-0 flex items-center justify-between gap-2">
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-obsidian-700/60 bg-gradient-to-b from-slate-50 to-white dark:from-obsidian-800 dark:to-obsidian-900/90 shrink-0 flex items-center justify-between gap-2">
           {/* Symbol & Price Info */}
           <div className="flex items-center gap-2 min-w-0">
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold text-white tracking-tight leading-tight">
+                <span className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                   {stock.symbol}
                 </span>
-                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-obsidian-700 text-slate-300 border border-obsidian-600">
+                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-slate-100 dark:bg-obsidian-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-obsidian-600">
                   NSE
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs font-tabular mt-0.5">
-                <span className="font-bold text-white">₹{stock.ltp.toFixed(2)}</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{stock.ltp.toFixed(2)}</span>
                 <span
                   className={`text-[11px] font-semibold ${
-                    (stock.change ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                    (stock.change ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                   }`}
                 >
                   {(stock.change ?? 0) >= 0 ? '+' : ''}
@@ -297,14 +297,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
           {/* Header Controls: BUY/SELL Mode + Close */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center bg-obsidian-950/90 p-0.5 rounded-lg border border-obsidian-700/80">
+            <div className="flex items-center bg-slate-100 dark:bg-obsidian-950/90 p-0.5 rounded-lg border border-slate-200 dark:border-obsidian-700/80">
               <button
                 type="button"
                 onClick={() => handleSideChange('BUY')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition ${
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
                   isBuy
                     ? 'bg-emerald-600 text-white shadow-sm glow-emerald'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 BUY
@@ -312,10 +312,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleSideChange('SELL')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition ${
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
                   !isBuy
                     ? 'bg-rose-600 text-white shadow-sm glow-crimson'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 SELL
@@ -324,7 +324,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1 rounded-lg hover:bg-obsidian-700 text-slate-400 hover:text-white transition"
+              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-obsidian-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -340,8 +340,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         >
           {/* Off-Market Hours Notice (Compact 1-line tag) */}
           {!isMarketOpen && (
-            <div className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-200 text-[11px] flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+            <div className="px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/25 text-amber-800 dark:text-amber-200 text-[11px] flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
               <span className="truncate">
                 <strong>NSE Closed:</strong> AMO order placed at ₹{stock.ltp.toFixed(2)}
               </span>
@@ -354,14 +354,20 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setProductType('CNC')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
+                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                   productType === 'CNC'
-                    ? 'bg-indigo-950/60 border-indigo-500 text-indigo-300 shadow-sm'
-                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
+                    ? 'bg-sky-50 border-brand-blue text-brand-blue dark:bg-brand-blue/20 dark:border-brand-blue dark:text-brand-cyan shadow-sm'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-obsidian-900 dark:border-obsidian-700 dark:text-slate-400 hover:border-slate-300 dark:hover:border-obsidian-600'
                 }`}
               >
                 <span>Longterm CNC</span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-indigo-900/60 text-indigo-200">
+                <span
+                  className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
+                    productType === 'CNC'
+                      ? 'bg-sky-100 text-brand-blue dark:bg-brand-blue/30 dark:text-sky-200'
+                      : 'bg-slate-200 dark:bg-obsidian-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
                   Delivery
                 </span>
               </button>
@@ -369,14 +375,20 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setProductType('MIS')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between ${
+                className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                   productType === 'MIS'
-                    ? 'bg-brand-blue/20 border-brand-blue text-brand-cyan shadow-sm glow-blue'
-                    : 'bg-obsidian-900 border-obsidian-700 text-slate-400 hover:border-obsidian-600'
+                    ? 'bg-sky-50 border-brand-blue text-brand-blue dark:bg-brand-blue/20 dark:border-brand-blue dark:text-brand-cyan shadow-sm'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-obsidian-900 dark:border-obsidian-700 dark:text-slate-400 hover:border-slate-300 dark:hover:border-obsidian-600'
                 }`}
               >
                 <span>Intraday MIS</span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand-blue/30 text-sky-200">
+                <span
+                  className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
+                    productType === 'MIS'
+                      ? 'bg-sky-100 text-brand-blue dark:bg-brand-blue/30 dark:text-sky-200'
+                      : 'bg-slate-200 dark:bg-obsidian-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
                   5x Margin
                 </span>
               </button>
@@ -384,23 +396,23 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
             {/* Dynamic Leverage / Cost Note (Concise 1-Line Strip) */}
             {productType === 'CNC' ? (
-              <div className="px-2.5 py-1.5 rounded-lg bg-indigo-950/40 border border-indigo-500/25 text-[11px] flex items-center justify-between text-slate-300">
-                <span className="flex items-center gap-1.5 text-indigo-300 font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <div className="px-2.5 py-1.5 rounded-lg bg-sky-50/70 dark:bg-brand-blue/10 border border-sky-200 dark:border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-700 dark:text-slate-300">
+                <span className="flex items-center gap-1.5 text-brand-blue dark:text-brand-cyan font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan shrink-0" />
                   Delivery CNC
                 </span>
-                <span className="text-indigo-300 font-bold font-tabular">
+                <span className="text-slate-900 dark:text-slate-100 font-bold font-tabular">
                   100% Upfront (₹
                   {requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
                 </span>
               </div>
             ) : (
-              <div className="px-2.5 py-1.5 rounded-lg bg-brand-blue/10 border border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-300">
-                <span className="flex items-center gap-1.5 text-brand-cyan font-medium">
-                  <Zap className="w-3.5 h-3.5 text-brand-cyan shrink-0" />
+              <div className="px-2.5 py-1.5 rounded-lg bg-sky-50/70 dark:bg-brand-blue/10 border border-sky-200 dark:border-brand-blue/25 text-[11px] flex items-center justify-between text-slate-700 dark:text-slate-300">
+                <span className="flex items-center gap-1.5 text-brand-blue dark:text-brand-cyan font-medium">
+                  <Zap className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan shrink-0" />
                   Trade: ₹{totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-emerald-400 font-bold font-tabular">
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold font-tabular">
                   You pay 1/5th (₹
                   {requiredMargin.toLocaleString('en-IN', { maximumFractionDigits: 0 })})
                 </span>
@@ -410,16 +422,16 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
           {/* Order Type (MARKET / LIMIT / SL_M) */}
           <div>
-            <div className="grid grid-cols-3 gap-1.5 bg-obsidian-950/70 p-1 rounded-xl border border-obsidian-700/80">
+            <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-obsidian-950/70 p-1 rounded-xl border border-slate-200 dark:border-obsidian-700/80">
               {(['MARKET', 'LIMIT', 'SL_M'] as OrderType[]).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setOrderType(type)}
-                  className={`py-1.5 rounded-lg text-xs font-bold transition ${
+                  className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                     orderType === type
-                      ? 'bg-obsidian-700 text-white shadow-sm border border-obsidian-600'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-white dark:bg-obsidian-700 text-slate-900 dark:text-white shadow-sm border border-slate-300 dark:border-obsidian-600'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   {type === 'SL_M' ? 'SL-M' : type}
@@ -431,7 +443,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {/* Quantity Controls & Steppers */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 Quantity (Shares)
               </label>
               <div className="flex items-center gap-1">
@@ -447,7 +459,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                         setQuantity(nextQty);
                       }
                     }}
-                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-obsidian-900 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition"
+                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 hover:bg-slate-200 dark:bg-obsidian-900 dark:hover:bg-obsidian-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-obsidian-700 transition cursor-pointer"
                   >
                     +{adder}
                   </button>
@@ -457,11 +469,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
             {/* Available to Sell Helper Strip when in SELL mode */}
             {!isBuy && (
-              <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-obsidian-900/90 border border-obsidian-700/80">
+              <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/80">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400 text-[11px]">Available to Sell:</span>
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px]">Available to Sell:</span>
                   <span
-                    className={`font-bold font-tabular text-[11px] ${availableHoldingQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                    className={`font-bold font-tabular text-[11px] ${availableHoldingQty > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                   >
                     {availableHoldingQty} Shares ({productType})
                   </span>
@@ -470,7 +482,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setQuantity(availableHoldingQty)}
-                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/40 transition active:scale-95"
+                    className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/70 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 transition active:scale-95 cursor-pointer"
                   >
                     Sell All ({availableHoldingQty})
                   </button>
@@ -482,7 +494,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setQuantity((prev) => Math.max(1, (prev || 1) - 1))}
-                className="w-9 h-9 rounded-xl bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0"
+                className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0 cursor-pointer"
               >
                 -
               </button>
@@ -496,7 +508,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     const val = parseInt(e.target.value, 10);
                     setQuantity(isNaN(val) ? 0 : Math.max(0, val));
                   }}
-                  className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-center text-sm font-tabular font-extrabold text-white focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-white dark:bg-obsidian-900 border border-slate-300 dark:border-obsidian-700 rounded-xl px-3 py-1.5 text-center text-sm font-tabular font-extrabold text-slate-900 dark:text-white focus:outline-none focus:border-brand-blue"
                   placeholder="0"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-semibold uppercase">
@@ -513,7 +525,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     setQuantity(nextQty);
                   }
                 }}
-                className="w-9 h-9 rounded-xl bg-obsidian-900 border border-obsidian-700 text-slate-300 hover:text-white hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0"
+                className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-obsidian-800 flex items-center justify-center font-bold text-base active:scale-95 transition shrink-0 cursor-pointer"
               >
                 +
               </button>
@@ -524,11 +536,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           {orderType === 'LIMIT' && (
             <div className="space-y-1 animate-in fade-in duration-150">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-400">Limit Price (₹)</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-400">Limit Price (₹)</span>
                 <button
                   type="button"
                   onClick={() => setLimitPrice(stock.ltp)}
-                  className="font-bold text-brand-cyan hover:underline"
+                  className="font-bold text-brand-blue dark:text-brand-cyan hover:underline cursor-pointer"
                 >
                   Use LTP (₹{stock.ltp.toFixed(2)})
                 </button>
@@ -538,20 +550,20 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 step="0.05"
                 value={limitPrice || ''}
                 onChange={(e) => setLimitPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-obsidian-900 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                className="w-full bg-white dark:bg-obsidian-900 border border-slate-300 dark:border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-blue"
                 placeholder={stock.ltp.toFixed(2)}
               />
             </div>
           )}
 
           {orderType === 'SL_M' && (
-            <div className="space-y-2 bg-obsidian-900/80 p-2.5 rounded-xl border border-obsidian-700/80 animate-in fade-in duration-150">
+            <div className="space-y-2 bg-slate-50 dark:bg-obsidian-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-obsidian-700/80 animate-in fade-in duration-150">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-300">Stoploss Trigger Price (₹)</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">Stoploss Trigger Price (₹)</span>
                 <button
                   type="button"
                   onClick={() => setTriggerPrice(parseFloat((stock.ltp * 0.99).toFixed(2)))}
-                  className="font-bold text-brand-cyan hover:underline"
+                  className="font-bold text-brand-blue dark:text-brand-cyan hover:underline cursor-pointer"
                 >
                   Reset (-1%)
                 </button>
@@ -563,14 +575,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   step="0.05"
                   value={triggerPrice || ''}
                   onChange={(e) => setTriggerPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-obsidian-950 border border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-white focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-white dark:bg-obsidian-950 border border-slate-300 dark:border-obsidian-700 rounded-xl px-3 py-1.5 text-sm font-tabular font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-blue"
                   placeholder={stock.ltp.toFixed(2)}
                 />
               </div>
 
               {/* Quick % Stoploss Presets */}
               <div className="flex items-center gap-1.5 pt-0.5">
-                <span className="text-[10px] text-slate-400 shrink-0 font-medium">Quick SL:</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 shrink-0 font-medium">Quick SL:</span>
                 {[0.5, 1, 2, 5].map((pct) => (
                   <button
                     key={pct}
@@ -578,7 +590,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     onClick={() =>
                       setTriggerPrice(parseFloat((stock.ltp * (1 - pct / 100)).toFixed(2)))
                     }
-                    className="flex-1 py-0.5 text-[10px] font-bold rounded bg-obsidian-950 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-obsidian-700 hover:border-rose-500/40 transition font-tabular"
+                    className="flex-1 py-0.5 text-[10px] font-bold rounded bg-white hover:bg-rose-50 dark:bg-obsidian-950 dark:hover:bg-rose-950/60 text-slate-700 dark:text-slate-300 hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-obsidian-700 hover:border-rose-300 dark:hover:border-rose-500/40 transition font-tabular cursor-pointer"
                   >
                     -{pct}%
                   </button>
@@ -586,14 +598,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </div>
 
               {/* Helpful Explanation Strip */}
-              <div className="p-2 rounded-lg bg-obsidian-950/90 border border-obsidian-800 text-[11px] text-slate-300 font-tabular space-y-0.5">
+              <div className="p-2 rounded-lg bg-white dark:bg-obsidian-950/90 border border-slate-200 dark:border-obsidian-800 text-[11px] text-slate-700 dark:text-slate-300 font-tabular space-y-0.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Current Market LTP:</span>
-                  <span className="font-bold text-white">₹{stock.ltp.toFixed(2)}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Current Market LTP:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₹{stock.ltp.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Execution Action:</span>
-                  <span className="font-bold text-amber-300">
+                  <span className="text-slate-500 dark:text-slate-400">Execution Action:</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-300">
                     {isBuy && triggerPrice < stock.ltp
                       ? `Buy @ Market ₹${stock.ltp.toFixed(2)} & auto-sell if price drops to ₹${triggerPrice.toFixed(2)}`
                       : isBuy
@@ -606,12 +618,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           )}
 
           {/* Margin Required vs Available Balance (Compact Strip) */}
-          <div className="bg-obsidian-950/80 rounded-xl p-2.5 border border-obsidian-700/80">
+          <div className="bg-slate-50 dark:bg-obsidian-950/80 rounded-xl p-2.5 border border-slate-200 dark:border-obsidian-700/80">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 text-[11px]">Required:</span>
+                <span className="text-slate-600 dark:text-slate-400 text-[11px]">Required:</span>
                 <span
-                  className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-400' : 'text-white'}`}
+                  className={`font-tabular font-bold ${hasInsufficientMargin ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}
                 >
                   ₹
                   {requiredMargin.toLocaleString('en-IN', {
@@ -621,8 +633,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 text-[11px]">Available:</span>
-                <span className="font-tabular font-bold text-emerald-400">
+                <span className="text-slate-600 dark:text-slate-400 text-[11px]">Available:</span>
+                <span className="font-tabular font-bold text-emerald-600 dark:text-emerald-400">
                   ₹
                   {availableMargin.toLocaleString('en-IN', {
                     minimumFractionDigits: 2,
@@ -633,7 +645,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
 
             {hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL') && (
-              <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1.5 mt-1.5 border-t border-rose-500/20 font-medium">
+              <div className="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 pt-1.5 mt-1.5 border-t border-rose-300 dark:border-rose-500/20 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>Insufficient margin to execute order</span>
               </div>
@@ -641,25 +653,25 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           </div>
 
           {/* Expandable Charges Breakdown */}
-          <div className="border border-obsidian-700/70 rounded-xl overflow-hidden bg-obsidian-900/50">
+          <div className="border border-slate-200 dark:border-obsidian-700/70 rounded-xl overflow-hidden bg-slate-50 dark:bg-obsidian-900/50">
             <button
               type="button"
               onClick={() => setShowTaxBreakdown(!showTaxBreakdown)}
-              className="w-full px-3 py-2 flex items-center justify-between text-xs text-slate-300 hover:text-white transition"
+              className="w-full px-3 py-2 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
             >
               <div className="flex items-center gap-1.5 text-[11px]">
-                <Sparkles className="w-3 h-3 text-brand-cyan" />
+                <Sparkles className="w-3 h-3 text-brand-blue dark:text-brand-cyan" />
                 <span>Taxes & Charges:</span>
-                <strong className="text-white font-tabular font-bold">
+                <strong className="text-slate-900 dark:text-white font-tabular font-bold">
                   ₹{taxBreakdown?.total_charges?.toFixed(2) || '0.00'}
                 </strong>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-400 text-[10px]">
-                <span className="text-emerald-400 font-tabular font-medium">
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
+                <span className="text-emerald-600 dark:text-emerald-400 font-tabular font-medium">
                   +₹{taxBreakdown?.breakeven_pnl?.toFixed(2) || '0.00'}/sh
                 </span>
                 {showTaxBreakdown ? (
-                  <ChevronUp className="w-3.5 h-3.5 text-brand-cyan" />
+                  <ChevronUp className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
                 ) : (
                   <ChevronDown className="w-3.5 h-3.5" />
                 )}
@@ -667,34 +679,34 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </button>
 
             {showTaxBreakdown && taxBreakdown && (
-              <div className="p-3 border-t border-obsidian-700/70 text-[11px] space-y-1 bg-obsidian-950/80 font-tabular animate-in fade-in duration-150">
-                <div className="flex justify-between text-slate-400">
+              <div className="p-3 border-t border-slate-200 dark:border-obsidian-700/70 text-[11px] space-y-1 bg-white dark:bg-obsidian-950/80 font-tabular animate-in fade-in duration-150">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>Brokerage ({productType}):</span>
-                  <span className="text-slate-200">₹{taxBreakdown.brokerage.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">₹{taxBreakdown.brokerage.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>STT / CTT:</span>
-                  <span className="text-slate-200">₹{taxBreakdown.stt.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">₹{taxBreakdown.stt.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>Exchange Turnover Charges:</span>
-                  <span className="text-slate-200">
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">
                     ₹{taxBreakdown.exchange_charges.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>SEBI Charges:</span>
-                  <span className="text-slate-200">₹{taxBreakdown.sebi_charges.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">₹{taxBreakdown.sebi_charges.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>Stamp Duty:</span>
-                  <span className="text-slate-200">₹{taxBreakdown.stamp_duty.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">₹{taxBreakdown.stamp_duty.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>GST (18%):</span>
-                  <span className="text-slate-200">₹{taxBreakdown.gst.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">₹{taxBreakdown.gst.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-emerald-400 pt-1 border-t border-obsidian-800 font-bold text-xs">
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 pt-1 border-t border-slate-200 dark:border-obsidian-800 font-bold text-xs">
                   <span>Breakeven per share:</span>
                   <span>+₹{taxBreakdown.breakeven_pnl.toFixed(2)}</span>
                 </div>

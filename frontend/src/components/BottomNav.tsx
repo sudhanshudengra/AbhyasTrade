@@ -17,15 +17,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   pendingOrdersCount,
 }) => {
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-obsidian-800/95 backdrop-blur-lg border-t border-obsidian-700/80 px-2 py-1.5 pb-safe">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-obsidian-800/95 backdrop-blur-lg border-t border-slate-200 dark:border-obsidian-700/80 px-2 py-1.5 pb-safe">
       <div className="grid grid-cols-5 gap-1">
         {/* Watchlist Tab */}
         <button
           onClick={() => onChangeTab('WATCHLIST')}
-          className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
+          className={`flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer ${
             activeTab === 'WATCHLIST'
-              ? 'text-brand-cyan font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-brand-blue dark:text-brand-cyan font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <List className="w-5 h-5" />
@@ -35,10 +35,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* Chart Tab */}
         <button
           onClick={() => onChangeTab('CHART')}
-          className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
+          className={`flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer ${
             activeTab === 'CHART'
-              ? 'text-brand-cyan font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-brand-blue dark:text-brand-cyan font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <LineChart className="w-5 h-5" />
@@ -48,16 +48,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* Positions Tab */}
         <button
           onClick={() => onChangeTab('POSITIONS')}
-          className={`flex flex-col items-center justify-center py-1 rounded-xl relative transition ${
+          className={`flex flex-col items-center justify-center py-1 rounded-xl relative transition cursor-pointer ${
             activeTab === 'POSITIONS'
-              ? 'text-brand-cyan font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-brand-blue dark:text-brand-cyan font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Layers className="w-5 h-5" />
           <span className="text-[10px] mt-0.5">Positions</span>
           {openPositionsCount > 0 && (
-            <span className="absolute top-0.5 right-3 w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 text-[9px] font-extrabold flex items-center justify-center">
+            <span className="absolute top-0.5 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-extrabold flex items-center justify-center shadow-sm">
               {openPositionsCount}
             </span>
           )}
@@ -66,16 +66,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* Orders Tab */}
         <button
           onClick={() => onChangeTab('ORDERS')}
-          className={`flex flex-col items-center justify-center py-1 rounded-xl relative transition ${
+          className={`flex flex-col items-center justify-center py-1 rounded-xl relative transition cursor-pointer ${
             activeTab === 'ORDERS'
-              ? 'text-brand-cyan font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-brand-blue dark:text-brand-cyan font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <FileText className="w-5 h-5" />
           <span className="text-[10px] mt-0.5">Orders</span>
           {pendingOrdersCount > 0 && (
-            <span className="absolute top-0.5 right-3 w-4 h-4 rounded-full bg-amber-500 text-obsidian-950 text-[9px] font-extrabold flex items-center justify-center">
+            <span className="absolute top-0.5 right-3 w-4 h-4 rounded-full bg-amber-600 text-white text-[9px] font-extrabold flex items-center justify-center shadow-sm">
               {pendingOrdersCount}
             </span>
           )}
@@ -84,10 +84,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* Analytics Tab */}
         <button
           onClick={() => onChangeTab('ANALYTICS')}
-          className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
+          className={`flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer ${
             activeTab === 'ANALYTICS'
-              ? 'text-brand-cyan font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-brand-blue dark:text-brand-cyan font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <PieChart className="w-5 h-5" />
