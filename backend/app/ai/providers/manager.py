@@ -6,7 +6,6 @@ from app.core.config import settings
 from app.ai.providers.base import BaseAIProvider
 from app.ai.providers.gemini import GeminiProvider
 from app.ai.providers.groq import GroqProvider
-from app.ai.providers.openrouter import OpenRouterProvider
 from app.ai.providers.mock import MockProvider
 from app.ai.errors import (
     AIException,
@@ -22,15 +21,13 @@ class ProviderManager:
     def __init__(self):
         self.gemini = GeminiProvider()
         self.groq = GroqProvider()
-        self.openrouter = OpenRouterProvider()
         self.mock = MockProvider()
 
     def get_provider_chain(self, task_name: str) -> list[BaseAIProvider]:
         """
         Returns an ordered list of providers to attempt for the given task type.
-        Heavy tasks: Gemini -> Groq -> OpenRouter (fallback).
-        Lightweight tasks: Groq -> Gemini -> OpenRouter (fallback).
-        OpenRouter is strictly the final fallback to conserve its daily quota.
+        Heavy tasks: Gemini -> Groq.
+        Lightweight tasks: Groq -> Gemini.
         """
         heavy_tasks = {"stock-analysis", "peer-comparison", "financial-analysis"}
         chain = []
@@ -40,16 +37,12 @@ class ProviderManager:
                 chain.append(self.gemini)
             if settings.AI_ENABLE_FALLBACK and self.groq.is_configured():
                 chain.append(self.groq)
-            if settings.AI_ENABLE_FALLBACK and self.openrouter.is_configured():
-                chain.append(self.openrouter)
         else:
             # Lightweight task
             if self.groq.is_configured():
                 chain.append(self.groq)
             if settings.AI_ENABLE_FALLBACK and self.gemini.is_configured():
                 chain.append(self.gemini)
-            if settings.AI_ENABLE_FALLBACK and self.openrouter.is_configured():
-                chain.append(self.openrouter)
 
         # Fallback to mock provider if no real provider is configured
         if not chain:
