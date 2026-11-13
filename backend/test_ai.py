@@ -17,7 +17,9 @@ from app.core.config import settings
 import app.core.database
 
 app.core.database.supabase_client = None
-app.core.database.SQLITE_DB_PATH = "backend/test_ai.db"
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+TEST_DB_PATH = os.path.join(_backend_dir, "test_ai.db")
+app.core.database.SQLITE_DB_PATH = TEST_DB_PATH
 from app.core.database import init_db, DatabaseService
 
 from app.ai.errors import AIUsageLimitExceededError
@@ -231,8 +233,8 @@ async def run_ai_tests():
 
     # Clean up test DB
     try:
-        if os.path.exists("backend/test_ai.db"):
-            os.remove("backend/test_ai.db")
+        if os.path.exists(TEST_DB_PATH):
+            os.remove(TEST_DB_PATH)
     except Exception:
         pass
 

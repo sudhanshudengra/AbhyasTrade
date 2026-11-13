@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # Supabase Configuration (Optional - falls back to local async SQLite if not configured)
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
+    SQLITE_DB_PATH: Optional[str] = None
 
     # AI Integration Settings
     GEMINI_API_KEY: Optional[str] = None
