@@ -27,7 +27,7 @@ if not os.environ.get("TESTING") and settings.SUPABASE_URL and settings.SUPABASE
 
 SQLITE_DB_PATH = "backend/abhyastrade.db"
 
-# Hinglish Trader Ranks (Level 1 to 5)
+# Trader Progression Ranks (Level 1 to 5)
 TRADER_RANKS = [
     {"level": 1, "title": "Jigyasu", "min_xp": 0, "max_xp": 250},
     {"level": 2, "title": "Abhyasi", "min_xp": 251, "max_xp": 750},

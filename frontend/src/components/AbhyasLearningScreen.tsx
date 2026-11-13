@@ -413,69 +413,162 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
         {/* ============================================================================== */}
         {/* INTERACTIVE AI TRADING GURU & QUIZ SECTION */}
         {/* ============================================================================== */}
-        <div className="w-full bg-gradient-to-b from-obsidian-900/90 to-obsidian-950/90 border border-brand-cyan/25 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-obsidian-800 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-brand-cyan">
-                <Sparkles className="w-5 h-5" />
+        <div className="w-full bg-gradient-to-r from-obsidian-900/95 via-obsidian-850/90 to-obsidian-900/95 border border-brand-cyan/30 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-xl relative overflow-hidden group space-y-5">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Card Header (Identical design to Dhanraj AI above) */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10 border-b border-obsidian-800 pb-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5 text-brand-cyan" />
               </div>
-              <div>
+              <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base sm:text-lg font-bold text-white">
-                    Abhyas AI Trading Guru &amp; Interactive Quiz
-                  </h3>
-                  {quizzesRemaining !== null && (
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-brand-blue/20 text-brand-cyan border border-brand-blue/40">
-                      🎯 {quizzesRemaining}/{quizzesLimit} Quizzes Left Today
+                  <h4 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
+                    Abhyas AI Guru{' '}
+                    <span className="text-amber-300 font-serif font-bold text-xs sm:text-sm">
+                      (अभ्यास गुरु)
                     </span>
-                  )}
+                  </h4>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-blue/20 text-brand-cyan border border-brand-blue/40">
+                    Interactive Learning &amp; Quiz
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
+                    {quizzesRemaining !== null
+                      ? `${quizzesRemaining}/${quizzesLimit} Quizzes Left Today`
+                      : `${quizzesLimit} Quizzes / Day Included`}
+                  </span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Earn Trader XP, climb Hinglish ranks, and master market psychology
+                <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+                  Build systematic market instincts through AI-guided concept breakdowns, real-world Indian market scenarios, and interactive dilemma quizzes. Complete quizzes to earn Trader XP and advance your rank with zero financial risk.
                 </p>
               </div>
             </div>
 
-            {/* Difficulty Selector */}
-            <div className="flex items-center bg-obsidian-900 p-1 rounded-xl border border-obsidian-700 text-xs">
-              {(['beginner', 'intermediate', 'advanced'] as const).map((diff) => {
-                const diffLabels: Record<string, { label: string; badge: string }> = {
-                  beginner: { label: 'Beginner', badge: 'Jigyasu' },
-                  intermediate: { label: 'Intermediate', badge: 'Abhyasi' },
-                  advanced: { label: 'Advanced', badge: 'Sadhak' },
-                };
+            <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+              <div className="px-3 py-1.5 rounded-xl bg-obsidian-950/80 border border-brand-cyan/30 text-brand-cyan text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <Award className="w-3.5 h-3.5 text-amber-400" />
+                <span>Trader XP Arena</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 1: Dedicated Difficulty Level Selector */}
+          <div className="space-y-2.5 relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-brand-cyan/20 border border-brand-cyan/50 text-brand-cyan text-[11px] font-black flex items-center justify-center">
+                  1
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Select Difficulty Level:
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                Active Category: <strong className="text-brand-cyan uppercase font-bold">{difficulty}</strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  id: 'beginner' as const,
+                  label: 'Beginner',
+                  badge: 'Jigyasu',
+                  desc: 'Order mechanics, 1% risk defense rule & candlestick anatomy',
+                },
+                {
+                  id: 'intermediate' as const,
+                  label: 'Intermediate',
+                  badge: 'Abhyasi',
+                  desc: 'RSI divergence, VWAP intraday strategies & breakout validation',
+                },
+                {
+                  id: 'advanced' as const,
+                  label: 'Advanced',
+                  badge: 'Sadhak',
+                  desc: 'Liquidity sweeps, Option Greeks theta decay & futures hedging',
+                },
+              ].map((tier) => {
+                const isSelected = difficulty === tier.id;
+                const tierHasQuiz = categoryStates[tier.id].lesson !== null;
+                const tierHasCompleted = categoryStates[tier.id].quizResult !== null;
                 return (
                   <button
-                    key={diff}
-                    onClick={() => handleDifficultyChange(diff)}
-                    className={`px-2.5 py-1 rounded-lg capitalize font-medium transition flex items-center gap-1.5 ${
-                      difficulty === diff
-                        ? 'bg-brand-cyan text-obsidian-950 font-bold shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
+                    key={tier.id}
+                    type="button"
+                    onClick={() => handleDifficultyChange(tier.id)}
+                    className={`p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative group ${
+                      isSelected
+                        ? 'bg-brand-cyan/15 border-brand-cyan text-white shadow-lg shadow-brand-cyan/5 ring-1 ring-brand-cyan/40'
+                        : 'bg-obsidian-900/80 hover:bg-obsidian-850 border-obsidian-750 hover:border-slate-500 text-slate-300'
                     }`}
                   >
-                    <span>{diffLabels[diff].label}</span>
-                    <span
-                      className={`text-[9px] px-1 py-0.2 rounded font-extrabold uppercase ${
-                        difficulty === diff
-                          ? 'bg-obsidian-950/25 text-obsidian-950'
-                          : 'bg-obsidian-800 text-slate-400 border border-obsidian-700'
-                      }`}
-                    >
-                      {diffLabels[diff].badge}
-                    </span>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-extrabold uppercase tracking-wide ${
+                              isSelected ? 'text-brand-cyan' : 'text-white'
+                            }`}
+                          >
+                            {tier.label}
+                          </span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                              isSelected
+                                ? 'bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40'
+                                : 'bg-obsidian-800 text-slate-400 border border-obsidian-700'
+                            }`}
+                          >
+                            {tier.badge}
+                          </span>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'border-brand-cyan bg-brand-cyan'
+                              : 'border-obsidian-600 bg-obsidian-950'
+                          }`}
+                        >
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-obsidian-950" />}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-snug">
+                        {tier.desc}
+                      </p>
+                    </div>
+
+                    {tierHasQuiz && (
+                      <div className="mt-2.5 pt-2 border-t border-obsidian-800 flex items-center gap-1.5 text-[10px] font-semibold">
+                        {tierHasCompleted ? (
+                          <span className="text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Completed (+XP)
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Active Quiz In Progress
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Curated Topic Chips (Tier-Specific) */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                1. Select a {difficulty.toUpperCase()} Topic:
-              </span>
+          {/* Step 2: Curated Topic Chips & Custom Concept Input */}
+          <div className="space-y-3 pt-1 relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-brand-cyan/20 border border-brand-cyan/50 text-brand-cyan text-[11px] font-black flex items-center justify-center">
+                  2
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Select a {difficulty.toUpperCase()} Topic or Type Your Own:
+                </span>
+              </div>
               <span className="text-[11px] text-brand-cyan font-medium hidden sm:inline truncate max-w-xs">
                 Selected: <strong className="text-white">{customTopic.trim() || selectedTopic}</strong>
               </span>
