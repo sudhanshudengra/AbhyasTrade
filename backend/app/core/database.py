@@ -1,7 +1,8 @@
 import json
 import logging
+import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import aiosqlite
 from app.core.config import settings
@@ -10,7 +11,7 @@ logger = logging.getLogger("abhyastrade.database")
 
 # Check if Supabase credentials are provided
 supabase_client = None
-if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+if not os.environ.get("TESTING") and settings.SUPABASE_URL and settings.SUPABASE_KEY:
     try:
         from supabase import create_client, Client
 
@@ -51,7 +52,8 @@ async def init_db():
                 logger.info("Initialized default portfolio in Supabase PostgreSQL.")
         except Exception as e:
             logger.warning(f"Supabase init check: {e}")
-        return
+
+    # Always ensure local SQLite fallback tables are initialized
 
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
         await db.execute("""
@@ -113,6 +115,71 @@ async def init_db():
                 executed_at TEXT NOT NULL
             )
         """)
+
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_analysis_cache (
+                id TEXT PRIMARY KEY,
+                cache_key TEXT UNIQUE NOT NULL,
+                analysis_type TEXT NOT NULL,
+                symbol TEXT,
+                exchange TEXT DEFAULT 'NSE',
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                result TEXT NOT NULL,
+                input_data_hash TEXT NOT NULL,
+                data_timestamp TEXT,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            )
+        """)
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_key ON ai_analysis_cache(cache_key)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_lookup ON ai_analysis_cache(symbol, analysis_type)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_cache_expires_at ON ai_analysis_cache(expires_at)"
+        )
+
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_usage_logs (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                symbol TEXT,
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                status TEXT NOT NULL,
+                tokens_input INTEGER,
+                tokens_output INTEGER,
+                cached INTEGER NOT NULL DEFAULT 0,
+                error_code TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+        # Safe migration for existing SQLite databases
+        try:
+            await db.execute("ALTER TABLE ai_usage_logs ADD COLUMN symbol TEXT")
+            await db.commit()
+        except Exception:
+            pass
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN custom_ai_limit INTEGER")
+            await db.commit()
+        except Exception:
+            pass
+
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_user_time ON ai_usage_logs(user_id, created_at DESC)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage_logs(feature)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_usage_symbol ON ai_usage_logs(user_id, symbol, created_at DESC)"
+        )
 
         # Seed default portfolio
         now = datetime.now(timezone.utc).isoformat()
@@ -615,3 +682,354 @@ class DatabaseService:
             )
             rows = await cursor.fetchall()
             return [dict(r) for r in rows]
+
+    @staticmethod
+    async def get_ai_cache(cache_key: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a cached AI result if not expired"""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_analysis_cache")
+                    .select("*")
+                    .eq("cache_key", cache_key)
+                    .gt("expires_at", now_iso)
+                    .execute()
+                )
+                if res.data and len(res.data) > 0:
+                    entry = dict(res.data[0])
+                    if isinstance(entry.get("result"), str):
+                        entry["result"] = json.loads(entry["result"])
+                    return entry
+                return None
+            except Exception as e:
+                logger.error(f"Supabase error get_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                "SELECT * FROM ai_analysis_cache WHERE cache_key = ? AND expires_at > ?",
+                (cache_key, now_iso),
+            )
+            row = await cursor.fetchone()
+            if not row:
+                return None
+            entry = dict(row)
+            if isinstance(entry.get("result"), str):
+                try:
+                    entry["result"] = json.loads(entry["result"])
+                except Exception:
+                    pass
+            return entry
+
+    @staticmethod
+    async def set_ai_cache(
+        cache_key: str,
+        analysis_type: str,
+        provider: str,
+        model: str,
+        result: Dict[str, Any],
+        input_data_hash: str,
+        expires_at: str,
+        symbol: Optional[str] = None,
+        exchange: str = "NSE",
+        data_timestamp: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Stores or updates a reusable AI analysis in the database cache"""
+        entry_id = str(uuid.uuid4())
+        now_iso = datetime.now(timezone.utc).isoformat()
+        result_str = json.dumps(result) if not isinstance(result, str) else result
+
+        payload = {
+            "id": entry_id,
+            "cache_key": cache_key,
+            "analysis_type": analysis_type,
+            "symbol": symbol,
+            "exchange": exchange,
+            "provider": provider,
+            "model": model,
+            "result": result if supabase_client else result_str,
+            "input_data_hash": input_data_hash,
+            "data_timestamp": data_timestamp or now_iso,
+            "created_at": now_iso,
+            "expires_at": expires_at,
+        }
+
+        if supabase_client:
+            try:
+                supabase_client.table("ai_analysis_cache").upsert(
+                    payload, on_conflict="cache_key"
+                ).execute()
+                return payload
+            except Exception as e:
+                logger.error(f"Supabase error set_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_analysis_cache 
+                (id, cache_key, analysis_type, symbol, exchange, provider, model, result, input_data_hash, data_timestamp, created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(cache_key) DO UPDATE SET
+                    provider = excluded.provider,
+                    model = excluded.model,
+                    result = excluded.result,
+                    input_data_hash = excluded.input_data_hash,
+                    data_timestamp = excluded.data_timestamp,
+                    created_at = excluded.created_at,
+                    expires_at = excluded.expires_at
+                """,
+                (
+                    entry_id,
+                    cache_key,
+                    analysis_type,
+                    symbol,
+                    exchange,
+                    provider,
+                    model,
+                    result_str,
+                    input_data_hash,
+                    data_timestamp or now_iso,
+                    now_iso,
+                    expires_at,
+                ),
+            )
+            await db.commit()
+        return payload
+
+    @staticmethod
+    async def cleanup_expired_ai_cache() -> int:
+        """Deletes expired entries from ai_analysis_cache"""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        deleted = 0
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_analysis_cache")
+                    .delete()
+                    .lt("expires_at", now_iso)
+                    .execute()
+                )
+                deleted = len(res.data) if res.data else 0
+            except Exception as e:
+                logger.error(f"Supabase error cleanup_expired_ai_cache: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            cursor = await db.execute(
+                "DELETE FROM ai_analysis_cache WHERE expires_at < ?", (now_iso,)
+            )
+            await db.commit()
+            deleted += cursor.rowcount
+        return deleted
+
+    @staticmethod
+    async def log_ai_usage(
+        user_id: str,
+        feature: str,
+        provider: str,
+        model: str,
+        status: str,
+        symbol: Optional[str] = None,
+        tokens_input: Optional[int] = None,
+        tokens_output: Optional[int] = None,
+        cached: bool = False,
+        error_code: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Logs an AI execution or cache hit to ai_usage_logs"""
+        entry_id = str(uuid.uuid4())
+        now_iso = datetime.now(timezone.utc).isoformat()
+        clean_symbol = symbol.strip().upper() if symbol else None
+        payload = {
+            "id": entry_id,
+            "user_id": user_id,
+            "feature": feature,
+            "symbol": clean_symbol,
+            "provider": provider,
+            "model": model,
+            "status": status,
+            "tokens_input": tokens_input,
+            "tokens_output": tokens_output,
+            "cached": 1 if cached else 0,
+            "error_code": error_code,
+            "created_at": now_iso,
+        }
+
+        if supabase_client:
+            try:
+                supa_payload = dict(payload)
+                supa_payload["cached"] = cached
+                supabase_client.table("ai_usage_logs").insert(supa_payload).execute()
+                return payload
+            except Exception as e:
+                logger.error(f"Supabase error log_ai_usage: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_usage_logs 
+                (id, user_id, feature, symbol, provider, model, status, tokens_input, tokens_output, cached, error_code, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    entry_id,
+                    user_id,
+                    feature,
+                    clean_symbol,
+                    provider,
+                    model,
+                    status,
+                    tokens_input,
+                    tokens_output,
+                    1 if cached else 0,
+                    error_code,
+                    now_iso,
+                ),
+            )
+            await db.commit()
+        return payload
+
+    @staticmethod
+    async def get_user_daily_ai_usage(
+        user_id: str = settings.DEFAULT_USER_ID,
+    ) -> Dict[str, Any]:
+        """Computes current user's usage counts today (UTC) for quota enforcement"""
+        now = datetime.now(timezone.utc)
+        today_midnight = datetime(
+            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
+        ).isoformat()
+
+        heavy_features = {"stock-analysis", "peer-comparison", "financial-analysis"}
+        light_features = {"sentiment", "education", "technical-indicator"}
+
+        analyzed_stocks = set()
+        heavy_count = 0
+        light_count = 0
+        recent_minute_count = 0
+        one_min_ago = (now - timedelta(minutes=1)).isoformat()
+        custom_limit = None
+
+        if supabase_client:
+            try:
+                # Check for custom per-user quota override in portfolios table
+                p_res = (
+                    supabase_client.table("portfolios")
+                    .select("custom_ai_limit")
+                    .eq("user_id", user_id)
+                    .limit(1)
+                    .execute()
+                )
+                if p_res.data and p_res.data[0].get("custom_ai_limit") is not None:
+                    custom_limit = int(p_res.data[0]["custom_ai_limit"])
+            except Exception:
+                pass
+
+            try:
+                res = (
+                    supabase_client.table("ai_usage_logs")
+                    .select("feature, symbol, cached, status, created_at")
+                    .eq("user_id", user_id)
+                    .gte("created_at", today_midnight)
+                    .execute()
+                )
+                if res.data:
+                    for row in res.data:
+                        is_cached = bool(row.get("cached", False))
+                        status = row.get("status")
+                        feat = row.get("feature", "")
+                        sym = row.get("symbol")
+                        created_at = row.get("created_at", "")
+
+                        if created_at >= one_min_ago:
+                            recent_minute_count += 1
+
+                        if status == "SUCCESS":
+                            if feat in heavy_features:
+                                if sym:
+                                    analyzed_stocks.add(sym.strip().upper())
+                                if not is_cached:
+                                    heavy_count += 1
+                            elif feat in light_features and not is_cached:
+                                light_count += 1
+
+                    stocks_limit = custom_limit if custom_limit is not None else settings.AI_STOCKS_DAILY_LIMIT
+                    stocks_used_count = (
+                        len(analyzed_stocks) if analyzed_stocks else heavy_count
+                    )
+                    stocks_remaining = max(0, stocks_limit - stocks_used_count)
+
+                    return {
+                        "stocks_remaining": stocks_remaining,
+                        "stocks_limit": stocks_limit,
+                        "stocks_used_count": stocks_used_count,
+                        "analyzed_stocks": sorted(list(analyzed_stocks)),
+                        "heavy_count": heavy_count,
+                        "light_count": light_count,
+                        "recent_minute_count": recent_minute_count,
+                        "heavy_limit": stocks_limit,
+                        "light_limit": settings.AI_USER_DAILY_LIMIT,
+                        "remaining_heavy": stocks_remaining,
+                        "remaining_light": max(
+                            0, settings.AI_USER_DAILY_LIMIT - light_count
+                        ),
+                    }
+            except Exception as e:
+                logger.error(f"Supabase error get_user_daily_ai_usage: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            if custom_limit is None:
+                try:
+                    p_cursor = await db.execute("SELECT custom_ai_limit FROM portfolios WHERE user_id = ?", (user_id,))
+                    p_row = await p_cursor.fetchone()
+                    if p_row and p_row["custom_ai_limit"] is not None:
+                        custom_limit = int(p_row["custom_ai_limit"])
+                except Exception:
+                    pass
+
+            cursor = await db.execute(
+                """
+                SELECT feature, symbol, cached, status, created_at 
+                FROM ai_usage_logs 
+                WHERE user_id = ? AND created_at >= ?
+                """,
+                (user_id, today_midnight),
+            )
+            rows = await cursor.fetchall()
+            for r in rows:
+                is_cached = bool(r["cached"])
+                status = r["status"]
+                feat = r["feature"]
+                sym = r["symbol"] if "symbol" in r.keys() else None
+                created_at = r["created_at"]
+
+                if created_at >= one_min_ago:
+                    recent_minute_count += 1
+
+                if status == "SUCCESS":
+                    if feat in heavy_features:
+                        if sym:
+                            analyzed_stocks.add(sym.strip().upper())
+                        if not is_cached:
+                            heavy_count += 1
+                    elif feat in light_features and not is_cached:
+                        light_count += 1
+
+            stocks_limit = custom_limit if custom_limit is not None else settings.AI_STOCKS_DAILY_LIMIT
+            stocks_used_count = (
+                len(analyzed_stocks) if analyzed_stocks else heavy_count
+            )
+            stocks_remaining = max(0, stocks_limit - stocks_used_count)
+
+            return {
+                "stocks_remaining": stocks_remaining,
+                "stocks_limit": stocks_limit,
+                "stocks_used_count": stocks_used_count,
+                "analyzed_stocks": sorted(list(analyzed_stocks)),
+                "heavy_count": heavy_count,
+                "light_count": light_count,
+                "recent_minute_count": recent_minute_count,
+                "heavy_limit": stocks_limit,
+                "light_limit": settings.AI_USER_DAILY_LIMIT,
+                "remaining_heavy": stocks_remaining,
+                "remaining_light": max(0, settings.AI_USER_DAILY_LIMIT - light_count),
+            }
