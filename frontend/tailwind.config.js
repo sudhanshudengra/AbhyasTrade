@@ -6,12 +6,14 @@ export default {
     extend: {
       colors: {
         obsidian: {
-          950: '#07090e',
-          900: '#0b0e14', // Deep obsidian canvas
-          800: '#131822', // Elevated card / surface
-          700: '#1e2638', // Border / separator
-          600: '#2b354d',
-          500: '#475569',
+          950: 'rgb(var(--color-obsidian-950) / <alpha-value>)',
+          900: 'rgb(var(--color-obsidian-900) / <alpha-value>)',
+          850: 'rgb(var(--color-obsidian-850, var(--color-obsidian-800)) / <alpha-value>)',
+          800: 'rgb(var(--color-obsidian-800) / <alpha-value>)',
+          750: 'rgb(var(--color-obsidian-750, var(--color-obsidian-700)) / <alpha-value>)',
+          700: 'rgb(var(--color-obsidian-700) / <alpha-value>)',
+          600: 'rgb(var(--color-obsidian-600) / <alpha-value>)',
+          500: 'rgb(var(--color-obsidian-500) / <alpha-value>)',
         },
         market: {
           green: '#10b981', // Emerald

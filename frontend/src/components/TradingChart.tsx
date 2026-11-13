@@ -8,6 +8,7 @@ import {
 } from 'lightweight-charts';
 import { BarChart2, CandlestickChart, TrendingUp, Sparkles } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTheme } from '../hooks/useTheme';
 import { getChartCandles } from '../lib/api';
 import { CandleData, isIndexSymbol, StockQuote } from '../lib/types';
 import { AIInsightsModal } from './AIInsightsModal';
@@ -36,6 +37,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
   const prevCloseLineRef = useRef<any>(null);
   const rawCandlesRef = useRef<CandleData[]>([]);
   const lastCandleRef = useRef<CandleData | null>(null);
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   // Line chart is DEFAULT as shown in Google Finance / Groww style
   const [chartType, setChartType] = useState<ChartType>('AREA');
@@ -135,8 +139,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
       width,
       height,
       layout: {
-        background: { type: ColorType.Solid, color: '#0b0e14' },
-        textColor: '#94a3b8',
+        background: { type: ColorType.Solid, color: isDark ? '#0b0e14' : '#ffffff' },
+        textColor: isDark ? '#94a3b8' : '#475569',
         fontFamily:
           '"JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontSize: 11,
@@ -147,8 +151,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         timeFormatter: (timestamp: number) => formatISTTimestamp(timestamp, timeframe),
       },
       grid: {
-        vertLines: { color: 'rgba(30, 38, 56, 0.40)' },
-        horzLines: { color: 'rgba(30, 38, 56, 0.40)' },
+        vertLines: { color: isDark ? 'rgba(30, 38, 56, 0.40)' : 'rgba(226, 232, 240, 0.80)' },
+        horzLines: { color: isDark ? 'rgba(30, 38, 56, 0.40)' : 'rgba(226, 232, 240, 0.80)' },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
@@ -156,17 +160,17 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           color: '#10b981',
           width: 1,
           style: LineStyle.Solid,
-          labelBackgroundColor: '#131822',
+          labelBackgroundColor: isDark ? '#131822' : '#ffffff',
         },
         horzLine: {
           color: '#3b82f6',
           width: 1,
           style: LineStyle.Dotted,
-          labelBackgroundColor: '#131822',
+          labelBackgroundColor: isDark ? '#131822' : '#ffffff',
         },
       },
       rightPriceScale: {
-        borderColor: '#1e2638',
+        borderColor: isDark ? '#1e2638' : '#e2e8f0',
         autoScale: true,
         scaleMargins: {
           top: 0.1,
@@ -174,7 +178,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         },
       },
       timeScale: {
-        borderColor: '#1e2638',
+        borderColor: isDark ? '#1e2638' : '#e2e8f0',
         timeVisible: timeframe === '1D' || timeframe === '5D',
         secondsVisible: false,
         rightOffset: 8,
@@ -346,7 +350,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         chartRef.current = null;
       }
     };
-  }, [chartType, isPositive, timeframe, stock?.close]);
+  }, [chartType, isPositive, timeframe, stock?.close, resolvedTheme]);
 
   // Fetch candles on stock or timeframe update
   useEffect(() => {
@@ -447,17 +451,17 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
       {/* Top Header Controls Bar */}
       <div className="px-4 py-2.5 bg-obsidian-800/95 border-b border-obsidian-700/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
         {/* Left: Timeframe Switcher */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {TIMEFRAMES.map((tf) => {
             const isActive = timeframe === tf.id;
             return (
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id)}
-                className={`px-3 py-1 text-xs font-bold rounded-xl transition-all ${
+                className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-xl transition-all select-none cursor-pointer ${
                   isActive
-                    ? 'bg-white text-obsidian-950 shadow-md shadow-white/10 ring-1 ring-white/20'
-                    : 'text-slate-300 hover:text-white hover:bg-obsidian-700/70'
+                    ? 'bg-brand-blue text-white shadow-sm ring-1 ring-brand-blue/30'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-700/70'
                 }`}
               >
                 {tf.label}
@@ -470,15 +474,15 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         <div className="flex items-center gap-3 flex-wrap">
           {/* Symbol & Live LTP */}
           <div className="flex items-center gap-2 mr-1">
-            <span className="font-black text-sm text-white">{stock.symbol}</span>
-            <span className="font-tabular font-black text-sm text-white">
+            <span className="font-black text-sm text-slate-900 dark:text-white">{stock.symbol}</span>
+            <span className="font-tabular font-black text-sm text-slate-900 dark:text-white">
               ₹
               {(stock.ltp ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
               })}
             </span>
             <span
-              className={`text-xs font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}
+              className={`text-xs font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
             >
               ({isPositive ? '+' : ''}
               {(stock.pChange ?? 0).toFixed(2)}%)
@@ -486,13 +490,13 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           </div>
 
           {/* Chart Type Toggle */}
-          <div className="flex items-center bg-obsidian-900/90 p-0.5 rounded-xl border border-obsidian-700">
+          <div className="flex items-center bg-slate-100 dark:bg-obsidian-900/90 p-0.5 rounded-xl border border-slate-200 dark:border-obsidian-700">
             <button
               onClick={() => setChartType('AREA')}
-              className={`px-2 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
                 chartType === 'AREA'
                   ? 'bg-brand-blue text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title="Line Chart"
             >
@@ -501,10 +505,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </button>
             <button
               onClick={() => setChartType('CANDLE')}
-              className={`px-2 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
                 chartType === 'CANDLE'
                   ? 'bg-brand-blue text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title="Candlestick Chart"
             >
@@ -516,10 +520,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           {/* Dhanraj AI Button */}
           <button
             onClick={() => setIsAIModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/15 to-blue-500/20 hover:from-cyan-500/25 hover:to-blue-500/30 text-brand-cyan border border-brand-cyan/40 text-xs font-bold transition shadow-sm active:scale-95 group"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-500/15 hover:bg-cyan-100 dark:hover:bg-cyan-500/25 text-brand-blue dark:text-brand-cyan border border-cyan-200 dark:border-cyan-500/40 text-xs font-bold transition shadow-sm active:scale-95 group cursor-pointer"
             title="Dhanraj AI • Fundamental, Peer & News Intelligence"
           >
-            <Sparkles className="w-3.5 h-3.5 text-brand-cyan shrink-0 group-hover:animate-bounce-subtle transition-all" />
+            <Sparkles className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan shrink-0 group-hover:animate-bounce-subtle transition-all" />
             <span className="hidden sm:inline">Dhanraj AI</span>
           </button>
 
@@ -541,7 +545,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
                 </button>
               </>
             ) : (
-              <div className="px-2.5 py-1 rounded-xl bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-bold shadow-sm">
+              <div className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300 text-[11px] font-bold shadow-sm">
                 Benchmark Index &bull; Spot View Only
               </div>
             )}
@@ -552,8 +556,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
       {/* Chart Canvas Area with Floating Hover Card */}
       <div className="flex-1 relative w-full h-full min-h-[220px] overflow-hidden">
         {isLoading && (
-          <div className="absolute inset-0 bg-obsidian-900/80 backdrop-blur-xs flex items-center justify-center z-10">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-800 border border-obsidian-700 text-brand-cyan text-xs font-bold shadow-2xl">
+          <div className="absolute inset-0 bg-slate-900/40 dark:bg-obsidian-900/80 backdrop-blur-xs flex items-center justify-center z-10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 text-brand-blue dark:text-brand-cyan text-xs font-bold shadow-2xl">
               <BarChart2 className="w-4 h-4 animate-bounce" />
               <span>
                 Loading {stock.symbol} ({timeframe}) chart...
@@ -565,14 +569,14 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         {/* Floating Google Finance / Groww Style Tooltip on Hover */}
         {tooltipState && tooltipState.visible && (
           <div
-            className="absolute z-20 pointer-events-none bg-obsidian-950/95 border border-obsidian-700/90 rounded-xl px-3 py-1.5 shadow-2xl backdrop-blur-md animate-in fade-in duration-75"
+            className="absolute z-20 pointer-events-none bg-white/95 dark:bg-obsidian-950/95 border border-slate-200 dark:border-obsidian-700/90 rounded-xl px-3 py-1.5 shadow-2xl backdrop-blur-md animate-in fade-in duration-75"
             style={{
               left: `${tooltipState.x}px`,
               top: `${tooltipState.y}px`,
             }}
           >
             <div
-              className={`font-tabular font-black text-sm ${tooltipState.isUp ? 'text-emerald-400' : 'text-rose-400'}`}
+              className={`font-tabular font-black text-sm ${tooltipState.isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
             >
               ₹
               {tooltipState.price.toLocaleString('en-IN', {
@@ -580,7 +584,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
                 maximumFractionDigits: 2,
               })}
             </div>
-            <div className="text-[11px] text-slate-300 font-medium">{tooltipState.time}</div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">{tooltipState.time}</div>
           </div>
         )}
 
@@ -588,12 +592,12 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
       </div>
 
       {/* Bottom Metrics Strip (Exact 3-Column, 2-Row Layout matching the user screenshot) */}
-      <div className="bg-obsidian-950/90 border-t border-obsidian-800/80 px-4 sm:px-6 py-2.5 shrink-0">
+      <div className="bg-slate-50 dark:bg-obsidian-950/90 border-t border-slate-200 dark:border-obsidian-800/80 px-4 sm:px-6 py-2.5 shrink-0">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-6 sm:gap-x-12 max-w-4xl text-xs font-tabular">
           {/* Row 1 */}
-          <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-400 font-medium">Previous Close</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Previous Close</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {(stock.close ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -602,9 +606,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-400 font-medium">Open</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Open</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {(stock.open ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -613,9 +617,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-b border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-400 font-medium">High</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">High</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {(stock.high ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -626,8 +630,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
 
           {/* Row 2 */}
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-400 font-medium">Low</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Low</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {(stock.low ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -637,8 +641,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-400 font-medium">52 Week High</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">52 Week High</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {stock.high52
                 ? Number(stock.high52).toLocaleString('en-IN', {
@@ -650,8 +654,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-400 font-medium">52 Week Low</span>
-            <span className="text-white font-extrabold text-xs sm:text-sm">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">52 Week Low</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
               ₹
               {stock.low52
                 ? Number(stock.low52).toLocaleString('en-IN', {

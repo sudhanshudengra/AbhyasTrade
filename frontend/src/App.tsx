@@ -19,6 +19,7 @@ import { OrderModal } from './components/OrderModal';
 import { PortfolioSummary } from './components/PortfolioSummary';
 import { PositionsDesk } from './components/PositionsDesk';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { SettingsModal } from './components/SettingsModal';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { TradingChart } from './components/TradingChart';
 import { Watchlist } from './components/Watchlist';
@@ -104,6 +105,7 @@ export const App: React.FC = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
   const [orderModalSide, setOrderModalSide] = useState<OrderSide>('BUY');
   const [isChargesCalcOpen, setIsChargesCalcOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Stop-Loss Live Trigger Toast Notification State
   interface SLNotification {
@@ -249,12 +251,13 @@ export const App: React.FC = () => {
   const pendingOrdersCount = orders.filter((o) => o.status === 'PENDING').length;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-obsidian-900 text-slate-100">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-obsidian-900 text-slate-900 dark:text-slate-100">
       {/* Top Header */}
       <Header
         portfolio={portfolio}
         onResetPortfolio={resetPortfolio}
         onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
         isConnected={isConnected}
         userProfile={userProfile}
         onSignInWithGoogle={signInWithGoogle}
@@ -302,12 +305,12 @@ export const App: React.FC = () => {
             {isWatchlistCollapsed && (
               <button
                 onClick={handleToggleWatchlistCollapse}
-                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-800/95 hover:bg-obsidian-700 border border-obsidian-600/90 text-slate-200 hover:text-white shadow-2xl text-xs font-bold backdrop-blur-md transition-all active:scale-95 group animate-in fade-in zoom-in-95"
+                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 dark:bg-obsidian-800/95 hover:bg-slate-100 dark:hover:bg-obsidian-700 border border-slate-200 dark:border-obsidian-600/90 text-slate-800 dark:text-slate-200 hover:text-black dark:hover:text-white shadow-md dark:shadow-2xl text-xs font-bold backdrop-blur-md transition-all active:scale-95 group animate-in fade-in zoom-in-95 cursor-pointer"
                 title="Expand Watchlist"
               >
-                <Layers className="w-4 h-4 text-brand-cyan group-hover:scale-110 transition-transform" />
+                <Layers className="w-4 h-4 text-brand-blue dark:text-brand-cyan group-hover:scale-110 transition-transform" />
                 <span>Watchlist</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand-blue/30 text-brand-cyan font-extrabold border border-brand-blue/40">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-sky-100 text-brand-blue border border-sky-300 dark:bg-brand-blue/30 dark:text-brand-cyan dark:border-brand-blue/40 font-extrabold">
                   {stocks.length}
                 </span>
               </button>
@@ -354,23 +357,29 @@ export const App: React.FC = () => {
               }}
             >
               {/* Desk Tab Switcher & Collapse Control */}
-              <div className="bg-obsidian-800/90 border-b border-obsidian-700/80 px-3 py-1.5 flex items-center justify-between shrink-0">
+              <div className="bg-slate-50 dark:bg-obsidian-800/90 border-b border-slate-200 dark:border-obsidian-700/80 px-3 py-1.5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
                       setDesktopDeskTab('POSITIONS');
                       if (isDeskCollapsed) setIsDeskCollapsed(false);
                     }}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
                       desktopDeskTab === 'POSITIONS' && !isDeskCollapsed
                         ? 'bg-brand-blue text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-obsidian-700/50'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-700/50'
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5" />
                     <span>Positions</span>
                     {openPositionsCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-obsidian-950 font-extrabold">
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                          desktopDeskTab === 'POSITIONS' && !isDeskCollapsed
+                            ? 'bg-white/25 text-white'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+                        }`}
+                      >
                         {openPositionsCount}
                       </span>
                     )}
@@ -381,16 +390,22 @@ export const App: React.FC = () => {
                       setDesktopDeskTab('ORDERS');
                       if (isDeskCollapsed) setIsDeskCollapsed(false);
                     }}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
                       desktopDeskTab === 'ORDERS' && !isDeskCollapsed
                         ? 'bg-brand-blue text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-obsidian-700/50'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-700/50'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>Orders</span>
                     {pendingOrdersCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500 text-obsidian-950 font-extrabold">
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                          desktopDeskTab === 'ORDERS' && !isDeskCollapsed
+                            ? 'bg-white/25 text-white'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30'
+                        }`}
+                      >
                         {pendingOrdersCount}
                       </span>
                     )}
@@ -401,10 +416,10 @@ export const App: React.FC = () => {
                       setDesktopDeskTab('ANALYTICS');
                       if (isDeskCollapsed) setIsDeskCollapsed(false);
                     }}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
                       desktopDeskTab === 'ANALYTICS' && !isDeskCollapsed
                         ? 'bg-brand-blue text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-obsidian-700/50'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-700/50'
                     }`}
                   >
                     <PieChart className="w-3.5 h-3.5" />
@@ -416,7 +431,7 @@ export const App: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsDeskCollapsed(!isDeskCollapsed)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-700/80 transition flex items-center gap-1 text-xs font-semibold"
+                    className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-obsidian-700/80 transition flex items-center gap-1 text-xs font-semibold cursor-pointer"
                     title={
                       isDeskCollapsed
                         ? 'Expand Bottom Desk'
@@ -425,8 +440,8 @@ export const App: React.FC = () => {
                   >
                     {isDeskCollapsed ? (
                       <>
-                        <span className="text-[10px] text-brand-cyan">Expand</span>
-                        <ChevronUp className="w-4 h-4 text-brand-cyan" />
+                        <span className="text-[10px] text-brand-blue dark:text-brand-cyan">Expand</span>
+                        <ChevronUp className="w-4 h-4 text-brand-blue dark:text-brand-cyan" />
                       </>
                     ) : (
                       <>
@@ -558,6 +573,16 @@ export const App: React.FC = () => {
           onClose={() => setIsChargesCalcOpen(false)}
           defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
           defaultPrice={selectedStock?.ltp || 3000}
+        />
+      )}
+
+      {/* Terminal Settings Modal */}
+      {isSettingsOpen && (
+        <SettingsModal
+          key="terminal-settings-modal"
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onResetPortfolio={resetPortfolio}
         />
       )}
 

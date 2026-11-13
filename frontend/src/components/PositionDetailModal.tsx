@@ -82,12 +82,12 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
     >
       <div
-        className={`w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
+        className={`w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
           isProfit ? 'border-emerald-500/40 glow-emerald' : 'border-rose-500/40 glow-crimson'
         } shadow-2xl overflow-hidden transition-all duration-150`}
       >
         {/* Header Bar */}
-        <div className="px-5 py-4 border-b border-obsidian-700/70 bg-gradient-to-b from-obsidian-800 to-obsidian-900/90 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-obsidian-700/70 bg-slate-50 dark:bg-gradient-to-b dark:from-obsidian-800 dark:to-obsidian-900/90 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               className={`w-2.5 h-10 rounded-full ${
@@ -98,17 +98,17 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black text-white tracking-tight leading-tight">
+                <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                   {position.symbol}
                 </span>
-                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-obsidian-950 text-slate-300 border border-obsidian-700">
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 dark:bg-obsidian-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-obsidian-700">
                   NSE EQ
                 </span>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     position.product_type === 'MIS'
-                      ? 'bg-amber-950/70 text-amber-300 border border-amber-500/40'
-                      : 'bg-brand-blue/20 text-brand-cyan border border-brand-blue/30'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-500/40'
+                      : 'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-brand-blue/20 dark:text-brand-cyan dark:border-brand-blue/30'
                   }`}
                 >
                   {position.product_type === 'MIS' ? 'INTRADAY MIS (5x)' : 'DELIVERY CNC'}
@@ -118,14 +118,14 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 <span
                   className={`font-extrabold px-1.5 py-0.2 rounded text-[10px] ${
                     isLong
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-500/30'
+                      : 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-500/30'
                   }`}
                 >
                   {isLong ? 'LONG POSITION' : 'SHORT POSITION'}
                 </span>
-                <span className="text-slate-400">
-                  Quantity: <strong className="text-white font-bold">{absQty} Shares</strong>
+                <span className="text-slate-500 dark:text-slate-400">
+                  Quantity: <strong className="text-slate-900 dark:text-white font-bold">{absQty} Shares</strong>
                 </span>
               </div>
             </div>
@@ -133,7 +133,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-obsidian-700 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-obsidian-700 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -146,18 +146,18 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           <div
             className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
               isProfit
-                ? 'bg-gradient-to-br from-emerald-950/50 via-obsidian-900 to-obsidian-950 border-emerald-500/30'
-                : 'bg-gradient-to-br from-rose-950/50 via-obsidian-900 to-obsidian-950 border-rose-500/30'
+                ? 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 dark:from-emerald-950/50 dark:via-obsidian-900 dark:to-obsidian-950 border-emerald-200 dark:border-emerald-500/30'
+                : 'bg-gradient-to-br from-rose-50 via-white to-rose-50/40 dark:from-rose-950/50 dark:via-obsidian-900 dark:to-obsidian-950 border-rose-200 dark:border-rose-500/30'
             }`}
           >
             <div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
                 <span>Unrealized P&L</span>
               </div>
               <div
                 className={`text-2xl sm:text-3xl font-black font-tabular flex items-center gap-1.5 mt-1 ${
-                  isProfit ? 'text-emerald-400' : 'text-rose-400'
+                  isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                 }`}
               >
                 {isProfit ? (
@@ -176,13 +176,13 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
               <div className="flex items-center gap-2 mt-1">
                 <span
                   className={`text-xs font-extrabold px-2 py-0.5 rounded-full font-tabular ${
-                    isProfit ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'
+                    isProfit ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300'
                   }`}
                 >
                   {isProfit ? '+' : ''}
                   {(position.pnl_percent || 0).toFixed(2)}% ROI
                 </span>
-                <span className="text-[11px] text-slate-400 font-tabular">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-tabular">
                   ({effectiveChangePerShare >= 0 ? '+' : ''}₹{effectiveChangePerShare.toFixed(2)}
                   /share)
                 </span>
@@ -190,10 +190,10 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             </div>
 
             {/* Realized P&L Badge */}
-            <div className="sm:text-right border-t sm:border-t-0 sm:border-l border-obsidian-700/60 pt-3 sm:pt-0 sm:pl-4">
-              <div className="text-[11px] font-semibold text-slate-400">Realized P&L (Booked)</div>
+            <div className="sm:text-right border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-obsidian-700/60 pt-3 sm:pt-0 sm:pl-4">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Realized P&L (Booked)</div>
               <div
-                className={`text-base font-bold font-tabular mt-0.5 ${isRealizedProfit ? 'text-emerald-400' : 'text-rose-400'}`}
+                className={`text-base font-bold font-tabular mt-0.5 ${isRealizedProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
               >
                 {isRealizedProfit ? '+' : ''}₹
                 {(position.realized_pnl || 0).toLocaleString('en-IN', {
@@ -201,18 +201,18 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   maximumFractionDigits: 2,
                 })}
               </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Net of brokerage & taxes</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Net of brokerage & taxes</div>
             </div>
           </div>
 
           {/* Detailed Metric Cards Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-tabular">
             {/* Average Buy Price */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Average Price
               </div>
-              <div className="text-base font-extrabold text-white mt-1">
+              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-1">
                 ₹
                 {position.average_price.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -222,17 +222,17 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             </div>
 
             {/* Current Market Price (LTP) */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Current LTP</span>
                 {effectiveChangePerShare >= 0 ? (
-                  <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                  <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
+                  <ArrowDownRight className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 )}
               </div>
               <div
-                className={`text-base font-extrabold mt-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}
+                className={`text-base font-extrabold mt-1 ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
               >
                 ₹
                 {ltp.toLocaleString('en-IN', {
@@ -243,21 +243,21 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             </div>
 
             {/* Quantity */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Quantity
               </div>
-              <div className="text-base font-extrabold text-white mt-1">
-                {absQty} <span className="text-xs text-slate-400 font-normal">Shares</span>
+              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-1">
+                {absQty} <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">Shares</span>
               </div>
             </div>
 
             {/* Invested Capital */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Invested Value
               </div>
-              <div className="text-base font-extrabold text-slate-200 mt-1">
+              <div className="text-base font-extrabold text-slate-900 dark:text-slate-200 mt-1">
                 ₹
                 {investedValue.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -267,11 +267,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             </div>
 
             {/* Current Position Value */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Current Value
               </div>
-              <div className="text-base font-extrabold text-white mt-1">
+              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-1">
                 ₹
                 {currentValue.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -281,16 +281,16 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             </div>
 
             {/* Margin Blocked */}
-            <div className="p-3 rounded-xl bg-obsidian-900/90 border border-obsidian-700/70">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/70">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Margin Used</span>
                 {position.product_type === 'MIS' ? (
-                  <Zap className="w-3 h-3 text-brand-cyan" />
+                  <Zap className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
                 ) : (
-                  <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                 )}
               </div>
-              <div className="text-base font-extrabold text-brand-cyan mt-1">
+              <div className="text-base font-extrabold text-brand-blue dark:text-brand-cyan mt-1">
                 ₹
                 {marginRequired.toLocaleString('en-IN', {
                   minimumFractionDigits: 2,
@@ -301,7 +301,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           </div>
 
           {/* Product Type Explanation Strip */}
-          <div className="p-3 rounded-xl bg-obsidian-950/60 border border-obsidian-700/60 text-xs flex items-center justify-between text-slate-300">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-950/60 border border-slate-200 dark:border-obsidian-700/60 text-xs flex items-center justify-between text-slate-700 dark:text-slate-300">
             <div className="flex items-center gap-2">
               {position.product_type === 'MIS' ? (
                 <>
@@ -324,14 +324,14 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
 
           {/* Error Message if Exit Fails */}
           {exitError && (
-            <div className="p-2.5 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs">
+            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-500/40 text-rose-700 dark:text-rose-300 text-xs">
               {exitError}
             </div>
           )}
         </div>
 
         {/* Action Controls Footer */}
-        <div className="p-4 border-t border-obsidian-700/70 bg-obsidian-900/90 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="p-4 border-t border-obsidian-700/70 bg-slate-50 dark:bg-obsidian-900/90 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2 flex-1">
             <button
               onClick={handleBuyMore}
@@ -353,7 +353,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           <button
             onClick={handleExit}
             disabled={isExiting}
-            className="py-2 px-4 rounded-xl bg-rose-950 hover:bg-rose-900 text-rose-200 hover:text-white border border-rose-500/50 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+            className="py-2 px-4 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-200 dark:border-rose-500/50 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
           >
             <LogOut className="w-4 h-4" />
             <span>{isExiting ? 'Exiting...' : 'Square Off Position'}</span>

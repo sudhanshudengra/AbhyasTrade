@@ -529,28 +529,10 @@ class MarketDataFeed:
                             self.market_cache[symbol] = updated
                             if new_ltp != prev_ltp:
                                 tick_diffs.append(updated)
-                elif settings.SIMULATION_MODE_AUTO:
-                    # Optional simulation mode (only if explicitly enabled in environment variables)
-                    for symbol in symbols_to_update:
-                        cached = self.market_cache.get(symbol)
-                        if cached and random.random() < 0.35:
-                            prev_ltp = cached["ltp"]
-                            variance = prev_ltp * random.uniform(-0.0006, 0.0006)
-                            new_ltp = round(prev_ltp + variance, 2)
-                            tick_dir = (
-                                "UP"
-                                if new_ltp > prev_ltp
-                                else ("DOWN" if new_ltp < prev_ltp else "NONE")
-                            )
-
-                            updated = {
-                                **cached,
-                                "ltp": new_ltp,
-                                "tick_direction": tick_dir,
-                                "last_updated": datetime.now(timezone.utc).isoformat(),
-                            }
-                            self.market_cache[symbol] = updated
-                            tick_diffs.append(updated)
+                else:
+                    # STRICT RULE: When Indian Equity Market (NSE) is closed (outside 09:15 - 15:30 IST / weekends),
+                    # prices MUST remain completely stationary at official closing levels. NO artificial fluctuations.
+                    pass
 
                 if tick_diffs and self.subscribers:
                     payload = {

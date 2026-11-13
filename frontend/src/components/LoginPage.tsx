@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingUp, ShieldCheck, Zap, Sparkles, Compass, CheckCircle2 } from 'lucide-react';
+import { ThemeSwitch } from './ThemeSwitch';
 
 interface LoginPageProps {
   onSignInWithGoogle: () => Promise<any>;
@@ -24,7 +25,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-obsidian-950 text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans select-none">
+    <div className="min-h-screen w-full bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans select-none">
       {/* Background Decorative Ambient Gradients */}
       <div className="absolute top-[-10%] left-[20%] w-[550px] h-[550px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[15%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[160px] pointer-events-none" />
@@ -38,7 +39,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
             <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-xl tracking-tight text-white">
+            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
               Abhyas<span className="text-emerald-400">Trade</span>
             </span>
             <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
@@ -47,8 +48,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-obsidian-900 border border-obsidian-800">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold text-slate-400">
+          <ThemeSwitch compact />
+          <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-obsidian-900 border border-obsidian-800">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>NSE Equity Live</span>
           </span>
@@ -77,7 +79,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white max-w-3xl leading-[1.15] mb-4">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white max-w-3xl leading-[1.15] mb-4">
           Master NSE Trading with{' '}
           <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-brand-cyan bg-clip-text text-transparent">
             ₹10,00,000
@@ -100,10 +102,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-slate-100 text-obsidian-950 font-black text-sm shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-black text-sm shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-obsidian-950 border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
             ) : (
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

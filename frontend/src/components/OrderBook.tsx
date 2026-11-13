@@ -68,48 +68,66 @@ export const OrderBook: React.FC<OrderBookProps> = ({
       <div className="px-4 py-2.5 bg-obsidian-800/90 border-b border-obsidian-700/80 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-cyan" />
-          <span className="font-extrabold text-sm text-white">Order Book</span>
+          <span className="font-extrabold text-sm text-slate-900 dark:text-white">Order Book</span>
         </div>
 
-        <div className="flex items-center gap-1 bg-obsidian-900 p-0.5 rounded-lg border border-obsidian-700">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-obsidian-900 p-0.5 rounded-lg border border-slate-200 dark:border-obsidian-700">
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'ALL'
                 ? 'bg-brand-blue text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
             }`}
           >
             <span>All Orders</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeTab === 'ALL'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-slate-200 dark:bg-obsidian-800 text-slate-700 dark:text-slate-300'
+              }`}
+            >
               {orders.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('OPEN')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'OPEN'
                 ? 'bg-brand-blue text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
             }`}
           >
             <span>Open (Pending)</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeTab === 'OPEN'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-slate-200 dark:bg-obsidian-800 text-slate-700 dark:text-slate-300'
+              }`}
+            >
               {pendingOrders.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('EXECUTED')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'EXECUTED'
                 ? 'bg-brand-blue text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
             }`}
           >
             <span>Executed</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-obsidian-800 font-bold">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeTab === 'EXECUTED'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-slate-200 dark:bg-obsidian-800 text-slate-700 dark:text-slate-300'
+              }`}
+            >
               {trades.length}
             </span>
           </button>
@@ -135,17 +153,17 @@ export const OrderBook: React.FC<OrderBookProps> = ({
               return (
                 <div
                   key={trade.id}
-                  className="px-4 py-3 hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                  className="px-4 py-3 hover:bg-slate-100/70 dark:hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-1.5 rounded-lg shrink-0 ${isBuy ? 'bg-emerald-950/60 text-emerald-400' : 'bg-rose-950/60 text-rose-400'}`}
+                      className={`p-1.5 rounded-lg shrink-0 ${isBuy ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'}`}
                     >
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-extrabold text-sm text-white tracking-tight">
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">
                           {trade.symbol}
                         </span>
                         <span
@@ -153,18 +171,18 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                         >
                           {trade.side}
                         </span>
-                        <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-obsidian-950 border border-slate-200 dark:border-obsidian-700">
                           {trade.product_type}
                         </span>
                         {isSlTriggered && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-sm">
-                            <ShieldAlert className="w-3 h-3 text-amber-400" />
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-500/40 flex items-center gap-1 shadow-sm">
+                            <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                             <span>SL Triggered</span>
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-1 font-tabular flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="text-slate-300 font-medium">{dateTimeStr}</span>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-tabular flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span className="text-slate-700 dark:text-slate-300 font-medium">{dateTimeStr}</span>
                         <span>&bull;</span>
                         <span>
                           Turnover: ₹
@@ -173,7 +191,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                         {isSlTriggered && triggerPrice != null && (
                           <>
                             <span>&bull;</span>
-                            <span className="text-amber-300 font-semibold">
+                            <span className="text-amber-700 dark:text-amber-300 font-semibold">
                               SL Trigger: ₹{triggerPrice.toFixed(2)}
                             </span>
                           </>
@@ -183,19 +201,19 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                   </div>
 
                   <div className="text-left sm:text-right font-tabular shrink-0 pl-10 sm:pl-0">
-                    <div className="font-bold text-slate-100 text-sm">
+                    <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">
                       {trade.quantity} @ ₹{trade.price.toFixed(2)}
                     </div>
                     {isSlTriggered && triggerPrice != null && (
-                      <div className="text-[11px] text-amber-300/90 font-medium flex items-center sm:justify-end gap-1">
+                      <div className="text-[11px] text-amber-700 dark:text-amber-300 font-medium flex items-center sm:justify-end gap-1">
                         <span>Trigger: ₹{triggerPrice.toFixed(2)}</span>
-                        <ArrowRight className="w-3 h-3 text-slate-500 inline" />
-                        <span className="text-emerald-400 font-semibold">
+                        <ArrowRight className="w-3 h-3 text-slate-400 inline" />
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                           Filled: ₹{trade.price.toFixed(2)}
                         </span>
                       </div>
                     )}
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
                       Taxes & Charges: ₹{trade.total_charges.toFixed(2)}
                     </div>
                   </div>
@@ -226,19 +244,19 @@ export const OrderBook: React.FC<OrderBookProps> = ({
             return (
               <div
                 key={order.id}
-                className="px-4 py-3 hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                className="px-4 py-3 hover:bg-slate-100/70 dark:hover:bg-obsidian-800/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-obsidian-800 border border-obsidian-700 shrink-0">
-                    {isPending && <Clock className="w-4 h-4 text-amber-400 animate-spin" />}
-                    {isExecuted && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-                    {isRejected && <AlertOctagon className="w-4 h-4 text-rose-400" />}
-                    {isCancelled && <XCircle className="w-4 h-4 text-slate-500" />}
+                  <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 shrink-0">
+                    {isPending && <Clock className="w-4 h-4 text-amber-500 animate-spin" />}
+                    {isExecuted && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    {isRejected && <AlertOctagon className="w-4 h-4 text-rose-500" />}
+                    {isCancelled && <XCircle className="w-4 h-4 text-slate-400" />}
                   </div>
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-extrabold text-sm text-white tracking-tight">
+                      <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">
                         {order.symbol}
                       </span>
                       <span
@@ -246,28 +264,28 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                       >
                         {order.side}
                       </span>
-                      <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-obsidian-950 border border-obsidian-700">
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-obsidian-950 border border-slate-200 dark:border-obsidian-700">
                         {order.product_type} &bull; {order.order_type}
                       </span>
                       {isSlOrder && isExecuted && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-sm">
-                          <ShieldAlert className="w-3 h-3 text-amber-400" />
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-500/40 flex items-center gap-1 shadow-sm">
+                          <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                           <span>SL Triggered</span>
                         </span>
                       )}
                       {isSlOrder && isPending && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/50 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-500/30 flex items-center gap-1">
                           <span>Stoploss Order</span>
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-1 font-tabular flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="text-slate-300 font-medium">{dateTimeStr}</span>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-tabular flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">{dateTimeStr}</span>
                       <span>&bull;</span>
                       <span>Qty: {order.quantity}</span>
                       {order.price ? <span>@ Limit ₹{order.price.toFixed(2)}</span> : null}
                       {order.trigger_price ? (
-                        <span className="text-amber-300 font-semibold">
+                        <span className="text-amber-700 dark:text-amber-300 font-semibold">
                           @ Stoploss Trigger ₹{order.trigger_price.toFixed(2)}
                         </span>
                       ) : null}
@@ -277,10 +295,10 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                           <span
                             className={`font-bold transition-colors rounded px-1 py-0.2 ${
                               liveFlash === 'UP'
-                                ? 'flash-up text-emerald-400'
+                                ? 'flash-up text-emerald-600 dark:text-emerald-400'
                                 : liveFlash === 'DOWN'
-                                  ? 'flash-down text-rose-400'
-                                  : 'text-brand-cyan'
+                                  ? 'flash-down text-rose-600 dark:text-rose-400'
+                                  : 'text-brand-blue dark:text-brand-cyan'
                             }`}
                           >
                             Live LTP: ₹{liveLtp.toFixed(2)}
@@ -289,7 +307,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                       )}
                     </div>
                     {isRejected && order.rejection_reason && (
-                      <div className="text-[10px] text-rose-400 mt-1">
+                      <div className="text-[10px] text-rose-600 dark:text-rose-400 mt-1">
                         Reason: {order.rejection_reason}
                       </div>
                     )}
@@ -301,14 +319,14 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                     <span
                       className={`font-bold text-[10px] px-2 py-0.5 rounded-full ${
                         isPending
-                          ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-500/30'
                           : isExecuted
                             ? isSlOrder
-                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-extrabold'
-                              : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-500/40 font-extrabold'
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/30'
                             : isRejected
-                              ? 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
-                              : 'bg-slate-800 text-slate-400'
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-500/30'
+                              : 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-400'
                       }`}
                     >
                       {isExecuted && isSlOrder ? 'EXECUTED (SL)' : order.status}
@@ -317,23 +335,23 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                       <div className="mt-0.5">
                         {isSlOrder && order.trigger_price != null ? (
                           <div className="text-[11px] font-tabular">
-                            <span className="text-slate-400">Trigger: </span>
-                            <span className="text-amber-300 font-semibold">
+                            <span className="text-slate-500 dark:text-slate-400">Trigger: </span>
+                            <span className="text-amber-700 dark:text-amber-300 font-semibold">
                               ₹{order.trigger_price.toFixed(2)}
                             </span>
-                            <span className="text-slate-500 mx-1">&rarr;</span>
-                            <span className="text-emerald-400 font-bold">
+                            <span className="text-slate-400 mx-1">&rarr;</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                               Filled: ₹{order.execution_price.toFixed(2)}
                             </span>
                           </div>
                         ) : (
-                          <div className="text-[11px] text-slate-300 font-semibold">
+                          <div className="text-[11px] text-slate-800 dark:text-slate-300 font-semibold">
                             Exec: ₹{order.execution_price.toFixed(2)}
                           </div>
                         )}
                       </div>
                     ) : isPending && liveLtp != null && liveLtp > 0 ? (
-                      <div className="text-[11px] text-brand-cyan font-bold mt-0.5">
+                      <div className="text-[11px] text-brand-blue dark:text-brand-cyan font-bold mt-0.5">
                         LTP: ₹{liveLtp.toFixed(2)}
                       </div>
                     ) : null}
@@ -343,7 +361,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
                     <button
                       onClick={() => handleCancel(order.id)}
                       disabled={cancellingId === order.id}
-                      className="p-1.5 rounded-lg bg-obsidian-700 hover:bg-rose-900/60 text-slate-400 hover:text-rose-200 transition"
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 dark:bg-obsidian-700 dark:hover:bg-rose-900/60 dark:text-slate-400 dark:hover:text-rose-200 transition cursor-pointer"
                       title="Cancel Order"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
