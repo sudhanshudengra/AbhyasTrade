@@ -22,7 +22,6 @@ from app.core.database import init_db, DatabaseService
 
 from app.ai.errors import AIUsageLimitExceededError
 from app.ai.providers.mock import MockProvider
-from app.ai.providers.openrouter import OpenRouterProvider
 from app.ai.providers.manager import ProviderManager
 from app.ai.schemas import (
     StockAnalysisData,
@@ -76,19 +75,6 @@ async def run_ai_tests():
     heavy_names = [p.provider_name for p in heavy_chain]
     light_names = [p.provider_name for p in light_chain]
     print(f"✓ Task routing passed. Heavy chain: {heavy_names}, Light chain: {light_names}")
-
-    # Verify OpenRouterProvider properties
-    test_or = OpenRouterProvider(api_key="test-key", model="nvidia/nemotron-3.5-lightning:free")
-    assert test_or.is_configured() is True
-    assert test_or.provider_name == "openrouter"
-    assert test_or.model_name == "nvidia/nemotron-3.5-lightning:free"
-
-    # If openrouter is in chain, verify it is strictly at the tail (fallback position)
-    if "openrouter" in heavy_names:
-        assert heavy_names[-1] == "openrouter", "OpenRouter must be the last fallback in heavy chain"
-    if "openrouter" in light_names:
-        assert light_names[-1] == "openrouter", "OpenRouter must be the last fallback in light chain"
-    print("✓ OpenRouter provider & fallback position verified.")
 
     print("\n=== Test 3: Single-Flight Stampede Protection ===")
     sf = SingleFlightManager()

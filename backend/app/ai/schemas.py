@@ -52,6 +52,15 @@ class EducationRequest(BaseModel):
     difficulty: Literal["beginner", "intermediate", "advanced"] = "beginner"
 
 
+class QuizCompleteRequest(BaseModel):
+    quizId: Optional[str] = None
+    topic: str = Field(..., min_length=1, max_length=255)
+    difficulty: str = "beginner"
+    score: int = Field(..., ge=0)
+    totalQuestions: int = Field(default=3, ge=1)
+
+
+
 # ==============================================================================
 # Structured Output Schemas (Validated from AI Providers)
 # ==============================================================================

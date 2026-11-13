@@ -27,6 +27,40 @@ if not os.environ.get("TESTING") and settings.SUPABASE_URL and settings.SUPABASE
 
 SQLITE_DB_PATH = "backend/abhyastrade.db"
 
+# Hinglish Trader Ranks (Level 1 to 5)
+TRADER_RANKS = [
+    {"level": 1, "title": "Jigyasu", "min_xp": 0, "max_xp": 250},
+    {"level": 2, "title": "Abhyasi", "min_xp": 251, "max_xp": 750},
+    {"level": 3, "title": "Sadhak", "min_xp": 751, "max_xp": 1800},
+    {"level": 4, "title": "Vivekavan", "min_xp": 1801, "max_xp": 3500},
+    {"level": 5, "title": "Maharathi", "min_xp": 3501, "max_xp": 999999},
+]
+
+
+def calculate_trader_level(xp: int) -> Dict[str, Any]:
+    level = 1
+    title = "Jigyasu"
+    current_tier_min = 0
+    next_level_xp = 250
+
+    for r in TRADER_RANKS:
+        if xp >= r["min_xp"]:
+            level = r["level"]
+            title = r["title"]
+            current_tier_min = r["min_xp"]
+            next_level_xp = r["max_xp"]
+
+    tier_range = max(1, next_level_xp - current_tier_min)
+    progress_pct = min(100, max(0, int(((xp - current_tier_min) / tier_range) * 100)))
+
+    return {
+        "level": level,
+        "title": title,
+        "current_xp": xp,
+        "next_level_xp": next_level_xp,
+        "progress_percent": progress_pct,
+    }
+
 
 async def init_db():
     """Initialize default portfolio in Supabase or tables in SQLite"""
@@ -171,6 +205,35 @@ async def init_db():
         except Exception:
             pass
 
+        # Quiz logs & gamification tracking
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS ai_quiz_logs (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                topic TEXT NOT NULL,
+                difficulty TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                total_questions INTEGER NOT NULL DEFAULT 3,
+                xp_awarded INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL
+            )
+        """)
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ai_quiz_logs_user_time ON ai_quiz_logs(user_id, created_at DESC)"
+        )
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN trader_xp INTEGER DEFAULT 0")
+            await db.commit()
+        except Exception:
+            pass
+
+        try:
+            await db.execute("ALTER TABLE portfolios ADD COLUMN trader_level INTEGER DEFAULT 1")
+            await db.commit()
+        except Exception:
+            pass
+
         await db.execute(
             "CREATE INDEX IF NOT EXISTS idx_ai_usage_user_time ON ai_usage_logs(user_id, created_at DESC)"
         )
@@ -213,15 +276,23 @@ class DatabaseService:
                     .execute()
                 )
                 if res.data:
-                    return res.data[0]
+                    p = dict(res.data[0])
+                    p["trader_xp"] = int(p.get("trader_xp") or 0)
+                    p["trader_level"] = int(p.get("trader_level") or 1)
+                    p["trader_rank"] = calculate_trader_level(p["trader_xp"])
+                    return p
                 # Insert initial portfolio
                 new_p = {
                     "user_id": user_id,
                     "virtual_cash": settings.VIRTUAL_INITIAL_CASH,
                     "used_margin": 0.0,
+                    "trader_xp": 0,
+                    "trader_level": 1,
                 }
                 insert_res = supabase_client.table("portfolios").insert(new_p).execute()
-                return insert_res.data[0]
+                res_p = dict(insert_res.data[0])
+                res_p["trader_rank"] = calculate_trader_level(0)
+                return res_p
             except Exception as e:
                 logger.error(f"Supabase error get_portfolio: {e}")
 
@@ -233,13 +304,17 @@ class DatabaseService:
             )
             row = await cursor.fetchone()
             if row:
-                return dict(row)
+                p = dict(row)
+                p["trader_xp"] = int(p.get("trader_xp") or 0)
+                p["trader_level"] = int(p.get("trader_level") or 1)
+                p["trader_rank"] = calculate_trader_level(p["trader_xp"])
+                return p
 
             now = datetime.now(timezone.utc).isoformat()
             new_id = str(uuid.uuid4())
             await db.execute(
-                "INSERT INTO portfolios (id, user_id, virtual_cash, used_margin, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (new_id, user_id, settings.VIRTUAL_INITIAL_CASH, 0.0, now, now),
+                "INSERT INTO portfolios (id, user_id, virtual_cash, used_margin, trader_xp, trader_level, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (new_id, user_id, settings.VIRTUAL_INITIAL_CASH, 0.0, 0, 1, now, now),
             )
             await db.commit()
             return {
@@ -247,6 +322,9 @@ class DatabaseService:
                 "user_id": user_id,
                 "virtual_cash": settings.VIRTUAL_INITIAL_CASH,
                 "used_margin": 0.0,
+                "trader_xp": 0,
+                "trader_level": 1,
+                "trader_rank": calculate_trader_level(0),
                 "created_at": now,
                 "updated_at": now,
             }
@@ -1033,3 +1111,190 @@ class DatabaseService:
                 "remaining_heavy": stocks_remaining,
                 "remaining_light": max(0, settings.AI_USER_DAILY_LIMIT - light_count),
             }
+
+    @staticmethod
+    async def get_user_quiz_usage(user_id: str) -> Dict[str, Any]:
+        """Calculates completed quizzes today (IST) to enforce daily quiz limits"""
+        ist = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist)
+        today_midnight = (
+            now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+            .astimezone(timezone.utc)
+            .isoformat()
+        )
+
+        quizzes_used_count = 0
+        quizzes_limit = settings.AI_QUIZ_DAILY_LIMIT
+
+        if supabase_client:
+            try:
+                res = (
+                    supabase_client.table("ai_quiz_logs")
+                    .select("id")
+                    .eq("user_id", user_id)
+                    .gte("created_at", today_midnight)
+                    .execute()
+                )
+                if res.data:
+                    quizzes_used_count = len(res.data)
+
+                quizzes_remaining = max(0, quizzes_limit - quizzes_used_count)
+                return {
+                    "quizzes_limit": quizzes_limit,
+                    "quizzes_used_count": quizzes_used_count,
+                    "quizzes_remaining": quizzes_remaining,
+                }
+            except Exception as e:
+                logger.error(f"Supabase error get_user_quiz_usage: {e}")
+
+        # SQLite fallback
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            cursor = await db.execute(
+                "SELECT COUNT(*) FROM ai_quiz_logs WHERE user_id = ? AND created_at >= ?",
+                (user_id, today_midnight),
+            )
+            row = await cursor.fetchone()
+            if row:
+                quizzes_used_count = row[0]
+
+        quizzes_remaining = max(0, quizzes_limit - quizzes_used_count)
+        return {
+            "quizzes_limit": quizzes_limit,
+            "quizzes_used_count": quizzes_used_count,
+            "quizzes_remaining": quizzes_remaining,
+        }
+
+    @staticmethod
+    async def record_quiz_generation(
+        quiz_id: str,
+        user_id: str,
+        topic: str,
+        difficulty: str,
+        total_questions: int = 3,
+    ) -> None:
+        """Records initial quiz generation into ai_quiz_logs immediately decrementing daily limit"""
+        now_utc = datetime.now(timezone.utc).isoformat()
+        if supabase_client:
+            try:
+                supabase_client.table("ai_quiz_logs").insert(
+                    {
+                        "id": quiz_id,
+                        "user_id": user_id,
+                        "topic": topic,
+                        "difficulty": difficulty,
+                        "score": 0,
+                        "total_questions": total_questions,
+                        "xp_awarded": 0,
+                        "created_at": now_utc,
+                    }
+                ).execute()
+            except Exception as e:
+                logger.error(f"Supabase error record_quiz_generation: {e}")
+
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT OR IGNORE INTO ai_quiz_logs (id, user_id, topic, difficulty, score, total_questions, xp_awarded, created_at)
+                VALUES (?, ?, ?, ?, 0, ?, 0, ?)
+                """,
+                (quiz_id, user_id, topic, difficulty, total_questions, now_utc),
+            )
+            await db.commit()
+
+    @staticmethod
+    async def award_quiz_xp(
+        user_id: str,
+        topic: str,
+        difficulty: str,
+        score: int,
+        total_questions: int = 3,
+        quiz_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Awards XP based on quiz performance and updates trader level in DB"""
+        safe_score = max(0, min(score, total_questions if total_questions > 0 else 3))
+        xp_awarded = safe_score * 10 + 20
+        if total_questions > 0 and safe_score == total_questions:
+            xp_awarded += 20  # Perfect score bonus
+
+        now_utc = datetime.now(timezone.utc).isoformat()
+        actual_quiz_id = quiz_id or str(uuid.uuid4())
+
+        # 1. Fetch current portfolio to read existing XP & Level
+        portfolio = await DatabaseService.get_portfolio(user_id)
+        current_xp = int(portfolio.get("trader_xp", 0) or 0)
+        current_level = int(portfolio.get("trader_level", 1) or 1)
+
+        new_xp = current_xp + xp_awarded
+        rank_info = calculate_trader_level(new_xp)
+        new_level = rank_info["level"]
+        level_up = new_level > current_level
+
+        # 2. Update quiz attempt in Supabase or SQLite
+        if supabase_client:
+            try:
+                supabase_client.table("ai_quiz_logs").upsert(
+                    {
+                        "id": actual_quiz_id,
+                        "user_id": user_id,
+                        "topic": topic,
+                        "difficulty": difficulty,
+                        "score": safe_score,
+                        "total_questions": total_questions,
+                        "xp_awarded": xp_awarded,
+                        "created_at": now_utc,
+                    }
+                ).execute()
+
+                supabase_client.table("portfolios").update(
+                    {
+                        "trader_xp": new_xp,
+                        "trader_level": new_level,
+                        "updated_at": now_utc,
+                    }
+                ).eq("user_id", user_id).execute()
+            except Exception as e:
+                logger.error(f"Supabase error award_quiz_xp: {e}")
+
+        # SQLite fallback/sync
+        async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+            await db.execute(
+                """
+                INSERT INTO ai_quiz_logs (id, user_id, topic, difficulty, score, total_questions, xp_awarded, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET score = excluded.score, xp_awarded = excluded.xp_awarded
+                """,
+                (
+                    actual_quiz_id,
+                    user_id,
+                    topic,
+                    difficulty,
+                    safe_score,
+                    total_questions,
+                    xp_awarded,
+                    now_utc,
+                ),
+            )
+            await db.execute(
+                """
+                UPDATE portfolios 
+                SET trader_xp = ?, trader_level = ?, updated_at = ?
+                WHERE user_id = ?
+                """,
+                (new_xp, new_level, now_utc, user_id),
+            )
+            await db.commit()
+
+        return {
+            "quiz_id": actual_quiz_id,
+            "topic": topic,
+            "difficulty": difficulty,
+            "score": safe_score,
+            "total_questions": total_questions,
+            "xp_awarded": xp_awarded,
+            "total_xp": new_xp,
+            "level": new_level,
+            "title": rank_info["title"],
+            "next_level_xp": rank_info["next_level_xp"],
+            "progress_percent": rank_info["progress_percent"],
+            "level_up": level_up,
+        }

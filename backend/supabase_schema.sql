@@ -171,4 +171,33 @@ CREATE POLICY "Allow all access to ai_analysis_cache" ON ai_analysis_cache FOR A
 DROP POLICY IF EXISTS "Allow all access to ai_usage_logs" ON ai_usage_logs;
 CREATE POLICY "Allow all access to ai_usage_logs" ON ai_usage_logs FOR ALL USING (true) WITH CHECK (true);
 
+-- ==============================================================================
+-- 7. Gamification & Quiz Tracking (XP, Level, Quiz Logs)
+-- ==============================================================================
+
+-- 7.1 Trader XP & Level Progression in portfolios
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS trader_xp INT DEFAULT 0;
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS trader_level INT DEFAULT 1;
+ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS custom_ai_limit INT DEFAULT NULL;
+
+-- 7.2 AI Quiz Usage & Score Logs
+CREATE TABLE IF NOT EXISTS ai_quiz_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    topic VARCHAR(255) NOT NULL,
+    difficulty VARCHAR(30) NOT NULL,
+    score INT NOT NULL,
+    total_questions INT NOT NULL DEFAULT 3,
+    xp_awarded INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_quiz_logs_user_time ON ai_quiz_logs(user_id, created_at DESC);
+
+-- RLS for ai_quiz_logs
+ALTER TABLE ai_quiz_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all access to ai_quiz_logs" ON ai_quiz_logs;
+CREATE POLICY "Allow all access to ai_quiz_logs" ON ai_quiz_logs FOR ALL USING (true) WITH CHECK (true);
+
+
 

@@ -1,13 +1,15 @@
 import logging
+import uuid
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, Header, HTTPException, status
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.core.database import DatabaseService
+from app.core.database import DatabaseService, calculate_trader_level
 from app.ai.errors import AIException
 from app.ai.schemas import (
     EducationRequest,
     PeerComparisonRequest,
+    QuizCompleteRequest,
     SentimentRequest,
     StockAnalysisRequest,
 )
@@ -138,11 +140,43 @@ async def get_education(
     """Generates beginner-friendly trading concept lessons, real-world examples, and interactive quizzes"""
     user_id = get_user_id_from_header(x_user_id)
     try:
+        # Check daily quiz/education limits
+        quiz_usage = await DatabaseService.get_user_quiz_usage(user_id)
+        if quiz_usage["quizzes_remaining"] <= 0:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "AI_LIMIT_EXCEEDED",
+                        "message": f"Daily quiz limit reached ({quiz_usage['quizzes_limit']} quizzes/day). Quota resets at midnight UTC (05:30 AM IST).",
+                    },
+                },
+            )
+
         res = await ai_orchestrator.get_education(
             topic=req.topic,
             user_id=user_id,
             difficulty=req.difficulty,
         )
+
+        # Record quiz generation immediately so daily quota decrements on generation
+        quiz_id = str(uuid.uuid4())
+        total_q = (
+            len(res.get("data", {}).get("quizzes", []))
+            if isinstance(res.get("data"), dict)
+            else 3
+        )
+        await DatabaseService.record_quiz_generation(
+            quiz_id=quiz_id,
+            user_id=user_id,
+            topic=req.topic,
+            difficulty=req.difficulty,
+            total_questions=total_q or 3,
+        )
+        if isinstance(res.get("data"), dict):
+            res["data"]["quizId"] = quiz_id
+
         return res
     except AIException as e:
         logger.warning(f"AIException in /education: {e.code} - {e.message}")
@@ -164,6 +198,31 @@ async def get_education(
         )
 
 
+@router.post("/quiz/complete")
+async def complete_quiz(
+    req: QuizCompleteRequest,
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
+) -> Dict[str, Any]:
+    """Awards XP for completed interactive quiz and records trader progression"""
+    user_id = get_user_id_from_header(x_user_id)
+    try:
+        res = await DatabaseService.award_quiz_xp(
+            user_id=user_id,
+            topic=req.topic,
+            difficulty=req.difficulty,
+            score=req.score,
+            total_questions=req.totalQuestions,
+            quiz_id=req.quizId,
+        )
+        return {"success": True, "data": res}
+    except Exception as e:
+        logger.error(f"Error awarding quiz XP: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "error": {"code": "XP_AWARD_FAILED", "message": "Failed to award quiz XP."}},
+        )
+
+
 @router.get("/usage")
 async def get_ai_usage(
     x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
@@ -171,6 +230,13 @@ async def get_ai_usage(
     """Returns current user's daily free AI quotas, remaining requests, and reset information"""
     user_id = get_user_id_from_header(x_user_id)
     usage = await DatabaseService.get_user_daily_ai_usage(user_id)
+    quiz_usage = await DatabaseService.get_user_quiz_usage(user_id)
+    portfolio = await DatabaseService.get_portfolio(user_id)
+
+    trader_xp = int(portfolio.get("trader_xp", 0) or 0)
+    trader_level = int(portfolio.get("trader_level", 1) or 1)
+    trader_rank = portfolio.get("trader_rank") or calculate_trader_level(trader_xp)
+
     return {
         "success": True,
         "data": {
@@ -178,12 +244,18 @@ async def get_ai_usage(
             "stocksLimit": usage.get("stocks_limit", settings.AI_STOCKS_DAILY_LIMIT),
             "stocksUsedToday": usage.get("stocks_used_count", 0),
             "analyzedStocksToday": usage.get("analyzed_stocks", []),
+            "quizzesRemaining": quiz_usage["quizzes_remaining"],
+            "quizzesLimit": quiz_usage["quizzes_limit"],
+            "quizzesUsedToday": quiz_usage["quizzes_used_count"],
+            "traderXp": trader_xp,
+            "traderLevel": trader_level,
+            "traderRank": trader_rank,
             "heavyRemaining": usage.get("stocks_remaining", usage.get("remaining_heavy", 0)),
             "heavyLimit": usage.get("stocks_limit", settings.AI_STOCKS_DAILY_LIMIT),
             "heavyUsedToday": usage.get("stocks_used_count", 0),
             "lightRemaining": usage["remaining_light"],
             "lightLimit": usage["light_limit"],
             "lightUsedToday": usage["light_count"],
-            "resetInfo": "Free daily AI quota allows up to 5 unique stocks per day, resetting at midnight UTC (05:30 AM IST). Viewing previously analyzed stocks is always free & unlimited.",
+            "resetInfo": f"Free daily AI quota allows up to {usage.get('stocks_limit', settings.AI_STOCKS_DAILY_LIMIT)} stocks & {quiz_usage['quizzes_limit']} quizzes per day, resetting at midnight UTC (05:30 AM IST). Viewing previously analyzed stocks is always free & unlimited.",
         },
     }

@@ -18,9 +18,6 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     GROQ_MODEL: str = "openai/gpt-oss-120b"
 
-    OPENROUTER_API_KEY: Optional[str] = None
-    OPENROUTER_MODEL: str = "nvidia/nemotron-3.5-lightning:free"
-
     AI_DEFAULT_PROVIDER: str = "gemini"
     AI_ENABLE_FALLBACK: bool = True
 
@@ -31,7 +28,8 @@ class Settings(BaseSettings):
     AI_CACHE_EDUCATION_TTL: int = 2592000  # 30 days
 
     # AI Rate Limiting & Quotas (per user)
-    AI_STOCKS_DAILY_LIMIT: int = 15  # 15 unique stocks per user per day
+    AI_STOCKS_DAILY_LIMIT: int = 10  # 10 unique stocks per user per day
+    AI_QUIZ_DAILY_LIMIT: int = 5  # 5 interactive quizzes per user per day
     AI_USER_DAILY_LIMIT: int = 10  # Lightweight requests (Sentiment, Education)
     AI_HEAVY_DAILY_LIMIT: int = 5  # Legacy fallback
     AI_PER_MINUTE_LIMIT: int = 5
