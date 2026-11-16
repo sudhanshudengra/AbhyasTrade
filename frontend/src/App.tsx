@@ -11,7 +11,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import { AbhyasLearningScreen } from './components/AbhyasLearningScreen';
 import { BottomNav, MobileTab } from './components/BottomNav';
-import { ChargesCalculatorModal } from './components/ChargesCalculatorModal';
 import { Header } from './components/Header';
 import { LoginPage } from './components/LoginPage';
 import { OrderBook } from './components/OrderBook';
@@ -104,7 +103,6 @@ export const App: React.FC = () => {
   );
   const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
   const [orderModalSide, setOrderModalSide] = useState<OrderSide>('BUY');
-  const [isChargesCalcOpen, setIsChargesCalcOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Stop-Loss Live Trigger Toast Notification State
@@ -256,7 +254,6 @@ export const App: React.FC = () => {
       <Header
         portfolio={portfolio}
         onResetPortfolio={resetPortfolio}
-        onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         isConnected={isConnected}
         userProfile={userProfile}
@@ -328,7 +325,6 @@ export const App: React.FC = () => {
               ) : (
                 <AbhyasLearningScreen
                   onSelectSymbol={setSelectedSymbol}
-                  onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
                 />
               )}
             </div>
@@ -515,7 +511,6 @@ export const App: React.FC = () => {
                   setSelectedSymbol(sym);
                   setMobileTab('CHART');
                 }}
-                onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
               />
             ))}
 
@@ -565,16 +560,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Brokerage & Regulatory Charges Calculator Modal - Destroyed completely on close */}
-      {isChargesCalcOpen && (
-        <ChargesCalculatorModal
-          key="charges-calculator-modal"
-          isOpen={isChargesCalcOpen}
-          onClose={() => setIsChargesCalcOpen(false)}
-          defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
-          defaultPrice={selectedStock?.ltp || 3000}
-        />
-      )}
+
 
       {/* Terminal Settings Modal */}
       {isSettingsOpen && (

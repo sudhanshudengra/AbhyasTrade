@@ -1,7 +1,6 @@
 import {
   Activity,
   Award,
-  Calculator,
   ChevronDown,
   LogOut,
   PieChart,
@@ -22,7 +21,6 @@ import { ThemeSwitch } from './ThemeSwitch';
 interface HeaderProps {
   portfolio: PortfolioSummary | null;
   onResetPortfolio?: () => Promise<any>;
-  onOpenChargesCalc: () => void;
   onOpenSettings?: () => void;
   isConnected: boolean;
   userProfile: UserProfile | null;
@@ -33,7 +31,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   portfolio,
-  onOpenChargesCalc,
   onOpenSettings,
   isConnected,
   userProfile,
@@ -252,26 +249,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls & Google OAuth Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Charges Calculator Button */}
-          <button
-            onClick={onOpenChargesCalc}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-obsidian-700/60 hover:bg-slate-200 dark:hover:bg-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-obsidian-600 transition-colors shadow-sm cursor-pointer"
-            title="Brokerage & Regulatory Charges Calculator"
-          >
-            <Calculator className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
-            <span className="hidden sm:inline">Calculator</span>
-          </button>
-
-          {/* Terminal Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-obsidian-700/60 hover:bg-slate-200 dark:hover:bg-obsidian-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-obsidian-600 transition-colors shadow-sm cursor-pointer"
-            title="Terminal Settings & Theme"
-          >
-            <Settings className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
-            <span className="hidden sm:inline">Settings</span>
-          </button>
-
           {/* User Profile Avatar & Dropdown Menu */}
           <div className="relative" ref={userMenuRef}>
             <button

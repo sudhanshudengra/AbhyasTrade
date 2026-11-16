@@ -19,7 +19,6 @@ import { AIResponseMeta, EducationData, QuizCompletionResponse } from '../lib/ty
 
 interface AbhyasLearningScreenProps {
   onSelectSymbol?: (symbol: string) => void;
-  onOpenChargesCalc?: () => void;
 }
 
 interface CategoryWorkspace {
