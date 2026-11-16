@@ -276,7 +276,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide uppercase">
-                3 Pillars of Abhyāsa (त्रिरत्न)
+                3 Pillars of Abhyāsa
               </h3>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
@@ -296,7 +296,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                     Pillar 1
                   </span>
                   <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
-                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">१. अनुशासन (Discipline)</span>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">Discipline (अनुशासन)</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Honor your stop-loss without hesitation. Respect capital limits and never trade
@@ -322,7 +322,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                     Pillar 2
                   </span>
                   <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
-                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">२. वैराग्य (Detachment)</span>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">Detachment (वैराग्य)</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Detach your self-worth from individual trade outcomes. Treat wins and losses with
@@ -348,7 +348,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                     Pillar 3
                   </span>
                   <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
-                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">३. अभ्यास (Practice)</span>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">Practice (अभ्यास)</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Test intraday (5x MIS) and delivery (CNC) strategies on live NSE ticks with
@@ -365,7 +365,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
           </div>
         </div>
 
-        {/* Dhanraj AI (धनराज) Sovereign Market Intelligence Showcase */}
+        {/* Dhanraj AI Sovereign Market Intelligence Showcase */}
         <div className="w-full bg-white dark:bg-gradient-to-r dark:from-obsidian-900/95 dark:via-obsidian-850/90 dark:to-obsidian-900/95 border border-sky-300 dark:border-brand-cyan/30 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl backdrop-blur-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 rounded-full blur-3xl pointer-events-none" />
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
@@ -376,10 +376,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    Dhanraj AI{' '}
-                    <span className="text-amber-600 dark:text-amber-300 font-serif font-bold text-xs sm:text-sm">
-                      (धनराज)
-                    </span>
+                    Dhanraj AI
                   </h4>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-brand-blue border border-sky-300 dark:bg-brand-blue/20 dark:text-brand-cyan dark:border-brand-blue/40">
                     Sovereign Market Intelligence
@@ -389,12 +386,12 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                  While <strong className="text-slate-900 dark:text-slate-100 font-bold">अनुशासन</strong> (Discipline),{' '}
-                  <strong className="text-slate-900 dark:text-slate-100 font-bold">वैराग्य</strong> (Detachment), and{' '}
-                  <strong className="text-slate-900 dark:text-slate-100 font-bold">अभ्यास</strong> (Practice) build your
+                  While <strong className="text-slate-900 dark:text-slate-100 font-bold">Discipline</strong> (अनुशासन),{' '}
+                  <strong className="text-slate-900 dark:text-slate-100 font-bold">Detachment</strong> (वैराग्य), and{' '}
+                  <strong className="text-slate-900 dark:text-slate-100 font-bold">Practice</strong> (अभ्यास) build your
                   trader character,{' '}
                   <strong className="text-brand-blue dark:text-brand-cyan font-bold">Dhanraj AI</strong> equips you with
-                  analytical discernment (विवेक). Get verified fundamental valuation, institutional
+                  analytical discernment. Get verified fundamental valuation, institutional
                   peer comparison, and technical summaries on any NSE stock directly inside your
                   trading chart.
                 </p>
@@ -413,22 +410,19 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
         {/* ============================================================================== */}
         {/* INTERACTIVE AI TRADING GURU & QUIZ SECTION */}
         {/* ============================================================================== */}
-        <div className="w-full bg-white dark:bg-gradient-to-r dark:from-obsidian-900/95 dark:via-obsidian-850/90 dark:to-obsidian-900/95 border border-sky-300 dark:border-brand-cyan/30 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl backdrop-blur-xl relative overflow-hidden group space-y-5">
+        <div className="w-full bg-white dark:bg-gradient-to-r dark:from-obsidian-900/95 dark:via-obsidian-850/90 dark:to-obsidian-900/95 border border-sky-300 dark:border-brand-cyan/30 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl backdrop-blur-xl relative overflow-hidden space-y-5">
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Card Header (Identical design to Dhanraj AI above) */}
+          {/* Card Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10 border-b border-slate-200 dark:border-obsidian-800 pb-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-100 dark:bg-brand-cyan/10 border border-sky-300 dark:border-brand-cyan/30 flex items-center justify-center text-brand-blue dark:text-brand-cyan shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-100 dark:bg-brand-cyan/10 border border-sky-300 dark:border-brand-cyan/30 flex items-center justify-center text-brand-blue dark:text-brand-cyan shrink-0 mt-0.5">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    Abhyas AI Guru{' '}
-                    <span className="text-amber-600 dark:text-amber-300 font-serif font-bold text-xs sm:text-sm">
-                      (अभ्यास गुरु)
-                    </span>
+                    Abhyas AI Guru
                   </h4>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-brand-blue border border-sky-300 dark:bg-brand-blue/20 dark:text-brand-cyan dark:border-brand-blue/40">
                     Interactive Learning &amp; Quiz
@@ -692,17 +686,17 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
                       });
                       setError(null);
                     }}
-                    className={`p-3 rounded-2xl border transition text-left group flex items-start gap-3 active:scale-98 shadow-sm cursor-pointer ${
+                    className={`p-3 rounded-2xl border transition text-left group/dilemma flex items-start gap-3 active:scale-98 shadow-sm cursor-pointer ${
                       selectedTopic === item.topic && !customTopic.trim()
-                        ? 'bg-sky-50 border-brand-blue text-slate-900 dark:bg-brand-cyan/15 dark:border-brand-cyan dark:text-white shadow-sm'
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-obsidian-850/80 dark:hover:bg-obsidian-800 dark:border-obsidian-750 dark:hover:border-brand-cyan/40 text-slate-700 dark:text-slate-300'
+                        ? 'bg-sky-50 border-brand-blue text-slate-900 dark:bg-brand-cyan/15 dark:border-brand-cyan dark:text-white shadow-sm ring-1 ring-brand-blue/30 dark:ring-brand-cyan/30'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-brand-blue/50 dark:bg-obsidian-850/80 dark:hover:bg-obsidian-800 dark:border-obsidian-750 dark:hover:border-brand-cyan/50 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
+                    <span className="text-xl shrink-0 group-hover/dilemma:scale-110 transition-transform">
                       {item.icon}
                     </span>
                     <div className="space-y-0.5">
-                      <div className="text-xs font-bold text-slate-900 group-hover:text-brand-blue dark:text-slate-200 dark:group-hover:text-brand-cyan transition-colors">
+                      <div className="text-xs font-bold text-slate-900 group-hover/dilemma:text-brand-blue dark:text-slate-200 dark:group-hover/dilemma:text-brand-cyan transition-colors">
                         {item.title}
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">

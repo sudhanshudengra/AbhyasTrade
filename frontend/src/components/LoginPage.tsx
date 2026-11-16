@@ -162,7 +162,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white">१. अनुशासन (Discipline)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">1. Discipline (अनुशासन)</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Define your Stop-Loss on every trade. Enforce strict capital protection and 1-2%
@@ -176,7 +176,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
                 <Compass className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white">२. धैर्य (Patience)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">2. Patience (धैर्य)</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Conquer emotional impulses and FOMO. Wait patiently for high-probability setups at key
@@ -190,7 +190,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
               <div className="p-1.5 rounded-lg bg-blue-100 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-cyan">
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white">३. अभ्यास (Practice)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">3. Practice (अभ्यास)</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Hone strategies risk-free on real-time NSE ticks with ₹10,00,000 virtual balance and
