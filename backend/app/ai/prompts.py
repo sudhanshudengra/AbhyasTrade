@@ -30,24 +30,33 @@ def build_stock_analysis_prompt(
     verified_metrics: Dict[str, Any],
     technical_indicators: Dict[str, Any],
 ) -> str:
+    # Flag which key metrics are available vs null to guide the AI
+    available = [k for k, v in verified_metrics.items() if v is not None]
+    missing = [k for k, v in verified_metrics.items() if v is None]
+    availability_note = ""
+    if missing:
+        availability_note = (
+            f"\nNote: The following metrics are unavailable (null) for this stock and must be reported as 'N/A' — "
+            f"do NOT invent numbers for them: {', '.join(missing)}"
+        )
     return f"""Analyze the following verified Indian equity data for {company_name} ({symbol}) on the NSE:
 
 Verified Financial & Valuation Metrics:
-{json.dumps(verified_metrics, indent=2)}
+{json.dumps(verified_metrics, indent=2)}{availability_note}
 
 Verified Technical Indicators:
 {json.dumps(technical_indicators, indent=2)}
 
-Generate a complete, structured analysis. Required JSON Schema:
+Generate a complete, structured analysis. For any metric that is null or unavailable, clearly state it is unavailable — never fabricate numbers. Required JSON Schema:
 {{
   "symbol": "{symbol}",
   "companyName": "{company_name}",
-  "overview": "Concise 2-3 sentence overview of business model, industry sector, and market position.",
+  "overview": "Concise 2-3 sentence overview of business model, industry sector ({sector}), and market position.",
   "financialPerformance": {{
-    "revenue": "Explanation of revenue trajectory and top-line health using verified figures.",
-    "profitability": "Explanation of profit margins, operating margins, and EPS.",
-    "debt": "Assessment of debt-to-equity and balance sheet solvency.",
-    "cashFlow": "Assessment of operational cash flow and liquidity strength."
+    "revenue": "Explanation of revenue trajectory and top-line health using verified figures. If revenue data is unavailable, state so explicitly.",
+    "profitability": "Explanation of profit margins, operating margins, and EPS using verified figures only.",
+    "debt": "Assessment of debt-to-equity and balance sheet solvency using verified figures only.",
+    "cashFlow": "Assessment of operational cash flow and liquidity strength using verified figures only."
   }},
   "strengths": [
     "3 to 4 key competitive advantages or fundamental strengths."
@@ -55,8 +64,8 @@ Generate a complete, structured analysis. Required JSON Schema:
   "risks": [
     "3 to 4 key vulnerabilities, industry headwinds, or operational risks."
   ],
-  "valuation": "Objective observation comparing P/E, P/B, and book value against reasonable industry norms.",
-  "technicalSummary": "Educational reading of the RSI, moving averages (SMA), and price trend.",
+  "valuation": "Objective observation comparing P/E, P/B, and book value against reasonable industry norms. If P/E is null, explicitly state it is unavailable and explain why (e.g. company may be loss-making or data not reported).",
+  "technicalSummary": "Educational reading of the RSI, moving averages (SMA), and price trend using only verified technical indicators above.",
   "conclusion": "A well-balanced, educational conclusion summarizing whether this company presents strong fundamentals, high volatility, or turnaround characteristics.",
   "limitations": [
     "2 to 3 data limitations (e.g. historical data latency, external regulatory changes, macroeconomic factors)."
@@ -69,27 +78,59 @@ def build_peer_comparison_prompt(
     symbols: List[str],
     peers_data: List[Dict[str, Any]],
 ) -> str:
+    # Build a concise lookup of verified company names and metrics for explicit injection
+    peer_summary_lines = []
+    for p in peers_data:
+        sym = p.get("symbol", "")
+        name = p.get("companyName", f"{sym} Ltd.")
+        vm = p.get("verifiedMetrics", {})
+        peer_summary_lines.append(
+            f"  - {sym}: companyName=\"{name}\", "
+            f"peRatio={vm.get('peRatio', 'N/A')}, "
+            f"priceToBook={vm.get('priceToBook', 'N/A')}, "
+            f"debtToEquity={vm.get('debtToEquity', 'N/A')}, "
+            f"returnOnEquity={vm.get('returnOnEquity', 'N/A')}, "
+            f"profitMargin={vm.get('profitMargin', 'N/A')}, "
+            f"marketCap={vm.get('marketCap', 'N/A')}"
+        )
+    peer_summary = "\n".join(peer_summary_lines)
+
+    # Build verified peer name map for the schema so the AI uses exact names
+    peers_schema_rows = []
+    for p in peers_data:
+        sym = p.get("symbol", "")
+        name = p.get("companyName", f"{sym} Ltd.")
+        vm = p.get("verifiedMetrics", {})
+        peers_schema_rows.append(
+            f"""    {{
+      "symbol": "{sym}",
+      "companyName": "{name}",
+      "marketCap": "{vm.get('marketCap') or 'N/A'}",
+      "pe": {vm.get('peRatio') if vm.get('peRatio') is not None else 'null'},
+      "pb": {vm.get('priceToBook') if vm.get('priceToBook') is not None else 'null'},
+      "debtToEquity": {vm.get('debtToEquity') if vm.get('debtToEquity') is not None else 'null'},
+      "roe": "{vm.get('returnOnEquity') or 'N/A'}",
+      "profitMargin": "{vm.get('profitMargin') or 'N/A'}",
+      "strengths": ["<fill: key relative advantage for {name}>"],
+      "risks": ["<fill: key relative concern for {name}>"]
+    }}"""
+        )
+    peers_schema = ",\n".join(peers_schema_rows)
+
     return f"""Compare the following {len(symbols)} NSE peer companies based on their verified data:
 
-Verified Peer Data:
+IMPORTANT: You MUST use the EXACT company names and symbols listed below — do NOT invent names like "Peer 1" or "Peer 2":
+{peer_summary}
+
+Full Verified Peer Data (use numbers only from here):
 {json.dumps(peers_data, indent=2)}
 
-Generate a comprehensive comparative analysis. Required JSON Schema:
+Generate a comprehensive comparative analysis. Use the EXACT companyName values shown above for each peer.
+Required JSON Schema (pre-filled with verified names and metrics — complete the analysis fields):
 {{
   "symbols": {json.dumps(symbols)},
   "peers": [
-    {{
-      "symbol": "SYMBOL",
-      "companyName": "Company Name",
-      "marketCap": "e.g. ₹15,40,000 Cr",
-      "pe": 24.5,
-      "pb": 3.2,
-      "debtToEquity": 0.45,
-      "roe": "18.5%",
-      "profitMargin": "14.2%",
-      "strengths": ["Key relative advantage"],
-      "risks": ["Key relative concern"]
-    }}
+{peers_schema}
   ],
   "businessComparison": "Comparative overview of how each peer generates revenue and their distinct competitive moats.",
   "financialPerformanceComparison": "Comparative analysis of revenue growth, profit margins, and balance sheet strength.",
