@@ -65,22 +65,23 @@ export const OrderBook: React.FC<OrderBookProps> = ({
   return (
     <div className="flex flex-col h-full bg-obsidian-900 overflow-hidden">
       {/* Tabs Header */}
-      <div className="px-4 py-2.5 bg-slate-50 dark:bg-obsidian-800/90 border-b border-slate-200 dark:border-obsidian-700/80 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-obsidian-800/90 border-b border-slate-200 dark:border-obsidian-700/80 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <FileText className="w-4 h-4 text-brand-cyan" />
-          <span className="font-extrabold text-sm text-slate-900 dark:text-white">Order Book</span>
+          <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate">Orders</span>
         </div>
 
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-obsidian-900 p-0.5 rounded-lg border border-slate-200 dark:border-obsidian-700">
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
               activeTab === 'ALL'
                 ? 'bg-brand-blue text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
             }`}
           >
-            <span>All Orders</span>
+            <span className="hidden sm:inline">All Orders</span>
+            <span className="sm:hidden">All</span>
             <span
               className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 activeTab === 'ALL'
@@ -94,13 +95,14 @@ export const OrderBook: React.FC<OrderBookProps> = ({
 
           <button
             onClick={() => setActiveTab('OPEN')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
               activeTab === 'OPEN'
                 ? 'bg-brand-blue text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
             }`}
           >
-            <span>Open (Pending)</span>
+            <span className="hidden sm:inline">Open (Pending)</span>
+            <span className="sm:hidden">Open</span>
             <span
               className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 activeTab === 'OPEN'
@@ -114,7 +116,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
 
           <button
             onClick={() => setActiveTab('EXECUTED')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
               activeTab === 'EXECUTED'
                 ? 'bg-brand-blue text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-obsidian-800/50'
@@ -135,7 +137,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
       </div>
 
       {/* List Content */}
-      <div className="flex-1 overflow-y-auto divide-y divide-obsidian-700/40">
+      <div className="flex-1 overflow-y-auto divide-y divide-obsidian-700/40 pb-28 lg:pb-4">
         {activeTab === 'EXECUTED' ? (
           // Executed Trades Tab
           trades.length === 0 ? (

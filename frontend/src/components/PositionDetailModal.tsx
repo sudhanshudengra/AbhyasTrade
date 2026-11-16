@@ -82,12 +82,15 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
     >
       <div
-        className={`w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
+        className={`w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-3xl sm:rounded-2xl border ${
           isProfit ? 'border-emerald-500/40 glow-emerald' : 'border-rose-500/40 glow-crimson'
         } shadow-2xl overflow-hidden transition-all duration-150`}
       >
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden w-12 h-1 bg-slate-300 dark:bg-obsidian-700 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Header Bar */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-obsidian-700/70 bg-slate-50 dark:bg-gradient-to-b dark:from-obsidian-800 dark:to-obsidian-900/90 flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 dark:border-obsidian-700/70 bg-slate-50 dark:bg-gradient-to-b dark:from-obsidian-800 dark:to-obsidian-900/90 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               className={`w-2.5 h-10 rounded-full ${
@@ -331,11 +334,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
         </div>
 
         {/* Action Controls Footer */}
-        <div className="p-4 border-t border-obsidian-700/70 bg-slate-50 dark:bg-obsidian-900/90 flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] border-t border-slate-200 dark:border-obsidian-700/70 bg-slate-50 dark:bg-obsidian-900/90 flex flex-wrap items-center justify-between gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
             <button
               onClick={handleBuyMore}
-              className="flex-1 py-2 px-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 touch-manipulation cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Buy More</span>
@@ -343,7 +346,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
 
             <button
               onClick={handleSellReduce}
-              className="flex-1 py-2 px-3 rounded-xl bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 touch-manipulation cursor-pointer"
             >
               <MinusCircle className="w-4 h-4" />
               <span>Sell / Reduce</span>
@@ -353,7 +356,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           <button
             onClick={handleExit}
             disabled={isExiting}
-            className="py-2 px-4 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-200 dark:border-rose-500/50 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-200 dark:border-rose-500/50 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50 touch-manipulation cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>{isExiting ? 'Exiting...' : 'Square Off Position'}</span>

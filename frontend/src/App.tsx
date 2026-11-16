@@ -185,15 +185,32 @@ export const App: React.FC = () => {
       if (isDeskCollapsed) setIsDeskCollapsed(false);
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!e.touches[0]) return;
+      const headerHeight = 60;
+      const availableHeight = window.innerHeight - headerHeight;
+      const newHeight = window.innerHeight - e.touches[0].clientY;
+      const clampedHeight = Math.max(140, Math.min(availableHeight - 180, newHeight));
+      setDeskHeight(clampedHeight);
+      localStorage.setItem('abhyastrade_desk_height', clampedHeight.toString());
+      if (isDeskCollapsed) setIsDeskCollapsed(false);
+    };
+
+    const handleDragEnd = () => {
       setIsDragging(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleDragEnd);
+    window.addEventListener('touchcancel', handleDragEnd);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleDragEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleDragEnd);
+      window.removeEventListener('touchcancel', handleDragEnd);
     };
   }, [isDragging, isDeskCollapsed]);
 
@@ -227,7 +244,8 @@ export const App: React.FC = () => {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-bold tracking-wider text-slate-300">
-            Initializing <span className="text-brand-cyan">Abhyas</span><span className="text-emerald-400">Trade</span> Terminal...
+            Initializing <span className="text-brand-cyan">Abhyas</span>
+            <span className="text-emerald-400">Trade</span> Terminal...
           </span>
         </div>
       </div>
@@ -249,7 +267,7 @@ export const App: React.FC = () => {
   const pendingOrdersCount = orders.filter((o) => o.status === 'PENDING').length;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-obsidian-900 text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col h-screen  w-screen overflow-hidden bg-obsidian-900 text-slate-900 dark:text-slate-100">
       {/* Top Header */}
       <Header
         portfolio={portfolio}
@@ -323,9 +341,7 @@ export const App: React.FC = () => {
               {selectedStock ? (
                 <TradingChart stock={selectedStock} onOpenOrderModal={handleOpenOrderModal} />
               ) : (
-                <AbhyasLearningScreen
-                  onSelectSymbol={setSelectedSymbol}
-                />
+                <AbhyasLearningScreen onSelectSymbol={setSelectedSymbol} />
               )}
             </div>
 
@@ -335,6 +351,7 @@ export const App: React.FC = () => {
                 e.preventDefault();
                 setIsDragging(true);
               }}
+              onTouchStart={() => setIsDragging(true)}
               className={`h-2 w-full bg-obsidian-950 hover:bg-brand-blue/40 border-y border-obsidian-800 cursor-row-resize flex items-center justify-center group transition-colors shrink-0 z-20 ${
                 isDragging ? 'bg-brand-blue/60' : ''
               }`}
@@ -436,7 +453,9 @@ export const App: React.FC = () => {
                   >
                     {isDeskCollapsed ? (
                       <>
-                        <span className="text-[10px] text-brand-blue dark:text-brand-cyan">Expand</span>
+                        <span className="text-[10px] text-brand-blue dark:text-brand-cyan">
+                          Expand
+                        </span>
                         <ChevronUp className="w-4 h-4 text-brand-blue dark:text-brand-cyan" />
                       </>
                     ) : (
@@ -480,7 +499,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Mobile View (< 1024px) */}
-        <div className="flex lg:hidden flex-1 flex-col h-full pb-16 overflow-hidden">
+        <div className="flex lg:hidden flex-1 flex-col h-full pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] overflow-hidden">
           {mobileTab === 'WATCHLIST' && (
             <Watchlist
               watchlists={watchlists}
@@ -560,8 +579,6 @@ export const App: React.FC = () => {
         />
       )}
 
-
-
       {/* Terminal Settings Modal */}
       {isSettingsOpen && (
         <SettingsModal
@@ -586,7 +603,9 @@ export const App: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm text-slate-900 dark:text-white">{notif.symbol}</span>
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                      {notif.symbol}
+                    </span>
                     <span
                       className={`text-[10px] font-bold px-1.5 py-0.2 rounded text-white ${notif.side === 'BUY' ? 'bg-emerald-600' : 'bg-rose-600'}`}
                     >
@@ -609,7 +628,9 @@ export const App: React.FC = () => {
                 </p>
                 <div className="mt-1.5 flex items-center gap-2 text-xs font-tabular bg-slate-50 dark:bg-obsidian-950/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-obsidian-700">
                   <span className="text-slate-500 dark:text-slate-400">Trigger:</span>
-                  <span className="text-amber-700 dark:text-amber-300 font-bold">₹{notif.triggerPrice.toFixed(2)}</span>
+                  <span className="text-amber-700 dark:text-amber-300 font-bold">
+                    ₹{notif.triggerPrice.toFixed(2)}
+                  </span>
                   <span className="text-slate-400 dark:text-slate-500">&rarr;</span>
                   <span className="text-slate-500 dark:text-slate-400">Filled:</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">

@@ -263,12 +263,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
     >
       <div
-        className={`w-full sm:max-w-md max-h-[92vh] sm:max-h-[85vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-2xl sm:rounded-2xl border ${
+        className={`w-full sm:max-w-md max-h-[90dvh] sm:max-h-[85vh] flex flex-col bg-white dark:bg-obsidian-850 rounded-t-3xl sm:rounded-2xl border ${
           isBuy ? 'border-emerald-500/40 glow-emerald' : 'border-rose-500/40 glow-crimson'
         } shadow-2xl overflow-hidden transition-all duration-150`}
       >
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden w-12 h-1 bg-slate-300 dark:bg-obsidian-700 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Compact Integrated Header Bar */}
-        <div className="px-4 py-3 border-b border-slate-200 dark:border-obsidian-700/60 bg-gradient-to-b from-slate-50 to-white dark:from-obsidian-800 dark:to-obsidian-900/90 shrink-0 flex items-center justify-between gap-2">
+        <div className="px-4 py-2.5 sm:py-3 border-b border-slate-200 dark:border-obsidian-700/60 bg-gradient-to-b from-slate-50 to-white dark:from-obsidian-800 dark:to-obsidian-900/90 shrink-0 flex items-center justify-between gap-2">
           {/* Symbol & Price Info */}
           <div className="flex items-center gap-2 min-w-0">
             <div>
@@ -738,7 +741,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               (hasInsufficientMargin && !(productType === 'CNC' && side === 'SELL')) ||
               isCncSellExceeded
             }
-            className={`w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+            className={`w-full py-3 sm:py-2.5 rounded-xl font-extrabold text-xs sm:text-sm tracking-wide shadow-xl transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-[max(0.5rem,env(safe-area-inset-bottom,0px))] touch-manipulation cursor-pointer ${
               isBuy
                 ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-950/60'
                 : 'bg-gradient-to-r from-rose-600 via-rose-500 to-red-500 hover:from-rose-500 hover:to-red-400 text-white shadow-rose-950/60'

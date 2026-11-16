@@ -385,37 +385,40 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-obsidian-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-gradient-to-b dark:from-obsidian-900 dark:via-obsidian-900/95 dark:to-obsidian-950 border border-slate-200 dark:border-brand-cyan/25 rounded-3xl shadow-2xl dark:shadow-cyan-950/40 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-obsidian-950/80 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full sm:max-w-4xl max-h-[90dvh] sm:max-h-[92vh] flex flex-col bg-white dark:bg-gradient-to-b dark:from-obsidian-900 dark:via-obsidian-900/95 dark:to-obsidian-950 border border-slate-200 dark:border-brand-cyan/25 rounded-t-3xl sm:rounded-3xl shadow-2xl dark:shadow-cyan-950/40 overflow-hidden text-slate-900 dark:text-slate-100">
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden w-12 h-1 bg-slate-300 dark:bg-obsidian-700 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Glow Effects */}
         <div className="absolute top-0 right-1/4 w-72 h-36 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 w-80 h-36 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-obsidian-700/80 bg-slate-50 dark:bg-obsidian-900/80 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-cyan/20 to-brand-blue/30 border border-brand-cyan/40 flex items-center justify-center text-brand-blue dark:text-brand-cyan shadow-sm">
-              <Sparkles className="w-5 h-5 animate-pulse" />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-obsidian-700/80 bg-slate-50 dark:bg-obsidian-900/80 relative z-10 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-brand-cyan/20 to-brand-blue/30 border border-brand-cyan/40 flex items-center justify-center text-brand-blue dark:text-brand-cyan shadow-sm shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                   Dhanraj AI
                 </h2>
                 <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-brand-blue/10 dark:bg-brand-cyan/15 text-brand-blue dark:text-brand-cyan border border-brand-blue/30 dark:border-brand-cyan/30">
                   {stock.symbol}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {stock.name} • Sovereign Wealth & Market Intelligence
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                {stock.name} • Sovereign Market Intelligence
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Free Quota Badge */}
             {usage && (
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 text-xs text-slate-700 dark:text-slate-300">
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 text-xs text-slate-700 dark:text-slate-300">
                 <Cpu className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan" />
                 <span>
                   Free Quota:{' '}
@@ -423,13 +426,13 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                     {usage.stocksRemaining !== undefined ? usage.stocksRemaining : usage.heavyRemaining}/
                     {usage.stocksLimit !== undefined ? usage.stocksLimit : usage.heavyLimit}
                   </strong>{' '}
-                  Stocks Left Today
+                  Stocks Left
                 </span>
               </div>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-800 transition cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-800 transition cursor-pointer"
               title="Close"
             >
               <X className="w-5 h-5" />
@@ -438,42 +441,45 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-2.5 bg-slate-100/70 dark:bg-obsidian-950/60 border-b border-slate-200 dark:border-obsidian-800/80">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-2 bg-slate-100/70 dark:bg-obsidian-950/60 border-b border-slate-200 dark:border-obsidian-800/80 overflow-x-auto shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => handleTabChange('ANALYSIS')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer shrink-0 ${
                 activeTab === 'ANALYSIS'
                   ? 'bg-brand-blue dark:bg-brand-cyan text-white dark:text-slate-950 font-bold shadow-md shadow-brand-blue/20 dark:shadow-cyan-500/20'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-obsidian-800/60'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
-              <span>Deep Analysis</span>
+              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Deep Analysis</span>
+              <span className="sm:hidden">Analysis</span>
             </button>
 
             <button
               onClick={() => handleTabChange('PEERS')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer shrink-0 ${
                 activeTab === 'PEERS'
                   ? 'bg-brand-blue dark:bg-brand-cyan text-white dark:text-slate-950 font-bold shadow-md shadow-brand-blue/20 dark:shadow-cyan-500/20'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-obsidian-800/60'
               }`}
             >
-              <Layers className="w-4 h-4" />
-              <span>Peer Comparison</span>
+              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Peer Comparison</span>
+              <span className="sm:hidden">Peers</span>
             </button>
 
             <button
               onClick={() => handleTabChange('SENTIMENT')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer shrink-0 ${
                 activeTab === 'SENTIMENT'
                   ? 'bg-brand-blue dark:bg-brand-cyan text-white dark:text-slate-950 font-bold shadow-md shadow-brand-blue/20 dark:shadow-cyan-500/20'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-obsidian-800/60'
               }`}
             >
-              <Newspaper className="w-4 h-4" />
-              <span>News Sentiment</span>
+              <Newspaper className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">News Sentiment</span>
+              <span className="sm:hidden">Sentiment</span>
             </button>
           </div>
 

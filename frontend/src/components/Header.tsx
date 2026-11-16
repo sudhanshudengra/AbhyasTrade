@@ -121,38 +121,39 @@ export const Header: React.FC<HeaderProps> = ({
   const isProfit = overallPnl >= 0;
 
   return (
-    <header className="bg-obsidian-800/90 backdrop-blur-md border-b border-obsidian-700 sticky top-0 z-30 px-3 sm:px-4 lg:px-5 py-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <header className="bg-obsidian-800/90 backdrop-blur-md border-b border-obsidian-700 sticky top-0 z-30 px-3 sm:px-4 lg:px-5 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+      {/* Top Flex Container */}
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         {/* Brand & Market Hours Status */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onGoHome}
-            className="flex items-center gap-2.5 text-left group transition-all hover:opacity-90 active:scale-95 cursor-pointer focus:outline-none"
+            className="flex items-center gap-2 sm:gap-2.5 text-left group transition-all hover:opacity-90 active:scale-95 cursor-pointer focus:outline-none min-w-0"
             title="Go to AbhyasTrade Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20 group-hover:scale-105 transition-transform">
-              <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20 group-hover:scale-105 transition-transform shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight transition-colors">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight transition-colors truncate">
                   <span className="text-brand-cyan">Abhyas</span>
                   <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-brand-blue/15 text-brand-cyan border border-brand-blue/30 shrink-0">
                   NSE PWA
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] font-tabular">
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-tabular truncate">
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMarketOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}
                 ></span>
                 <span
-                  className={isMarketOpen ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 font-medium'}
+                  className={`truncate ${isMarketOpen ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 font-medium'}`}
                 >
-                  {isMarketOpen ? 'NSE Live (09:15 - 15:30 IST)' : 'Market Closed (15:30 IST)'}
+                  {isMarketOpen ? 'NSE Live' : 'Market Closed'}
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:inline">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden md:inline">
                   &bull; {istTimeStr} IST
                 </span>
               </div>
@@ -160,11 +161,11 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        {/* Financial Metrics Strip */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 overflow-x-auto py-0.5">
+        {/* Desktop-only Rich Financial Metrics Strip (>= 1024px) */}
+        <div className="hidden lg:flex items-center gap-2 sm:gap-3 overflow-x-auto py-0.5">
           {/* Total Capital */}
           <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
-            <Wallet className="w-4 h-4 text-brand-blue dark:text-brand-cyan hidden sm:block" />
+            <Wallet className="w-4 h-4 text-brand-blue dark:text-brand-cyan" />
             <div>
               <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Total Capital
@@ -181,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Available Capital */}
           <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
-            <PieChart className="w-4 h-4 text-emerald-600 dark:text-emerald-400 hidden sm:block" />
+            <PieChart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <div>
               <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Available Capital
@@ -197,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Deployed Capital */}
-          <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 hidden md:flex items-center gap-2 shadow-sm">
+          <div className="bg-white dark:bg-obsidian-900/80 border border-slate-200/90 dark:border-obsidian-700/80 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
             <Activity className="w-4 h-4 text-amber-500 dark:text-amber-400" />
             <div>
               <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
@@ -248,12 +249,12 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Action Controls & Google OAuth Profile */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* User Profile Avatar & Dropdown Menu */}
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200/90 dark:border-obsidian-700 hover:border-brand-blue/60 transition shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-1.5 pr-2 sm:pr-2.5 py-1 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200/90 dark:border-obsidian-700 hover:border-brand-blue/60 transition shadow-sm cursor-pointer"
               title="Account Menu"
             >
               {userProfile?.avatarUrl && !avatarFailed ? (
@@ -284,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-obsidian-850 backdrop-blur-xl border border-slate-200 dark:border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 space-y-2.5">
+              <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-obsidian-850 backdrop-blur-xl border border-slate-200 dark:border-obsidian-700 rounded-2xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 space-y-2.5">
                 <div className="pb-2.5 border-b border-slate-200 dark:border-obsidian-700">
                   <div className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
                     {userProfile?.name || 'Trader'}
@@ -379,6 +380,35 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Mobile & Tablet Sleek Financial Strip (< 1024px) */}
+      <div className="flex lg:hidden items-center justify-between gap-2 pt-1.5 mt-1 border-t border-slate-200/60 dark:border-obsidian-700/50 text-[11px] sm:text-xs font-tabular">
+        <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Total:</span>
+          <span className="font-bold text-slate-900 dark:text-slate-100 truncate">
+            ₹{initialCap.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Avail:</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate">
+            ₹{availableCapital.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">P&L:</span>
+          <span
+            className={`font-extrabold flex items-center gap-0.5 truncate ${
+              isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            {isProfit ? '+' : ''}₹{overallPnl.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            <span className="text-[10px] font-bold opacity-85">
+              ({isProfit ? '+' : ''}{overallPnlPercent}%)
+            </span>
+          </span>
         </div>
       </div>
     </header>

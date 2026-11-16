@@ -67,22 +67,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg bg-white dark:bg-obsidian-850 border border-slate-200 dark:border-obsidian-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full sm:max-w-lg bg-white dark:bg-obsidian-850 border border-slate-200 dark:border-obsidian-700/80 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden w-12 h-1 bg-slate-300 dark:bg-obsidian-700 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-obsidian-700/80 bg-slate-50 dark:bg-obsidian-900/60">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 dark:border-obsidian-700/80 bg-slate-50 dark:bg-obsidian-900/60 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-brand-blue/15 border border-brand-blue/30 flex items-center justify-center text-brand-blue dark:text-brand-cyan">
               <Settings className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">
                 Terminal Settings
               </h2>
-              <p className="text-xs text-slate-500">Trading preferences & account controls</p>
+              <p className="text-[11px] sm:text-xs text-slate-500">Trading preferences & controls</p>
             </div>
           </div>
           <button
@@ -95,7 +98,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 sm:space-y-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
           {/* Trading & Interface Preferences */}
           <div className="space-y-4">
             <span className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-slate-400">

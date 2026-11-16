@@ -458,33 +458,15 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
   return (
     <div className="flex-1 flex flex-col h-full bg-obsidian-900 overflow-hidden select-none">
       {/* Top Header Controls Bar */}
-      <div className="px-4 py-2.5 bg-obsidian-800/95 border-b border-obsidian-700/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        {/* Left: Timeframe Switcher */}
-        <div className="flex items-center gap-1 sm:gap-1.5">
-          {TIMEFRAMES.map((tf) => {
-            const isActive = timeframe === tf.id;
-            return (
-              <button
-                key={tf.id}
-                onClick={() => setTimeframe(tf.id)}
-                className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-xl transition-all select-none cursor-pointer ${
-                  isActive
-                    ? 'bg-brand-blue text-white shadow-sm ring-1 ring-brand-blue/30'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-700/70'
-                }`}
-              >
-                {tf.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right: Symbol Info, Chart Type Toggle & BUY/SELL buttons */}
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="px-3 sm:px-4 py-2 bg-obsidian-800/95 border-b border-obsidian-700/80 flex flex-col gap-2 shrink-0">
+        {/* Row 1: Stock Symbol & Price on Left, BUY & SELL on Right */}
+        <div className="flex items-center justify-between gap-2">
           {/* Symbol & Live LTP */}
-          <div className="flex items-center gap-2 mr-1">
-            <span className="font-black text-sm text-slate-900 dark:text-white">{stock.symbol}</span>
-            <span className="font-tabular font-black text-sm text-slate-900 dark:text-white">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white truncate">
+              {stock.symbol}
+            </span>
+            <span className="font-tabular font-black text-sm sm:text-base text-slate-900 dark:text-white">
               ₹
               {(stock.ltp ?? 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -498,66 +480,92 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
             </span>
           </div>
 
-          {/* Chart Type Toggle */}
-          <div className="flex items-center bg-slate-100 dark:bg-obsidian-900/90 p-0.5 rounded-xl border border-slate-200 dark:border-obsidian-700">
-            <button
-              onClick={() => setChartType('AREA')}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
-                chartType === 'AREA'
-                  ? 'bg-brand-blue text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-              title="Line Chart"
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Line</span>
-            </button>
-            <button
-              onClick={() => setChartType('CANDLE')}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
-                chartType === 'CANDLE'
-                  ? 'bg-brand-blue text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-              title="Candlestick Chart"
-            >
-              <CandlestickChart className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Candles</span>
-            </button>
-          </div>
-
-          {/* Dhanraj AI Button */}
-          <button
-            onClick={() => setIsAIModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-500/15 hover:bg-cyan-100 dark:hover:bg-cyan-500/25 text-brand-blue dark:text-brand-cyan border border-cyan-200 dark:border-cyan-500/40 text-xs font-bold transition shadow-sm active:scale-95 group cursor-pointer"
-            title="Dhanraj AI • Fundamental, Peer & News Intelligence"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan shrink-0 group-hover:animate-bounce-subtle transition-all" />
-            <span className="hidden sm:inline">Dhanraj AI</span>
-          </button>
-
-          {/* Buy & Sell Actions - Stocks only, disabled for Benchmark Indices */}
-          <div className="flex items-center gap-1.5">
+          {/* Quick Buy & Sell Action Buttons (Desktop only >= 1024px) */}
+          <div className="hidden lg:flex items-center gap-1.5 shrink-0">
             {!isIndexSymbol(stock?.symbol) ? (
               <>
                 <button
                   onClick={() => stock && onOpenOrderModal(stock.symbol, 'BUY')}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black shadow-md transition active:scale-95"
+                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-950/20 transition active:scale-95 cursor-pointer touch-manipulation"
                 >
                   BUY
                 </button>
                 <button
                   onClick={() => stock && onOpenOrderModal(stock.symbol, 'SELL')}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white text-xs font-black shadow-md transition active:scale-95"
+                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-950/20 transition active:scale-95 cursor-pointer touch-manipulation"
                 >
                   SELL
                 </button>
               </>
             ) : (
               <div className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300 text-[11px] font-bold shadow-sm">
-                Benchmark Index &bull; Spot View Only
+                Spot View
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Row 2: Timeframes on Left, Chart Type & Dhanraj AI on Right */}
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pt-0.5">
+          {/* Timeframe Switcher */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {TIMEFRAMES.map((tf) => {
+              const isActive = timeframe === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  onClick={() => setTimeframe(tf.id)}
+                  className={`px-2 sm:px-3 py-1 text-xs font-bold rounded-xl transition-all select-none cursor-pointer shrink-0 ${
+                    isActive
+                      ? 'bg-brand-blue text-white shadow-sm ring-1 ring-brand-blue/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-obsidian-700/70'
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tools: Chart Type & Dhanraj AI */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Chart Type Toggle */}
+            <div className="flex items-center bg-slate-100 dark:bg-obsidian-900/90 p-0.5 rounded-xl border border-slate-200 dark:border-obsidian-700">
+              <button
+                onClick={() => setChartType('AREA')}
+                className={`p-1 sm:px-2.5 sm:py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                  chartType === 'AREA'
+                    ? 'bg-brand-blue text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+                title="Line Chart"
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Line</span>
+              </button>
+              <button
+                onClick={() => setChartType('CANDLE')}
+                className={`p-1 sm:px-2.5 sm:py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                  chartType === 'CANDLE'
+                    ? 'bg-brand-blue text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+                title="Candlestick Chart"
+              >
+                <CandlestickChart className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Candles</span>
+              </button>
+            </div>
+
+            {/* Dhanraj AI Button */}
+            <button
+              onClick={() => setIsAIModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-500/15 hover:bg-cyan-100 dark:hover:bg-cyan-500/25 text-brand-blue dark:text-brand-cyan border border-cyan-200 dark:border-cyan-500/40 text-xs font-bold transition shadow-sm active:scale-95 group cursor-pointer shrink-0"
+              title="Dhanraj AI • Fundamental, Peer & News Intelligence"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-brand-blue dark:text-brand-cyan shrink-0 group-hover:animate-bounce-subtle transition-all" />
+              <span className="hidden sm:inline">Dhanraj AI</span>
+            </button>
           </div>
         </div>
       </div>
@@ -628,80 +636,78 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
         <div ref={chartContainerRef} className="w-full h-full absolute inset-0" />
       </div>
 
-      {/* Bottom Metrics Strip (Exact 3-Column, 2-Row Layout matching the user screenshot) */}
-      <div className="bg-slate-50 dark:bg-obsidian-950/90 border-t border-slate-200 dark:border-obsidian-800/80 px-4 sm:px-6 py-2.5 shrink-0">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-6 sm:gap-x-12 max-w-4xl text-xs font-tabular">
+      {/* Bottom Metrics Strip */}
+      <div className="bg-slate-50 dark:bg-obsidian-950/90 border-t border-slate-200 dark:border-obsidian-800/80 px-3 sm:px-6 py-1.5 sm:py-2.5 shrink-0">
+        <div className="grid grid-cols-3 gap-y-1 sm:gap-y-2 gap-x-2 sm:gap-x-12 max-w-4xl text-[10px] sm:text-xs font-tabular">
           {/* Row 1 */}
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Previous Close</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {(stock.close ?? 0).toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Prev Close</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{(stock.close ?? 0).toFixed(2)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Open</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {(stock.open ?? 0).toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Open</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{(stock.open ?? 0).toFixed(2)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">High</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {(stock.high ?? 0).toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-obsidian-800/60 pb-1">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">High</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{(stock.high ?? 0).toFixed(2)}
             </span>
           </div>
 
           {/* Row 2 */}
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Low</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {(stock.low ?? 0).toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-0.5">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Low</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{(stock.low ?? 0).toFixed(2)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">52 Week High</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {stock.high52
-                ? Number(stock.high52).toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : '-'}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-0.5">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">52W High</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{stock.high52 ? Number(stock.high52).toFixed(2) : '-'}
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">52 Week Low</span>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xs sm:text-sm">
-              ₹
-              {stock.low52
-                ? Number(stock.low52).toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : '-'}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-0.5">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">52W Low</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-[11px] sm:text-sm">
+              ₹{stock.low52 ? Number(stock.low52).toFixed(2) : '-'}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile & Tablet Bottom Trade Action Bar (< 1024px) */}
+      <div className="flex lg:hidden items-center justify-center px-3.5 pt-2 pb-2.5 bg-white/95 dark:bg-obsidian-900/95 border-t border-slate-200/80 dark:border-obsidian-800/80 shadow-[0_-2px_12px_rgba(0,0,0,0.04)] shrink-0">
+        <div className="w-full max-w-lg mx-auto flex items-center gap-2.5 sm:gap-3">
+          {!isIndexSymbol(stock?.symbol) ? (
+            <>
+              <button
+                onClick={() => stock && onOpenOrderModal(stock.symbol, 'BUY')}
+                className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-sm tracking-wide shadow-md shadow-emerald-950/20 active:scale-[0.98] transition-all touch-manipulation cursor-pointer flex items-center justify-center min-h-[44px]"
+              >
+                BUY
+              </button>
+              <button
+                onClick={() => stock && onOpenOrderModal(stock.symbol, 'SELL')}
+                className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-red-500 hover:from-rose-500 hover:to-red-400 text-white font-black text-sm tracking-wide shadow-md shadow-rose-950/20 active:scale-[0.98] transition-all touch-manipulation cursor-pointer flex items-center justify-center min-h-[44px]"
+              >
+                SELL
+              </button>
+            </>
+          ) : (
+            <div className="w-full text-center py-2 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 rounded-xl border border-amber-300 dark:border-amber-500/30">
+              Benchmark Spot Index &bull; View Only
+            </div>
+          )}
         </div>
       </div>
 

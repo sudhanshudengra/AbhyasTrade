@@ -412,7 +412,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
       </div>
 
       {/* Stock List & Global Search Results */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-200 dark:divide-obsidian-700/40">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-200 dark:divide-obsidian-700/40 pb-28 lg:pb-4">
         {filteredStocks.map((stock) => {
           const isSelected = stock.symbol === selectedSymbol;
           const isIndex = isIndexSymbol(stock.symbol);
@@ -453,7 +453,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[130px] sm:max-w-[160px]">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[130px] sm:max-w-xs md:max-w-md lg:max-w-[160px] xl:max-w-[200px]">
                     {stock.name}
                   </div>
                 </div>
@@ -511,8 +511,57 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                 </span>
               </div>
 
-              {/* Quick Action Hover Buttons (Buy, Sell, Remove - Buy/Sell disabled for indices) */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-1 bg-white/95 dark:bg-obsidian-800/95 p-1 rounded-lg border border-slate-200 dark:border-obsidian-600 shadow-xl z-10">
+              {/* Mobile Quick Action Strip (< 1024px) */}
+              <div className="flex lg:hidden items-center justify-between gap-2 mt-2 pt-1.5 border-t border-slate-100 dark:border-obsidian-750">
+                <div className="flex items-center gap-1.5">
+                  {!isIndex ? (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenOrderModal(stock.symbol, 'BUY');
+                        }}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black rounded-lg shadow-sm transition active:scale-95 cursor-pointer flex items-center gap-1"
+                        title="Buy"
+                      >
+                        BUY
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenOrderModal(stock.symbol, 'SELL');
+                        }}
+                        className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-black rounded-lg shadow-sm transition active:scale-95 cursor-pointer flex items-center gap-1"
+                        title="Sell"
+                      >
+                        SELL
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      Spot Index
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-brand-blue dark:text-brand-cyan font-semibold flex items-center gap-0.5">
+                    Tap for Chart &rarr;
+                  </span>
+                  {onRemoveSymbol && (
+                    <button
+                      onClick={(e) => handleRemoveStock(e, stock.symbol)}
+                      className="p-1 text-slate-400 hover:text-rose-500 rounded active:scale-95 cursor-pointer"
+                      title="Remove from Watchlist"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop Quick Action Hover Buttons (>= 1024px) */}
+              <div className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity items-center gap-1 bg-white/95 dark:bg-obsidian-800/95 p-1 rounded-lg border border-slate-200 dark:border-obsidian-600 shadow-xl z-10">
                 {!isIndex ? (
                   <>
                     <button

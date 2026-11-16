@@ -89,17 +89,17 @@ export const PositionsDesk: React.FC<PositionsDeskProps> = ({
         </div>
 
         {/* PnL Summaries & Emergency Squareoff */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-3 text-xs font-tabular">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-tabular">
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Unrealized: </span>
+              <span className="text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">Unrealized: </span>
               <span
                 className={`font-bold ${totalUnrealized >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
               >
                 {totalUnrealized >= 0 ? '+' : ''}₹{totalUnrealized.toFixed(2)}
               </span>
             </div>
-            <div>
+            <div className="hidden sm:inline">
               <span className="text-slate-500 dark:text-slate-400">Realized: </span>
               <span
                 className={`font-bold ${totalRealized >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
@@ -112,17 +112,18 @@ export const PositionsDesk: React.FC<PositionsDeskProps> = ({
           {openPositions.some((p) => p.product_type === 'MIS') && (
             <button
               onClick={() => setShowSquareoffModal(true)}
-              className="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 dark:border-rose-500/40 text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 dark:border-rose-500/40 text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
             >
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span>Square Off All MIS</span>
+              <span className="hidden sm:inline">Square Off All MIS</span>
+              <span className="sm:hidden">Square Off MIS</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Positions Table / List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-28 lg:pb-4">
         {positions.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-xs">
             No open or closed positions yet. Place orders from the watchlist!

@@ -19,7 +19,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ portfolio, t
   const totalCharges = portfolio?.total_charges_paid ?? 0;
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-obsidian-900 overflow-y-auto p-4 sm:p-6 space-y-6">
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-obsidian-900 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 lg:pb-6">
       {/* Top Banner Card */}
       <div className="bg-white dark:bg-gradient-to-r dark:from-obsidian-800 dark:via-obsidian-800 dark:to-obsidian-700/80 border border-slate-200 dark:border-obsidian-700 rounded-2xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-brand-blue/10 rounded-full blur-3xl pointer-events-none" />

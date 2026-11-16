@@ -33,17 +33,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       <div className="absolute inset-0 bg-[radial-gradient(#1e2638_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       {/* Top Navbar */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20">
-            <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
+      <header className="w-full max-w-7xl mx-auto px-4 py-3 sm:px-6 sm:py-6 pt-[max(0.75rem,env(safe-area-inset-top,0px))] flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20 shrink-0">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-xl tracking-tight">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="font-extrabold text-lg sm:text-xl tracking-tight">
               <span className="text-brand-cyan">Abhyas</span>
               <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
             </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-brand-blue/10 dark:bg-brand-blue/15 text-brand-blue dark:text-brand-cyan border border-brand-blue/30">
+            <span className="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-brand-blue/10 dark:bg-brand-blue/15 text-brand-blue dark:text-brand-cyan border border-brand-blue/30 shrink-0">
               NSE Terminal
             </span>
           </div>
@@ -59,20 +59,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       </header>
 
       {/* Hero & Login Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-8 relative z-10 max-w-4xl mx-auto text-center">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-8 relative z-10 max-w-4xl mx-auto text-center">
         {/* Sacred Sanskrit Shloka Banner */}
-        <div className="w-full max-w-3xl bg-amber-50/80 dark:bg-gradient-to-b dark:from-obsidian-800/90 dark:via-obsidian-900/90 dark:to-obsidian-950/95 border border-amber-200 dark:border-amber-500/25 rounded-3xl p-5 sm:p-7 pt-7 sm:pt-8 shadow-md dark:shadow-2xl backdrop-blur-xl relative overflow-hidden mb-8 group">
+        <div className="w-full max-w-3xl bg-amber-50/80 dark:bg-gradient-to-b dark:from-obsidian-800/90 dark:via-obsidian-900/90 dark:to-obsidian-950/95 border border-amber-200 dark:border-amber-500/25 rounded-3xl p-4 sm:p-7 pt-4 sm:pt-8 shadow-md dark:shadow-2xl backdrop-blur-xl relative overflow-hidden mb-4 sm:mb-8 group">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
 
-          <h2 className="text-xl sm:text-2xl md:text-[28px] font-bold text-amber-800 dark:text-amber-300 py-2 px-2 leading-[1.8] sm:leading-[1.9] tracking-normal dark:drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]">
+          <h2 className="text-lg sm:text-2xl md:text-[28px] font-bold text-amber-800 dark:text-amber-300 py-1.5 px-2 leading-[1.6] sm:leading-[1.9] tracking-normal dark:drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]">
             अभ्यासेन तु कौन्तेय वैराग्येण च गृह्यते ।
           </h2>
-          <p className="text-[11px] sm:text-xs font-semibold text-amber-800/80 dark:text-amber-300/80 tracking-widest uppercase mt-1 font-mono">
+          <p className="text-[10px] sm:text-xs font-semibold text-amber-800/80 dark:text-amber-300/80 tracking-widest uppercase mt-0.5 sm:mt-1 font-mono">
             &ldquo;Abhyāsena tu kaunteya vairāgyeṇa ca gṛhyate&rdquo;
           </p>
 
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-3 max-w-xl mx-auto font-medium leading-relaxed">
-            &ldquo;Through continuous, disciplined practice (
+          <p className="text-[11px] sm:text-sm text-slate-600 dark:text-slate-300 mt-2 sm:mt-3 max-w-xl mx-auto font-medium leading-relaxed">
+            &ldquo;Through continuous practice (
             <span className="text-amber-800 dark:text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (
             <span className="text-emerald-600 dark:text-emerald-400 font-bold">वैराग्य</span>), market mastery is
             attained.&rdquo;
@@ -80,7 +80,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white max-w-3xl leading-[1.15] mb-4">
+        <h1 className="text-xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white max-w-3xl leading-[1.15] mb-2 sm:mb-4">
           Master NSE Trading with{' '}
           <span className="text-emerald-600 dark:text-emerald-400 font-black">
             ₹10,00,000
@@ -89,21 +89,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mb-8 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mb-5 sm:mb-8 leading-relaxed">
           Cultivate emotional discipline and test intraday (5x MIS) &amp; delivery (CNC) strategies
           in a high-fidelity virtual terminal with real-time NSE prices and exact SEBI regulatory
           charge calculations.
         </p>
 
         {/* Primary Auth Action Card */}
-        <div className="w-full max-w-md bg-white dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/80 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl relative group">
+        <div className="w-full max-w-md bg-white dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/80 rounded-3xl p-5 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl relative group">
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-brand-blue/5 dark:from-brand-blue/10 to-transparent pointer-events-none" />
 
           {/* Continue with Google Button */}
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 dark:text-slate-900 border border-slate-300 dark:border-transparent font-black text-sm shadow-sm dark:shadow-xl hover:shadow-md dark:hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            className="w-full py-3.5 sm:py-4 px-6 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 dark:text-slate-900 border border-slate-300 dark:border-transparent font-black text-sm shadow-sm dark:shadow-xl hover:shadow-md dark:hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 touch-manipulation cursor-pointer"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
