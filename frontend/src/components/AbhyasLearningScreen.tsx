@@ -922,14 +922,15 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
           )}
         </div>
 
-        {/* Motivational Subhashitam Reflection */}
-        <div className="text-center text-[11px] sm:text-xs text-slate-500 max-w-lg pt-2 pb-2">
-          <p className="italic font-serif text-slate-400">
-            &ldquo;करत करत अभ्यास के जड़मति होत सुजान । रसरी आवत जात ते सिल पर परत निसान ॥&rdquo;
-          </p>
-          <p className="mt-1 text-[10px] text-slate-500">
-            <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span> • Cultivating disciplined, confident Indian traders through deliberate
-            practice.
+        {/* Terminal Mission Tagline Footer */}
+        <div className="w-full text-center pt-4 pb-2 border-t border-slate-200/80 dark:border-obsidian-800/80">
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium tracking-wide">
+            <span className="font-bold">
+              <span className="text-brand-cyan">Abhyas</span>
+              <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
+            </span>{' '}
+            <span className="text-slate-400 dark:text-slate-600 px-1.5">•</span>{' '}
+            Cultivating disciplined, confident Indian traders through deliberate practice.
           </p>
         </div>
       </div>
