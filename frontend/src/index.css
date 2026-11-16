@@ -177,7 +177,17 @@ html:not(.dark) {
     color: #020617;
   }
 
-  /* Preserve crisp white text on colored buttons and badges */
+  /* Preserve crisp white/light text on explicitly dark or colored backgrounds */
+  .text-white {
+    color: #ffffff !important;
+  }
+
+  .bg-slate-900,
+  .bg-slate-950,
+  .bg-black,
+  [class*="bg-slate-900"],
+  [class*="bg-slate-950"],
+  [class*="bg-black/"],
   .bg-emerald-600,
   .bg-emerald-500,
   .bg-rose-600,
@@ -186,19 +196,25 @@ html:not(.dark) {
   .bg-blue-600,
   .bg-indigo-600,
   .bg-amber-500,
+  .bg-amber-600,
   [class*="from-brand-blue"],
   [class*="from-emerald-"],
   [class*="from-rose-"] {
-    color: #ffffff !important;
+    color: #ffffff;
   }
 
+  .bg-slate-900 *,
+  .bg-slate-950 *,
+  .bg-black *,
+  [class*="bg-slate-900"] *,
+  [class*="bg-slate-950"] *,
   .bg-emerald-600 *,
   .bg-rose-600 *,
   .bg-brand-blue *,
   .bg-blue-600 *,
   .bg-indigo-600 *,
   [class*="from-brand-blue"] * {
-    color: #ffffff;
+    color: inherit;
   }
 
   .bg-brand-blue.text-white {

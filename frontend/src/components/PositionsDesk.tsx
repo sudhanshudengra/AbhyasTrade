@@ -269,13 +269,13 @@ export const PositionsDesk: React.FC<PositionsDeskProps> = ({
 
       {/* Confirmation Modal for Square Off All MIS */}
       {showSquareoffModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-obsidian-800 border border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400 mb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-obsidian-850 border border-slate-200 dark:border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-3">
               <AlertTriangle className="w-6 h-6" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Square Off All MIS Positions?</h3>
             </div>
-            <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-sm mb-6 leading-relaxed">
               This will place immediate market exit orders for all open Intraday (MIS) positions at
               current market prices and release margin.
             </p>
@@ -283,14 +283,14 @@ export const PositionsDesk: React.FC<PositionsDeskProps> = ({
               <button
                 onClick={() => setShowSquareoffModal(false)}
                 disabled={isSquaringOff}
-                className="px-4 py-2 rounded-lg bg-obsidian-700 hover:bg-obsidian-600 text-slate-200 text-sm font-semibold transition"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-obsidian-700 dark:hover:bg-obsidian-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-obsidian-600 text-sm font-semibold transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSquareoffAll}
                 disabled={isSquaringOff}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition cursor-pointer"
               >
                 {isSquaringOff ? 'Squaring Off...' : 'Confirm Square Off'}
               </button>
