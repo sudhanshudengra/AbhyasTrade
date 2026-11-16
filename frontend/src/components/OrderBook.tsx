@@ -65,7 +65,7 @@ export const OrderBook: React.FC<OrderBookProps> = ({
   return (
     <div className="flex flex-col h-full bg-obsidian-900 overflow-hidden">
       {/* Tabs Header */}
-      <div className="px-4 py-2.5 bg-obsidian-800/90 border-b border-obsidian-700/80 flex items-center justify-between">
+      <div className="px-4 py-2.5 bg-slate-50 dark:bg-obsidian-800/90 border-b border-slate-200 dark:border-obsidian-700/80 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-cyan" />
           <span className="font-extrabold text-sm text-slate-900 dark:text-white">Order Book</span>

@@ -39,19 +39,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
             <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
-              Abhyas<span className="text-emerald-400">Trade</span>
+            <span className="font-extrabold text-xl tracking-tight">
+              <span className="text-brand-cyan">Abhyas</span>
+              <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
             </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
+            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-brand-blue/10 dark:bg-brand-blue/15 text-brand-blue dark:text-brand-cyan border border-brand-blue/30">
               NSE Terminal
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold text-slate-400">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
           <ThemeSwitch compact />
-          <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-obsidian-900 border border-obsidian-800">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-800 text-slate-700 dark:text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             <span>NSE Equity Live</span>
           </span>
         </div>
@@ -60,20 +61,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       {/* Hero & Login Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-8 relative z-10 max-w-4xl mx-auto text-center">
         {/* Sacred Sanskrit Shloka Banner */}
-        <div className="w-full max-w-3xl bg-gradient-to-b from-obsidian-800/90 via-obsidian-900/90 to-obsidian-950/95 border border-amber-500/25 rounded-3xl p-5 sm:p-7 pt-7 sm:pt-8 shadow-2xl backdrop-blur-xl relative overflow-hidden mb-8 group">
+        <div className="w-full max-w-3xl bg-amber-50/80 dark:bg-gradient-to-b dark:from-obsidian-800/90 dark:via-obsidian-900/90 dark:to-obsidian-950/95 border border-amber-200 dark:border-amber-500/25 rounded-3xl p-5 sm:p-7 pt-7 sm:pt-8 shadow-md dark:shadow-2xl backdrop-blur-xl relative overflow-hidden mb-8 group">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
 
-          <h2 className="text-xl sm:text-2xl md:text-[28px] font-bold text-amber-300 py-2 px-2 leading-[1.8] sm:leading-[1.9] tracking-normal drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]">
+          <h2 className="text-xl sm:text-2xl md:text-[28px] font-bold text-amber-800 dark:text-amber-300 py-2 px-2 leading-[1.8] sm:leading-[1.9] tracking-normal dark:drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]">
             अभ्यासेन तु कौन्तेय वैराग्येण च गृह्यते ।
           </h2>
-          <p className="text-[11px] sm:text-xs font-semibold text-amber-300/80 tracking-widest uppercase mt-1 font-mono">
+          <p className="text-[11px] sm:text-xs font-semibold text-amber-800/80 dark:text-amber-300/80 tracking-widest uppercase mt-1 font-mono">
             &ldquo;Abhyāsena tu kaunteya vairāgyeṇa ca gṛhyate&rdquo;
           </p>
 
-          <p className="text-xs sm:text-sm text-slate-300 mt-3 max-w-xl mx-auto font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-3 max-w-xl mx-auto font-medium leading-relaxed">
             &ldquo;Through continuous, disciplined practice (
-            <span className="text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (
-            <span className="text-emerald-400 font-bold">वैराग्य</span>), market mastery is
+            <span className="text-amber-800 dark:text-amber-300 font-bold">अभ्यास</span>) and emotional detachment (
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">वैराग्य</span>), market mastery is
             attained.&rdquo;
           </p>
         </div>
@@ -81,28 +82,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         {/* Hero Title */}
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white max-w-3xl leading-[1.15] mb-4">
           Master NSE Trading with{' '}
-          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-brand-cyan bg-clip-text text-transparent">
+          <span className="text-emerald-600 dark:text-emerald-400 font-black">
             ₹10,00,000
           </span>{' '}
           Virtual Capital
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mb-8 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mb-8 leading-relaxed">
           Cultivate emotional discipline and test intraday (5x MIS) &amp; delivery (CNC) strategies
           in a high-fidelity virtual terminal with real-time NSE prices and exact SEBI regulatory
           charge calculations.
         </p>
 
         {/* Primary Auth Action Card */}
-        <div className="w-full max-w-md bg-obsidian-900/90 border border-obsidian-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative group">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-brand-blue/10 to-transparent pointer-events-none" />
+        <div className="w-full max-w-md bg-white dark:bg-obsidian-900/90 border border-slate-200 dark:border-obsidian-700/80 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl relative group">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-brand-blue/5 dark:from-brand-blue/10 to-transparent pointer-events-none" />
 
           {/* Continue with Google Button */}
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-black text-sm shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 dark:text-slate-900 border border-slate-300 dark:border-transparent font-black text-sm shadow-sm dark:shadow-xl hover:shadow-md dark:hover:shadow-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
@@ -131,23 +132,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
 
           {/* Error Message if any */}
           {errorMessage && (
-            <div className="mt-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs font-medium text-left">
+            <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-medium text-left">
               {errorMessage}
             </div>
           )}
 
           {/* Value Props Pills */}
-          <div className="mt-6 pt-6 border-t border-obsidian-800/80 flex items-center justify-around text-[11px] text-slate-400">
+          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-obsidian-800/80 flex items-center justify-around text-[11px] text-slate-600 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>1-Click OAuth</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Zero Financial Risk</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>₹10L Virtual Capital</span>
             </span>
           </div>
@@ -156,42 +157,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         {/* 3 Pillars of Abhyasa in Trading Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10 w-full max-w-4xl text-left">
           {/* Pillar 1 */}
-          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-emerald-500/30 transition-colors">
+          <div className="p-4 rounded-2xl bg-white dark:bg-obsidian-900/60 border border-slate-200 dark:border-obsidian-800/80 hover:border-emerald-500/40 dark:hover:border-emerald-500/30 transition-colors shadow-sm">
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="p-1.5 rounded-lg bg-emerald-950 text-emerald-400">
+              <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-white">१. अनुशासन (Discipline)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">1. Discipline (अनुशासन)</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Define your Stop-Loss on every trade. Enforce strict capital protection and 1-2%
               position sizing.
             </p>
           </div>
 
           {/* Pillar 2 */}
-          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-amber-500/30 transition-colors">
+          <div className="p-4 rounded-2xl bg-white dark:bg-obsidian-900/60 border border-slate-200 dark:border-obsidian-800/80 hover:border-amber-500/40 dark:hover:border-amber-500/30 transition-colors shadow-sm">
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="p-1.5 rounded-lg bg-amber-950 text-amber-400">
+              <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
                 <Compass className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-white">२. धैर्य (Patience)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">2. Patience (धैर्य)</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Conquer emotional impulses and FOMO. Wait patiently for high-probability setups at key
               levels.
             </p>
           </div>
 
           {/* Pillar 3 */}
-          <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-800/80 hover:border-brand-blue/30 transition-colors">
+          <div className="p-4 rounded-2xl bg-white dark:bg-obsidian-900/60 border border-slate-200 dark:border-obsidian-800/80 hover:border-brand-blue/40 dark:hover:border-brand-blue/30 transition-colors shadow-sm">
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="p-1.5 rounded-lg bg-brand-blue/20 text-brand-cyan">
+              <div className="p-1.5 rounded-lg bg-blue-100 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-cyan">
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <span className="text-xs font-extrabold text-white">३. अभ्यास (Practice)</span>
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">3. Practice (अभ्यास)</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Hone strategies risk-free on real-time NSE ticks with ₹10,00,000 virtual balance and
               exact charges.
             </p>
@@ -199,29 +200,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
         </div>
 
         {/* Google OAuth & Data Usage Disclosure (Required by Google Trust & Safety) */}
-        <div className="mt-8 w-full max-w-4xl p-6 rounded-2xl bg-obsidian-900/70 border border-obsidian-800 text-left">
+        <div className="mt-8 w-full max-w-4xl p-6 rounded-2xl bg-white dark:bg-obsidian-900/70 border border-slate-200 dark:border-obsidian-800 shadow-sm text-left">
           <div className="flex items-center gap-2 mb-3">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               Why We Request Your Google User Data &amp; How It Is Used
             </h2>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed mb-3">
-            AbhyasTrade is an educational, zero-risk virtual stock trading terminal designed for
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+            <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span> is an educational, zero-risk virtual stock trading terminal designed for
             learning Indian Equity markets. When you sign in with Google, we only request standard,
             non-sensitive profile permissions (
-            <span className="text-slate-200 font-semibold">email, name, and profile picture</span>).
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">email, name, and profile picture</span>).
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-300">
-            <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
-              <span className="font-bold text-emerald-400 block mb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-600 dark:text-slate-300">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-950/80 border border-slate-200 dark:border-obsidian-800/80">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
                 1. Purpose of Data Collection
               </span>
               Your email is used solely to authenticate your session and create a private, isolated
               virtual paper trading account with ₹10,00,000 virtual balance.
             </div>
-            <div className="p-3 rounded-xl bg-obsidian-950/80 border border-obsidian-800/80">
-              <span className="font-bold text-brand-cyan block mb-1">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-obsidian-950/80 border border-slate-200 dark:border-obsidian-800/80">
+              <span className="font-bold text-brand-blue dark:text-brand-cyan block mb-1">
                 2. Strict Privacy &amp; Non-Disclosure
               </span>
               We never access passwords, contacts, or Google Drive files. We never sell, share, or
@@ -232,17 +233,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSignInWithGoogle }) => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-4 px-6 text-center text-xs text-slate-500 border-t border-obsidian-900 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl mx-auto">
+      <footer className="w-full py-4 px-6 text-center text-xs text-slate-600 dark:text-slate-500 border-t border-slate-200 dark:border-obsidian-900 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl mx-auto">
         <div>
-          AbhyasTrade &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders
+          <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span> &copy; {new Date().getFullYear()} &bull; Built for Indian Equity Traders
           &bull; Educational Virtual Trading Environment
         </div>
-        <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
-          <a href="/privacy" className="hover:text-brand-cyan transition-colors">
+        <div className="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400">
+          <a href="/privacy" className="hover:text-brand-blue dark:hover:text-brand-cyan transition-colors">
             Privacy Policy
           </a>
           <span>&bull;</span>
-          <a href="/terms" className="hover:text-emerald-400 transition-colors">
+          <a href="/terms" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
             Terms of Service
           </a>
         </div>

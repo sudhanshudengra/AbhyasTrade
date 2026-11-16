@@ -252,7 +252,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </a>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-600">
-              AbhyasTrade Terminal v1.0 • Real-Time NSE Paper Trading
+              <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span> Terminal v1.0 • Real-Time NSE Paper Trading
             </p>
           </div>
         </div>

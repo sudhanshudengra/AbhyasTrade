@@ -412,7 +412,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
       </div>
 
       {/* Stock List & Global Search Results */}
-      <div className="flex-1 overflow-y-auto divide-y divide-obsidian-700/40">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-200 dark:divide-obsidian-700/40">
         {filteredStocks.map((stock) => {
           const isSelected = stock.symbol === selectedSymbol;
           const isIndex = isIndexSymbol(stock.symbol);

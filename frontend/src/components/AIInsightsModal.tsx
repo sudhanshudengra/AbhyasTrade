@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Sparkles,
   X,
@@ -15,6 +15,8 @@ import {
   Newspaper,
   BookOpen,
   Info,
+  Loader2,
+  Search,
 } from 'lucide-react';
 import {
   StockQuote,
@@ -29,6 +31,7 @@ import {
   getAIPeerComparison,
   getAINewsSentiment,
   getAIUsage,
+  searchSymbols,
 } from '../lib/api';
 
 interface AIInsightsModalProps {
@@ -135,6 +138,15 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
   const [peerMeta, setPeerMeta] = useState<AIResponseMeta | null>(null);
   const [peerLoading, setPeerLoading] = useState<boolean>(false);
   const [peerError, setPeerError] = useState<string | null>(null);
+  const [peerValidating, setPeerValidating] = useState<boolean>(false);
+  const [peerInputError, setPeerInputError] = useState<string | null>(null);
+
+  // Peer Suggestions State (Top 5 search matches when query >= 3 chars)
+  const [peerSuggestions, setPeerSuggestions] = useState<StockQuote[]>([]);
+  const [isSearchingSuggestions, setIsSearchingSuggestions] = useState<boolean>(false);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
+  const peerInputContainerRef = useRef<HTMLDivElement>(null);
 
   // Sentiment State
   const [sentiment, setSentiment] = useState<SentimentData | null>(null);
@@ -218,13 +230,149 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
     }
   };
 
-  const handleAddPeer = () => {
+  // Debounced search for peer suggestions when input is >= 3 characters
+  useEffect(() => {
+    const q = peerInput.trim().toUpperCase();
+    if (peerLoading || q.length < 3) {
+      setPeerSuggestions([]);
+      setIsSearchingSuggestions(false);
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+      return;
+    }
+
+    let unmounted = false;
+    setIsSearchingSuggestions(true);
+    const timeout = setTimeout(() => {
+      searchSymbols(q)
+        .then((results) => {
+          if (!unmounted) {
+            // Filter out symbols already in peerSymbols
+            const existing = new Set(peerSymbols.map((s) => s.toUpperCase()));
+            const filtered = (results || [])
+              .filter((r) => r && r.symbol && !existing.has(r.symbol.toUpperCase()))
+              .slice(0, 5); // Top 5 matches only
+            setPeerSuggestions(filtered);
+            setShowSuggestions(true);
+            setSelectedSuggestionIndex(-1);
+          }
+        })
+        .catch((err) => {
+          console.warn('Peer searchSymbols error:', err);
+        })
+        .finally(() => {
+          if (!unmounted) setIsSearchingSuggestions(false);
+        });
+    }, 200);
+
+    return () => {
+      unmounted = true;
+      clearTimeout(timeout);
+    };
+  }, [peerInput, peerSymbols, peerLoading]);
+
+  // Close suggestions dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        peerInputContainerRef.current &&
+        !peerInputContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Directly select a suggestion from dropdown
+  const handleSelectSuggestion = (sym: string) => {
+    if (peerLoading) return;
+    const clean = sym.trim().toUpperCase();
+    if (!clean || peerSymbols.includes(clean) || peerSymbols.length >= 5) return;
+    const updated = [...peerSymbols, clean];
+    setPeerSymbols(updated);
+    setPeerInput('');
+    setPeerSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+    setPeerInputError(null);
+    fetchPeerComparison(updated);
+  };
+
+  const handleAddPeer = async () => {
+    if (peerLoading) return;
     const clean = peerInput.trim().toUpperCase();
-    if (clean && !peerSymbols.includes(clean) && peerSymbols.length < 5) {
+    if (!clean) return;
+    if (peerSymbols.includes(clean)) {
+      setPeerInputError(`${clean} is already in the comparison`);
+      return;
+    }
+    if (peerSymbols.length >= 5) return;
+
+    // Validate the symbol against the backend before adding
+    setPeerValidating(true);
+    setPeerInputError(null);
+    try {
+      const rawApiBase = (import.meta.env.VITE_API_URL || '/api') as string;
+      const apiBase = rawApiBase.endsWith('/api')
+        ? rawApiBase
+        : rawApiBase === '' || rawApiBase === '/'
+          ? '/api'
+          : `${rawApiBase.replace(/\/$/, '')}/api`;
+      const res = await fetch(`${apiBase}/market/quote/${encodeURIComponent(clean)}`);
+      if (!res.ok) {
+        setPeerInputError(`"${clean}" is not a valid NSE symbol`);
+        return;
+      }
+      // Symbol is valid — add it
       const updated = [...peerSymbols, clean];
       setPeerSymbols(updated);
       setPeerInput('');
+      setPeerSuggestions([]);
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
       fetchPeerComparison(updated);
+    } catch {
+      setPeerInputError('Could not validate symbol. Check your connection.');
+    } finally {
+      setPeerValidating(false);
+    }
+  };
+
+  const handlePeerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (peerLoading) return;
+    if (showSuggestions && peerSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) =>
+          prev < peerSuggestions.length - 1 ? prev + 1 : 0
+        );
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) =>
+          prev > 0 ? prev - 1 : peerSuggestions.length - 1
+        );
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0 && peerSuggestions[selectedSuggestionIndex]) {
+          handleSelectSuggestion(peerSuggestions[selectedSuggestionIndex].symbol);
+          return;
+        }
+      }
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        return;
+      }
+    }
+    if (e.key === 'Enter') {
+      handleAddPeer();
     }
   };
 
@@ -454,11 +602,11 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                           </span>
 
                           {/* Tooltip popping cleanly on top of content below */}
-                          <div className="absolute left-0 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-slate-900 dark:bg-obsidian-900 border border-slate-700 dark:border-brand-cyan/40 shadow-2xl text-[11px] text-slate-100 z-50 pointer-events-none backdrop-blur-md">
-                            <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-slate-900 dark:bg-obsidian-900 border-t border-l border-slate-700 dark:border-brand-cyan/40" />
-                            <strong className="text-brand-cyan block font-semibold mb-1 relative z-10">{METRIC_TOOLTIPS.pe.title}</strong>
-                            <p className="text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.pe.desc}</p>
-                            <div className="pt-1.5 border-t border-slate-700/60 text-amber-300 font-medium text-[10px] relative z-10">
+                          <div className="absolute left-0 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-brand-cyan/40 shadow-xl dark:shadow-2xl text-[11px] text-slate-800 dark:text-slate-100 z-50 pointer-events-none backdrop-blur-md">
+                            <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-white dark:bg-obsidian-900 border-t border-l border-slate-200 dark:border-brand-cyan/40" />
+                            <strong className="text-brand-blue dark:text-brand-cyan block font-bold mb-1 relative z-10">{METRIC_TOOLTIPS.pe.title}</strong>
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.pe.desc}</p>
+                            <div className="pt-1.5 border-t border-slate-200 dark:border-slate-700/60 text-amber-700 dark:text-amber-300 font-semibold text-[10px] relative z-10">
                               {METRIC_TOOLTIPS.pe.rule}
                             </div>
                           </div>
@@ -477,11 +625,11 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                           </span>
 
                           {/* Tooltip popping cleanly on top of content below */}
-                          <div className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-slate-900 dark:bg-obsidian-900 border border-slate-700 dark:border-brand-cyan/40 shadow-2xl text-[11px] text-slate-100 z-50 pointer-events-none backdrop-blur-md">
-                            <div className="absolute -top-1.5 left-6 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 rotate-45 bg-slate-900 dark:bg-obsidian-900 border-t border-l border-slate-700 dark:border-brand-cyan/40" />
-                            <strong className="text-brand-cyan block font-semibold mb-1 relative z-10">{METRIC_TOOLTIPS.de.title}</strong>
-                            <p className="text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.de.desc}</p>
-                            <div className="pt-1.5 border-t border-slate-700/60 text-amber-300 font-medium text-[10px] relative z-10">
+                          <div className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-brand-cyan/40 shadow-xl dark:shadow-2xl text-[11px] text-slate-800 dark:text-slate-100 z-50 pointer-events-none backdrop-blur-md">
+                            <div className="absolute -top-1.5 left-6 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 rotate-45 bg-white dark:bg-obsidian-900 border-t border-l border-slate-200 dark:border-brand-cyan/40" />
+                            <strong className="text-brand-blue dark:text-brand-cyan block font-bold mb-1 relative z-10">{METRIC_TOOLTIPS.de.title}</strong>
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.de.desc}</p>
+                            <div className="pt-1.5 border-t border-slate-200 dark:border-slate-700/60 text-amber-700 dark:text-amber-300 font-semibold text-[10px] relative z-10">
                               {METRIC_TOOLTIPS.de.rule}
                             </div>
                           </div>
@@ -500,11 +648,11 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                           </span>
 
                           {/* Tooltip popping cleanly on top of content below */}
-                          <div className="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-slate-900 dark:bg-obsidian-900 border border-slate-700 dark:border-brand-cyan/40 shadow-2xl text-[11px] text-slate-100 z-50 pointer-events-none backdrop-blur-md">
-                            <div className="absolute -top-1.5 right-6 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 rotate-45 bg-slate-900 dark:bg-obsidian-900 border-t border-l border-slate-700 dark:border-brand-cyan/40" />
-                            <strong className="text-brand-cyan block font-semibold mb-1 relative z-10">{METRIC_TOOLTIPS.roe.title}</strong>
-                            <p className="text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.roe.desc}</p>
-                            <div className="pt-1.5 border-t border-slate-700/60 text-amber-300 font-medium text-[10px] relative z-10">
+                          <div className="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-brand-cyan/40 shadow-xl dark:shadow-2xl text-[11px] text-slate-800 dark:text-slate-100 z-50 pointer-events-none backdrop-blur-md">
+                            <div className="absolute -top-1.5 right-6 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 rotate-45 bg-white dark:bg-obsidian-900 border-t border-l border-slate-200 dark:border-brand-cyan/40" />
+                            <strong className="text-brand-blue dark:text-brand-cyan block font-bold mb-1 relative z-10">{METRIC_TOOLTIPS.roe.title}</strong>
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.roe.desc}</p>
+                            <div className="pt-1.5 border-t border-slate-200 dark:border-slate-700/60 text-amber-700 dark:text-amber-300 font-semibold text-[10px] relative z-10">
                               {METRIC_TOOLTIPS.roe.rule}
                             </div>
                           </div>
@@ -523,11 +671,11 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                           </span>
 
                           {/* Tooltip popping cleanly on top of content below */}
-                          <div className="absolute right-0 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-slate-900 dark:bg-obsidian-900 border border-slate-700 dark:border-brand-cyan/40 shadow-2xl text-[11px] text-slate-100 z-50 pointer-events-none backdrop-blur-md">
-                            <div className="absolute -top-1.5 right-6 w-3 h-3 rotate-45 bg-slate-900 dark:bg-obsidian-900 border-t border-l border-slate-700 dark:border-brand-cyan/40" />
-                            <strong className="text-brand-cyan block font-semibold mb-1 relative z-10">{METRIC_TOOLTIPS.pb.title}</strong>
-                            <p className="text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.pb.desc}</p>
-                            <div className="pt-1.5 border-t border-slate-700/60 text-amber-300 font-medium text-[10px] relative z-10">
+                          <div className="absolute right-0 top-full mt-2 hidden group-hover/tip:block w-64 sm:w-72 p-3 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-brand-cyan/40 shadow-xl dark:shadow-2xl text-[11px] text-slate-800 dark:text-slate-100 z-50 pointer-events-none backdrop-blur-md">
+                            <div className="absolute -top-1.5 right-6 w-3 h-3 rotate-45 bg-white dark:bg-obsidian-900 border-t border-l border-slate-200 dark:border-brand-cyan/40" />
+                            <strong className="text-brand-blue dark:text-brand-cyan block font-bold mb-1 relative z-10">{METRIC_TOOLTIPS.pb.title}</strong>
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 mb-1.5">{METRIC_TOOLTIPS.pb.desc}</p>
+                            <div className="pt-1.5 border-t border-slate-200 dark:border-slate-700/60 text-amber-700 dark:text-amber-300 font-semibold text-[10px] relative z-10">
                               {METRIC_TOOLTIPS.pb.rule}
                             </div>
                           </div>
@@ -734,7 +882,8 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                       {sym !== stock.symbol && peerSymbols.length > 2 && (
                         <button
                           onClick={() => handleRemovePeer(sym)}
-                          className="hover:text-rose-600 dark:hover:text-rose-400 transition ml-1 cursor-pointer"
+                          disabled={peerLoading}
+                          className="hover:text-rose-600 dark:hover:text-rose-400 transition ml-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           ×
                         </button>
@@ -743,21 +892,118 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                   ))}
 
                   {peerSymbols.length < 5 && (
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        value={peerInput}
-                        onChange={(e) => setPeerInput(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddPeer()}
-                        placeholder="+ Add Symbol"
-                        className="px-3 py-1 rounded-xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700 text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-blue dark:focus:border-brand-cyan w-28 uppercase"
-                      />
-                      <button
-                        onClick={handleAddPeer}
-                        className="px-2.5 py-1 rounded-xl bg-brand-blue/15 hover:bg-brand-blue/25 dark:bg-brand-cyan/20 dark:hover:bg-brand-cyan/30 border border-brand-blue/30 dark:border-brand-cyan/40 text-brand-blue dark:text-brand-cyan text-xs font-bold transition cursor-pointer"
-                      >
-                        Add
-                      </button>
+                    <div ref={peerInputContainerRef} className="relative flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={peerInput}
+                            onChange={(e) => {
+                              if (peerLoading) return;
+                              setPeerInput(e.target.value.toUpperCase());
+                              setPeerInputError(null);
+                            }}
+                            onFocus={() => {
+                              if (!peerLoading && peerSuggestions.length > 0) setShowSuggestions(true);
+                            }}
+                            onKeyDown={handlePeerKeyDown}
+                            placeholder="e.g. INFY"
+                            disabled={peerValidating || peerLoading}
+                            className={`px-3 py-1 rounded-xl bg-white dark:bg-obsidian-900 border text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-28 sm:w-32 uppercase transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                              peerInputError
+                                ? 'border-rose-400 dark:border-rose-500 focus:border-rose-500'
+                                : 'border-slate-200 dark:border-obsidian-700 focus:border-brand-blue dark:focus:border-brand-cyan'
+                            }`}
+                          />
+                        </div>
+                        <button
+                          onClick={handleAddPeer}
+                          disabled={peerValidating || peerLoading || !peerInput.trim()}
+                          className="px-2.5 py-1 rounded-xl bg-brand-blue/15 hover:bg-brand-blue/25 dark:bg-brand-cyan/20 dark:hover:bg-brand-cyan/30 border border-brand-blue/30 dark:border-brand-cyan/40 text-brand-blue dark:text-brand-cyan text-xs font-bold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {peerValidating ? (
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                          ) : (
+                            'Add'
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Suggestions Dropdown (Max 5 items, triggers at >= 3 chars, disabled during peer generation) */}
+                      {showSuggestions && !peerLoading && peerInput.trim().length >= 3 && (
+                        <div className="absolute top-full left-0 mt-1.5 w-64 sm:w-72 bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-700/90 rounded-2xl shadow-xl z-50 overflow-hidden backdrop-blur-md animate-fadeIn">
+                          {/* Dropdown Header */}
+                          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-obsidian-800 flex items-center justify-between bg-slate-50/70 dark:bg-obsidian-950/40">
+                            <span className="flex items-center gap-1">
+                              <Search className="w-2.5 h-2.5" />
+                              <span>Top NSE Matches</span>
+                            </span>
+                            {isSearchingSuggestions && (
+                              <Loader2 className="w-3 h-3 animate-spin text-brand-blue dark:text-brand-cyan" />
+                            )}
+                          </div>
+
+                          {/* Suggestions List */}
+                          {peerSuggestions.length > 0 ? (
+                            <div className="max-h-56 overflow-y-auto divide-y divide-slate-100/70 dark:divide-obsidian-800/60">
+                              {peerSuggestions.map((item, idx) => (
+                                <button
+                                  key={item.symbol}
+                                  type="button"
+                                  onClick={() => handleSelectSuggestion(item.symbol)}
+                                  onMouseEnter={() => setSelectedSuggestionIndex(idx)}
+                                  className={`w-full px-3 py-2 text-left transition flex items-center justify-between gap-2 cursor-pointer ${
+                                    selectedSuggestionIndex === idx
+                                      ? 'bg-brand-blue/10 dark:bg-brand-cyan/15 text-brand-blue dark:text-brand-cyan'
+                                      : 'hover:bg-slate-50 dark:hover:bg-obsidian-800/80 text-slate-700 dark:text-slate-200'
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-mono font-bold text-xs text-brand-blue dark:text-brand-cyan">
+                                        {item.symbol}
+                                      </span>
+                                      {item.sector && (
+                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate max-w-[100px]">
+                                          {item.sector}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                      {item.name}
+                                    </p>
+                                  </div>
+                                  {item.ltp && item.ltp > 0 ? (
+                                    <span className="font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200 shrink-0">
+                                      ₹{item.ltp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-brand-blue dark:text-brand-cyan bg-brand-blue/10 dark:bg-brand-cyan/20 px-1.5 py-0.5 rounded shrink-0">
+                                      + Add
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          ) : isSearchingSuggestions ? (
+                            <div className="px-3 py-3 text-xs text-slate-400 dark:text-slate-500 text-center flex items-center justify-center gap-1.5">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-blue dark:text-brand-cyan" />
+                              <span>Searching NSE scrips...</span>
+                            </div>
+                          ) : (
+                            <div className="px-3 py-3 text-xs text-slate-400 dark:text-slate-500 text-center">
+                              No stocks found matching "{peerInput}"
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {peerInputError && (
+                        <p className="text-[10px] text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1 max-w-[200px]">
+                          <AlertTriangle className="w-3 h-3 shrink-0" />
+                          {peerInputError}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -914,17 +1160,50 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({ stock, onClose
                       </p>
                     </div>
 
-                    <div className="text-right sm:border-l sm:border-slate-200 dark:border-obsidian-700/80 sm:pl-5">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Score (-1 to +1)</span>
+                    <div className="shrink-0 flex flex-col items-center gap-1.5 sm:border-l sm:border-slate-200 dark:border-obsidian-700/80 sm:pl-5">
+                      {/* Score label */}
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        Sentiment Score
+                      </span>
+
+                      {/* Big score number */}
                       <span
-                        className={`text-xl font-mono font-black ${
-                          sentiment.overallScore >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                        className={`text-3xl font-mono font-black leading-none ${
+                          sentiment.overallScore >= 0.2
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : sentiment.overallScore <= -0.2
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : 'text-amber-600 dark:text-amber-400'
                         }`}
                       >
                         {sentiment.overallScore > 0
                           ? `+${sentiment.overallScore.toFixed(2)}`
                           : sentiment.overallScore.toFixed(2)}
                       </span>
+
+                      {/* Gauge bar: -1 → 0 → +1 */}
+                      <div className="relative w-28 h-2.5 rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 overflow-hidden shadow-inner">
+                        {/* Moving thumb */}
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 shadow-md transition-all duration-500"
+                          style={{
+                            left: `calc(${((sentiment.overallScore + 1) / 2) * 100}% - 6px)`,
+                            borderColor:
+                              sentiment.overallScore >= 0.2
+                                ? '#10b981'
+                                : sentiment.overallScore <= -0.2
+                                  ? '#f43f5e'
+                                  : '#f59e0b',
+                          }}
+                        />
+                      </div>
+
+                      {/* Range labels */}
+                      <div className="flex items-center justify-between w-28 text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                        <span>−1</span>
+                        <span>0</span>
+                        <span>+1</span>
+                      </div>
                     </div>
                   </div>
 

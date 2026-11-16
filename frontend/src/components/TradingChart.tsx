@@ -440,8 +440,17 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
 
   if (!stock) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-obsidian-900 text-slate-500 text-sm">
-        Select a stock from the watchlist to view chart
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-white dark:bg-obsidian-900 text-slate-500 text-sm select-none p-4 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/20 opacity-80 animate-bounce-subtle">
+          <TrendingUp className="w-6 h-6 text-white stroke-[2.5]" />
+        </div>
+        <div className="flex items-center gap-1.5 text-sm font-extrabold">
+          <span className="text-brand-cyan">Abhyas</span>
+          <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
+        </div>
+        <p className="font-semibold text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
+          Select an instrument from the Watchlist to view live NSE chart
+        </p>
       </div>
     );
   }
@@ -555,13 +564,41 @@ export const TradingChart: React.FC<TradingChartProps> = ({ stock, onOpenOrderMo
 
       {/* Chart Canvas Area with Floating Hover Card */}
       <div className="flex-1 relative w-full h-full min-h-[220px] overflow-hidden">
+        {/* Sleek AbhyasTrade Branded Chart Loader */}
         {isLoading && (
-          <div className="absolute inset-0 bg-slate-900/40 dark:bg-obsidian-900/80 backdrop-blur-xs flex items-center justify-center z-10">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 text-brand-blue dark:text-brand-cyan text-xs font-bold shadow-2xl">
-              <BarChart2 className="w-4 h-4 animate-bounce" />
-              <span>
-                Loading {stock.symbol} ({timeframe}) chart...
-              </span>
+          <div className="absolute inset-0 bg-white/70 dark:bg-obsidian-950/80 backdrop-blur-xs flex items-center justify-center z-20 transition-all duration-200">
+            <div className="flex flex-col items-center justify-center gap-3 p-5 sm:p-6 rounded-2xl bg-white dark:bg-obsidian-900/95 border border-slate-200/90 dark:border-obsidian-700/80 shadow-2xl backdrop-blur-md max-w-xs w-auto mx-4 select-none animate-in fade-in zoom-in-95 duration-150">
+              {/* Brand Logo with Ambient Pulsing Glow */}
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-brand-blue via-brand-cyan to-emerald-400 blur-lg opacity-40 dark:opacity-60 animate-pulse" />
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-blue to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-blue/25 animate-bounce-subtle">
+                  <TrendingUp className="w-5 h-5 text-white stroke-[2.5]" />
+                </div>
+              </div>
+
+              {/* Brand Name */}
+              <div className="flex items-center gap-1.5 -mt-1">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight">
+                  <span className="text-brand-cyan">Abhyas</span>
+                  <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
+                </span>
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-brand-blue/15 text-brand-blue dark:text-brand-cyan border border-brand-blue/30 font-mono">
+                  LIVE
+                </span>
+              </div>
+
+              {/* Stock Symbol & Timeframe */}
+              <div className="flex flex-col items-center text-center space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 font-mono">
+                  <span>{stock.symbol}</span>
+                  <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                  <span className="text-brand-blue dark:text-brand-cyan font-semibold">{timeframe} Chart</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Loading real-time NSE candles...</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

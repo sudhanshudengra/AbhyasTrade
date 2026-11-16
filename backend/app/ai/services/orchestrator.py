@@ -235,9 +235,20 @@ class AIOrchestrator:
                     model=cached_entry["model"],
                     symbol=primary_symbol,
                 )
+                cached_result = cached_entry["result"]
+                # Overwrite companyName from verified data to fix any stale cached names
+                verified_names_cache: Dict[str, str] = {
+                    p["symbol"]: p.get("companyName", f"{p['symbol']} Ltd.")
+                    for p in peers_data
+                }
+                if isinstance(cached_result.get("peers"), list):
+                    for peer_row in cached_result["peers"]:
+                        sym = peer_row.get("symbol", "")
+                        if sym in verified_names_cache:
+                            peer_row["companyName"] = verified_names_cache[sym]
                 return {
                     "success": True,
-                    "data": cached_entry["result"],
+                    "data": cached_result,
                     "meta": {
                         "cached": True,
                         "provider": cached_entry["provider"],
@@ -282,6 +293,36 @@ class AIOrchestrator:
                 )
 
                 raw_result["symbols"] = clean_symbols
+
+                # Overwrite companyName per peer from verified data to prevent AI hallucinations
+                verified_names: Dict[str, str] = {
+                    p["symbol"]: p.get("companyName", f"{p['symbol']} Ltd.")
+                    for p in peers_data
+                }
+                if isinstance(raw_result.get("peers"), list):
+                    for peer_row in raw_result["peers"]:
+                        sym = peer_row.get("symbol", "")
+                        if sym in verified_names:
+                            peer_row["companyName"] = verified_names[sym]
+                        # Also back-fill metrics that AI may have left null but we have verified data for
+                        verified_peer = next(
+                            (p for p in peers_data if p["symbol"] == sym), None
+                        )
+                        if verified_peer:
+                            vm = verified_peer.get("verifiedMetrics", {})
+                            if peer_row.get("pe") is None and vm.get("peRatio") is not None:
+                                peer_row["pe"] = vm["peRatio"]
+                            if peer_row.get("pb") is None and vm.get("priceToBook") is not None:
+                                peer_row["pb"] = vm["priceToBook"]
+                            if peer_row.get("debtToEquity") is None and vm.get("debtToEquity") is not None:
+                                peer_row["debtToEquity"] = vm["debtToEquity"]
+                            if not peer_row.get("roe") and vm.get("returnOnEquity"):
+                                peer_row["roe"] = vm["returnOnEquity"]
+                            if not peer_row.get("marketCap") and vm.get("marketCap"):
+                                peer_row["marketCap"] = vm["marketCap"]
+                            if not peer_row.get("profitMargin") and vm.get("profitMargin"):
+                                peer_row["profitMargin"] = vm["profitMargin"]
+
                 validated = PeerComparisonData(**raw_result).dict()
                 gen_time = datetime.now(timezone.utc).isoformat()
 

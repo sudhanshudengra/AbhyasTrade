@@ -75,7 +75,8 @@ class FinancialDataProvider:
                 logger.warning(f"Failed to fetch yf info for {ticker_str}: {e}")
                 inf = {}
             try:
-                hist = tkr.history(period="6mo", interval="1d")
+                # Use 1y period to get enough bars for SMA200, RSI-14, Bollinger Bands
+                hist = tkr.history(period="1y", interval="1d")
             except Exception as e:
                 logger.warning(f"Failed to fetch yf history for {ticker_str}: {e}")
                 hist = pd.DataFrame()
@@ -103,21 +104,37 @@ class FinancialDataProvider:
                 ltp = round(float(hist_df["Close"].iloc[-1]), 2)
             ltp = float(ltp) if ltp else 0.0
 
-        # Extract verified fundamentals
+        # Extract verified fundamentals — try multiple yfinance key variants for NSE coverage
         market_cap_raw = info.get("marketCap")
-        pe_trailing = info.get("trailingPE")
-        pe_forward = info.get("forwardPE")
-        pb = info.get("priceToBook")
-        book_val = info.get("bookValue")
-        debt_to_equity = info.get("debtToEquity")
-        roe = info.get("returnOnEquity")
-        roa = info.get("returnOnAssets")
-        profit_margin = info.get("profitMargins")
-        op_margin = info.get("operatingMargins")
-        rev_growth = info.get("revenueGrowth")
-        div_yield = info.get("dividendYield")
+        pe_trailing = info.get("trailingPE") or info.get("trailingPe")
+        pe_forward = info.get("forwardPE") or info.get("forwardPe")
+        pb = info.get("priceToBook") or info.get("price_to_book")
+        book_val = info.get("bookValue") or info.get("book_value")
+        debt_to_equity = info.get("debtToEquity") or info.get("debt_to_equity")
+        roe = info.get("returnOnEquity") or info.get("return_on_equity")
+        roa = info.get("returnOnAssets") or info.get("return_on_assets")
+        profit_margin = info.get("profitMargins") or info.get("profit_margins")
+        op_margin = info.get("operatingMargins") or info.get("operating_margins")
+        rev_growth = info.get("revenueGrowth") or info.get("revenue_growth")
+        div_yield = info.get("dividendYield") or info.get("dividend_yield")
         beta = info.get("beta")
-        eps = info.get("trailingEps")
+        eps = (
+            info.get("trailingEps")
+            or info.get("trailing_eps")
+            or info.get("epsTrailingTwelveMonths")
+        )
+
+        # If yfinance did not provide trailingPE, compute from EPS + LTP as fallback
+        _pe_valid = pe_trailing is not None and not (
+            isinstance(pe_trailing, float) and pd.isna(pe_trailing)
+        )
+        if not _pe_valid and eps and ltp:
+            try:
+                _eps_f = float(eps)
+                if _eps_f > 0:
+                    pe_trailing = round(float(ltp) / _eps_f, 2)
+            except Exception:
+                pass
         high52 = info.get("fiftyTwoWeekHigh") or (
             round(float(hist_df["High"].max()), 2) if not hist_df.empty else None
         )

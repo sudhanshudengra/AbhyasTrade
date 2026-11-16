@@ -11,7 +11,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import { AbhyasLearningScreen } from './components/AbhyasLearningScreen';
 import { BottomNav, MobileTab } from './components/BottomNav';
-import { ChargesCalculatorModal } from './components/ChargesCalculatorModal';
 import { Header } from './components/Header';
 import { LoginPage } from './components/LoginPage';
 import { OrderBook } from './components/OrderBook';
@@ -104,7 +103,6 @@ export const App: React.FC = () => {
   );
   const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
   const [orderModalSide, setOrderModalSide] = useState<OrderSide>('BUY');
-  const [isChargesCalcOpen, setIsChargesCalcOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Stop-Loss Live Trigger Toast Notification State
@@ -229,7 +227,7 @@ export const App: React.FC = () => {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-bold tracking-wider text-slate-300">
-            Initializing AbhyasTrade Terminal...
+            Initializing <span className="text-brand-cyan">Abhyas</span><span className="text-emerald-400">Trade</span> Terminal...
           </span>
         </div>
       </div>
@@ -256,7 +254,6 @@ export const App: React.FC = () => {
       <Header
         portfolio={portfolio}
         onResetPortfolio={resetPortfolio}
-        onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         isConnected={isConnected}
         userProfile={userProfile}
@@ -328,7 +325,6 @@ export const App: React.FC = () => {
               ) : (
                 <AbhyasLearningScreen
                   onSelectSymbol={setSelectedSymbol}
-                  onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
                 />
               )}
             </div>
@@ -515,7 +511,6 @@ export const App: React.FC = () => {
                   setSelectedSymbol(sym);
                   setMobileTab('CHART');
                 }}
-                onOpenChargesCalc={() => setIsChargesCalcOpen(true)}
               />
             ))}
 
@@ -565,16 +560,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Brokerage & Regulatory Charges Calculator Modal - Destroyed completely on close */}
-      {isChargesCalcOpen && (
-        <ChargesCalculatorModal
-          key="charges-calculator-modal"
-          isOpen={isChargesCalcOpen}
-          onClose={() => setIsChargesCalcOpen(false)}
-          defaultSymbol={selectedStock?.symbol || 'RELIANCE'}
-          defaultPrice={selectedStock?.ltp || 3000}
-        />
-      )}
+
 
       {/* Terminal Settings Modal */}
       {isSettingsOpen && (
@@ -592,41 +578,41 @@ export const App: React.FC = () => {
           {slNotifications.map((notif) => (
             <div
               key={notif.id}
-              className="pointer-events-auto bg-obsidian-850 border border-amber-500/50 glow-amber shadow-2xl rounded-2xl p-3.5 flex items-start gap-3 animate-in slide-in-from-top-3 duration-200"
+              className="pointer-events-auto bg-white dark:bg-obsidian-850 border border-amber-300 dark:border-amber-500/50 shadow-2xl rounded-2xl p-3.5 flex items-start gap-3 animate-in slide-in-from-top-3 duration-200"
             >
-              <div className="p-2 rounded-xl bg-amber-950/80 text-amber-400 border border-amber-500/40 shrink-0">
+              <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-500/40 shrink-0">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm text-white">{notif.symbol}</span>
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white">{notif.symbol}</span>
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${notif.side === 'BUY' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}
+                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded text-white ${notif.side === 'BUY' ? 'bg-emerald-600' : 'bg-rose-600'}`}
                     >
                       {notif.side}
                     </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-950/90 text-amber-300 border border-amber-500/40">
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/90 dark:text-amber-300 dark:border-amber-500/40">
                       SL TRIGGERED
                     </span>
                   </div>
                   <button
                     onClick={() => dismissSlNotification(notif.id)}
-                    className="text-slate-400 hover:text-white p-0.5 rounded transition"
+                    className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-0.5 rounded transition cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                   Protective stop-loss for <strong>{notif.quantity} shares</strong> was
                   automatically triggered & executed.
                 </p>
-                <div className="mt-1.5 flex items-center gap-2 text-xs font-tabular bg-obsidian-950/80 px-2.5 py-1 rounded-lg border border-obsidian-700">
-                  <span className="text-slate-400">Trigger:</span>
-                  <span className="text-amber-300 font-bold">₹{notif.triggerPrice.toFixed(2)}</span>
-                  <span className="text-slate-500">&rarr;</span>
-                  <span className="text-slate-400">Filled:</span>
-                  <span className="text-emerald-400 font-extrabold">
+                <div className="mt-1.5 flex items-center gap-2 text-xs font-tabular bg-slate-50 dark:bg-obsidian-950/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-obsidian-700">
+                  <span className="text-slate-500 dark:text-slate-400">Trigger:</span>
+                  <span className="text-amber-700 dark:text-amber-300 font-bold">₹{notif.triggerPrice.toFixed(2)}</span>
+                  <span className="text-slate-400 dark:text-slate-500">&rarr;</span>
+                  <span className="text-slate-500 dark:text-slate-400">Filled:</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
                     ₹{notif.executionPrice.toFixed(2)}
                   </span>
                 </div>
