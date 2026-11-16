@@ -229,7 +229,7 @@ export const App: React.FC = () => {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-bold tracking-wider text-slate-300">
-            Initializing AbhyasTrade Terminal...
+            Initializing <span className="text-brand-cyan">Abhyas</span><span className="text-emerald-400">Trade</span> Terminal...
           </span>
         </div>
       </div>

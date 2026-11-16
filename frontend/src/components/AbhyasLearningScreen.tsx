@@ -263,7 +263,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
               mind and complex mastery are conquered.&rdquo;
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
-              Trading success is 80% emotional psychology and 20% technical strategy. AbhyasTrade
+              Trading success is 80% emotional psychology and 20% technical strategy. <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span>
               gives you the sacred, zero-risk arena to build trader discipline, master risk
               management, and sharpen instincts before risking real capital.
             </p>
@@ -934,7 +934,7 @@ export const AbhyasLearningScreen: React.FC<AbhyasLearningScreenProps> = () => {
             &ldquo;करत करत अभ्यास के जड़मति होत सुजान । रसरी आवत जात ते सिल पर परत निसान ॥&rdquo;
           </p>
           <p className="mt-1 text-[10px] text-slate-500">
-            AbhyasTrade • Cultivating disciplined, confident Indian traders through deliberate
+            <span className="text-brand-cyan font-bold">Abhyas</span><span className="text-emerald-500 dark:text-emerald-400 font-bold">Trade</span> • Cultivating disciplined, confident Indian traders through deliberate
             practice.
           </p>
         </div>

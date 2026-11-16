@@ -138,8 +138,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white group-hover:text-brand-cyan transition-colors">
-                  Abhyas<span className="text-emerald-400">Trade</span>
+                <span className="font-extrabold text-base tracking-tight transition-colors">
+                  <span className="text-brand-cyan">Abhyas</span>
+                  <span className="text-emerald-500 dark:text-emerald-400">Trade</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-brand-blue/15 text-brand-cyan border border-brand-blue/30">
                   NSE PWA
