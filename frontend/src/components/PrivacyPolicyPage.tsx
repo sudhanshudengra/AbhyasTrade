@@ -138,10 +138,10 @@ export const PrivacyPolicyPage: React.FC = () => {
               please email:
             </p>
             <a
-              href="mailto:sudhanshudengra.tdc@gmail.com"
+              href="mailto:sudhanshu.tdc@gmail.com"
               className="inline-block text-brand-blue dark:text-brand-cyan hover:underline font-mono text-sm font-semibold"
             >
-              sudhanshudengra.tdc@gmail.com
+              sudhanshu.tdc@gmail.com
             </a>
           </div>
         </div>
